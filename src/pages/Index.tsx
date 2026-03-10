@@ -1,7 +1,7 @@
-import RegistrationWizard from "@/components/registration/RegistrationWizard";
+import LandingPage from "./LandingPage";
 
 const Index = () => {
-  return <RegistrationWizard />;
+  return <LandingPage />;
 };
 
 export default Index;
