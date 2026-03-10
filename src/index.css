@@ -92,8 +92,14 @@
   }
 }
 
-@layer utilities {
+@layer components {
   .wizard-card {
-    @apply bg-card rounded-xl shadow-lg border border-border p-6 md:p-8;
+    @apply bg-card rounded-xl shadow-lg border border-border p-6;
+  }
+}
+
+@media (min-width: 768px) {
+  .wizard-card {
+    padding: 2rem;
   }
 }
