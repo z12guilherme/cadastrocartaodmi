@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import ProgressBar from "./ProgressBar";
 import Step1Titular from "./Step1Titular";
 import Step2Documentos from "./Step2Documentos";
@@ -10,7 +11,7 @@ import {
   initialTitular,
   initialDocumentos,
 } from "@/types/registration";
-import { Heart } from "lucide-react";
+import logoDmi from "@/assets/logo-dmi.png";
 
 const RegistrationWizard = () => {
   const [step, setStep] = useState(1);
