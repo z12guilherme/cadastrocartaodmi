@@ -1,0 +1,33 @@
+import { CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+interface Step5Props {
+  onReset: () => void;
+}
+
+const Step5Sucesso = ({ onReset }: Step5Props) => {
+  return (
+    <div className="animate-fade-in flex flex-col items-center justify-center text-center py-12 space-y-6">
+      <div className="w-20 h-20 rounded-full bg-success/15 flex items-center justify-center">
+        <CheckCircle2 className="w-12 h-12 text-success" />
+      </div>
+
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold text-foreground">
+          Pré-cadastro realizado!
+        </h2>
+        <p className="text-muted-foreground max-w-md">
+          Seu pré-cadastro foi recebido com sucesso. Nossa equipe entrará em
+          contato em breve para confirmar seus dados e ativar seu Cartão de
+          Benefícios.
+        </p>
+      </div>
+
+      <Button variant="outline" onClick={onReset} size="lg">
+        Fazer novo cadastro
+      </Button>
+    </div>
+  );
+};
+
+export default Step5Sucesso;
