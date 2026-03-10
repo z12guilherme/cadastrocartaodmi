@@ -14,7 +14,7 @@ import {
 } from "@/types/registration";
 import logoDmi from "@/assets/logo-dmi.png";
 import { submitCadastro } from "@/services/api";
-import { generateContractPdf } from "./pdf";
+import { generateContractPdf } from "@/services/pdf";
 import { toast } from "sonner";
 
 const RegistrationWizard = () => {

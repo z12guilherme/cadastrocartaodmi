@@ -1,5 +1,6 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { RegistrationData } from "@/types/registration";
+import contractPdfUrl from "@/assets/contrato.pdf"; // Importa o PDF da pasta de assets
 
 /**
  * Gera um PDF de contrato preenchido com os dados do titular e sua assinatura.
@@ -12,9 +13,8 @@ export const generateContractPdf = async (
   data: RegistrationData,
   signatureImageBase64: string
 ): Promise<Uint8Array> => {
-  // Carrega o template do contrato da pasta /public
-  const contractUrl = "/contrato.pdf";
-  const existingPdfBytes = await fetch(contractUrl).then((res) =>
+  // Carrega o template do contrato da pasta de assets
+  const existingPdfBytes = await fetch(contractPdfUrl).then((res) =>
     res.arrayBuffer()
   );
 
@@ -22,29 +22,58 @@ export const generateContractPdf = async (
   const pdfDoc = await PDFDocument.load(existingPdfBytes);
   const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const pages = pdfDoc.getPages();
-  const firstPage = pages[0];
+  const lastPage = pages[pages.length - 1]; // Pega a última página do PDF
+  const { width: pageWidth } = lastPage.getSize();
 
   // Embeda a imagem da assinatura
-  const signatureImage = await pdfDoc.embedPng(signatureImageBase64);
-  const signatureDims = signatureImage.scale(0.25); // Reduz o tamanho da assinatura em 75%
+  // FIX: Converte a string Base64 para ArrayBuffer para garantir compatibilidade
+  const signatureImageBytes = await fetch(signatureImageBase64).then((res) =>
+    res.arrayBuffer()
+  );
+  const signatureImage = await pdfDoc.embedPng(signatureImageBytes);
 
-  // Adiciona os dados do titular ao PDF
-  // NOTA: Ajuste as coordenadas (x, y) conforme necessário para o seu template.
-  // A origem (0, 0) é o canto inferior esquerdo da página.
-  firstPage.drawText(`Nome: ${data.titular.nomeCompleto}`, {
-    x: 70,
-    y: 250, // Ajuste a posição vertical
+  // FIX: Define uma largura alvo (150 pontos) e ajusta a altura proporcionalmente
+  // Isso evita que a assinatura fique muito pequena ou invisível
+  const signatureDims = signatureImage.scale(150 / signatureImage.width);
+
+  // --- Bloco da Assinatura do Cliente (Canto Inferior Direito) ---
+  const blockWidth = 180; // Largura estimada do bloco de assinatura
+  const marginRight = 70;
+  const xPos = pageWidth - marginRight - blockWidth;
+  const yPosLine = 150; // Posição Y da linha da assinatura
+
+  // Desenha a assinatura do cliente
+  lastPage.drawImage(signatureImage, {
+    x: xPos,
+    y: yPosLine + 5, // Um pouco acima da linha
+    width: signatureDims.width,
+    height: signatureDims.height,
+  });
+
+  // Desenha a linha para a assinatura
+  lastPage.drawLine({
+    start: { x: xPos, y: yPosLine },
+    end: { x: xPos + blockWidth, y: yPosLine },
+    thickness: 0.5,
+    color: rgb(0, 0, 0),
+  });
+
+  // Adiciona o nome do titular abaixo da linha
+  lastPage.drawText(data.titular.nomeCompleto, {
+    x: xPos,
+    y: yPosLine - 15,
     font: helveticaFont,
     size: 10,
     color: rgb(0, 0, 0),
   });
 
-  // Desenha a assinatura na página
-  firstPage.drawImage(signatureImage, {
-    x: 70, // Ajuste a posição horizontal
-    y: 150, // Ajuste a posição vertical
-    width: signatureDims.width,
-    height: signatureDims.height,
+  // Adiciona o CPF abaixo do nome
+  lastPage.drawText(`CPF: ${data.titular.cpf}`, {
+    x: xPos,
+    y: yPosLine - 30,
+    font: helveticaFont,
+    size: 8,
+    color: rgb(0, 0, 0),
   });
 
   // Salva o PDF e retorna os bytes
