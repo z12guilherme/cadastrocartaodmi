@@ -1,73 +1,47 @@
-# Welcome to your Lovable project
+# Cadastro Cartão DMI
 
-## Project info
+Sistema de cadastro e emissão de cartões para o DMI.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Sobre o Projeto
 
-## How can I edit this code?
+Esta aplicação permite o cadastro de membros e a geração automática de cartões de identificação em formato PDF, incluindo a captura de assinatura digital diretamente na interface.
 
-There are several ways of editing your application.
+## Tecnologias Utilizadas
 
-**Use Lovable**
+O projeto foi desenvolvido com uma stack moderna focada em performance e usabilidade:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- **[Vite](https://vitejs.dev/)**: Build tool e servidor de desenvolvimento.
+- **[React](https://reactjs.org/)**: Biblioteca para construção da interface.
+- **[TypeScript](https://www.typescriptlang.org/)**: Tipagem estática para maior segurança no código.
+- **[Tailwind CSS](https://tailwindcss.com/)**: Estilização rápida e responsiva.
+- **[shadcn/ui](https://ui.shadcn.com/)**: Componentes de interface elegantes e acessíveis.
+- **[react-signature-canvas](https://github.com/agilgur5/react-signature-canvas)**: Para captura de assinaturas manuscritas.
+- **[pdf-lib](https://pdf-lib.js.org/)**: Para geração e manipulação de arquivos PDF no navegador.
 
-Changes made via Lovable will be committed automatically to this repo.
+## Funcionalidades
 
-**Use your preferred IDE**
+- 📝 **Formulário de Cadastro**: Campos para inserção de dados do membro.
+- ✍️ **Assinatura Digital**: Canvas interativo para desenhar a assinatura.
+- 🖨️ **Geração de PDF**: Criação instantânea do cartão preenchido pronto para impressão ou download.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Como Executar o Projeto
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Certifique-se de ter o [Node.js](https://nodejs.org/) instalado.
 
-Follow these steps:
+1. **Clone o repositório** (se ainda não o fez):
+   ```bash
+   git clone <URL_DO_SEU_REPOSITORIO>
+   cd cadastrocartaodmi
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. **Instale as dependências**:
+   ```bash
+   npm install
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. **Rode o servidor de desenvolvimento**:
+   ```bash
+   npm run dev
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+4. Acesse a aplicação no navegador através do link exibido no terminal (geralmente `http://localhost:8080`).
