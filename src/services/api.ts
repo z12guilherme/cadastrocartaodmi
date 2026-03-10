@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import axios from "axios";
-import { Titular, TitularDocumentos } from "@/types/registration"; // Assumindo que seus tipos estão aqui
+import { RegistrationData, Titular, TitularDocumentos, Dependente } from "@/types/registration"; // Assumindo que seus tipos estão aqui
 
 // --- Configuração de Ambiente ---
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -35,7 +35,7 @@ interface DocumentosPayload {
 // Interface final enviada para a API REST (SIGPAF)
 export interface CadastroPayload {
   titular: Titular;
-  // dependentes: Dependente[]; // Descomente se tiver a interface de dependentes
+  dependentes: Dependente[];
   documentos: DocumentosPayload;
   metadata: {
     origem: string;
@@ -105,21 +105,21 @@ export const uploadImageToSupabase = async (
 // --- Função Principal (Orquestrador) ---
 
 interface SubmitProps {
-  titular: Titular;
-  documentos: TitularDocumentos;
-  // dependentes: Dependente[];
+  data: RegistrationData;
+  contractPdf: Blob;
 }
 
 /**
  * Orquestra o cadastro:
  * 1. Upload das imagens para Supabase
- * 2. Montagem do JSON
- * 3. POST para API REST
+ * 2. Montagem do FormData com JSON e PDF
+ * 3. POST para API REST como multipart/form-data
  */
 export const submitCadastro = async ({
-  titular,
-  documentos,
+  data,
+  contractPdf,
 }: SubmitProps): Promise<void> => {
+  const { titular, documentos, dependentes } = data;
   // Validação básica antes de começar
   if (!documentos.fotoRg || !documentos.fotoComprovanteResidencia) {
     throw new Error("Documentos obrigatórios estão faltando.");
@@ -145,7 +145,7 @@ export const submitCadastro = async ({
         cpf: titular.cpf.replace(/\D/g, ""),
         cep: titular.cep.replace(/\D/g, ""),
       },
-      // dependentes: dependentes,
+      dependentes: dependentes,
       documentos: {
         urlRg,
         urlCpf,
@@ -157,8 +157,20 @@ export const submitCadastro = async ({
       },
     };
 
-    // Envio para API REST Principal (SIGPAF)
-    await api.post("/cadastros", payload);
+    // FASE 3: Montar FormData para envio
+    const formData = new FormData();
+    // Adiciona o payload JSON como uma string
+    formData.append("data", JSON.stringify(payload));
+    // Adiciona o arquivo PDF
+    formData.append("contract", contractPdf, `contrato-${payload.titular.cpf}.pdf`);
+
+    // Envio para API REST Principal (SIGPAF) como multipart/form-data
+    await api.post("/cadastros", formData, {
+      headers: {
+        // Axios define o Content-Type para multipart/form-data automaticamente
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
   } catch (error: any) {
     // Tratamento de erro unificado

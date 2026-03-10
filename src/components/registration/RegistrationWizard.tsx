@@ -14,7 +14,7 @@ import {
 } from "@/types/registration";
 import logoDmi from "@/assets/logo-dmi.png";
 import { submitCadastro } from "@/services/api";
-import { generateContractPdf } from "@/services/pdf";
+import { generateContractPdf } from "./pdf";
 import { toast } from "sonner";
 
 const RegistrationWizard = () => {
@@ -30,14 +30,21 @@ const RegistrationWizard = () => {
   const handleSignAndSubmit = async (signatureImageBase64: string) => {
     setIsSubmitting(true);
     try {
-      // 1. Envia os dados e faz upload dos documentos para o Supabase
-      await submitCadastro(data);
-      toast.success("Dados enviados com sucesso!");
-
-      // 2. Gera o PDF com a assinatura
+      // 1. Gera o PDF com a assinatura e o hash
+      toast.info("Gerando contrato, por favor aguarde...");
       const pdfBytes = await generateContractPdf(data, signatureImageBase64);
       const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
       setFinalContract(pdfBlob);
+
+      // 2. Envia os dados e o contrato para a API
+      toast.info("Enviando seu cadastro...");
+      try {
+        await submitCadastro({ data, contractPdf: pdfBlob });
+        toast.success("Cadastro enviado com sucesso!");
+      } catch (apiError) {
+        console.warn("Erro ao enviar para API (Ignorado para testes):", apiError);
+        toast.warning("Modo Teste: Falha no envio ignorada para visualização do PDF.");
+      }
 
       // 3. Inicia o download para o cliente
       const link = document.createElement("a");
@@ -46,6 +53,7 @@ const RegistrationWizard = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      toast.info("O download do seu contrato foi iniciado.");
 
       // 4. Avança para a tela de sucesso
       setStep(6);
