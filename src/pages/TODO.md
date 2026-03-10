@@ -42,3 +42,10 @@ VITE_API_BASE_URL=https://api.seusistema.com.br/v1
 - [ ] **Teste de API**:
   - Verifique se o JSON chegou corretamente no endpoint `VITE_API_BASE_URL`.
   - Dica: Use Webhook.site como `VITE_API_BASE_URL` temporário para validar o formato do JSON enviado.
+
+## 5. Ajustes de Layout e Conteúdo
+
+- [ ] **Assinatura da Diretora**:
+  - Adicionar a assinatura pendente da diretora.
+- [ ] **Assinatura do Cliente**:
+  - Trocar a posição da assinatura do cliente.
