@@ -5,13 +5,17 @@ import Step1Titular from "./Step1Titular";
 import Step2Documentos from "./Step2Documentos";
 import Step3Dependentes from "./Step3Dependentes";
 import Step4Resumo from "./Step4Resumo";
-import Step5Sucesso from "./Step5Sucesso";
+import Step5Assinatura from "./Step5Assinatura";
+import Step6Sucesso from "./Step6Sucesso"; // Renomeado
 import {
   RegistrationData,
   initialTitular,
   initialDocumentos,
 } from "@/types/registration";
 import logoDmi from "@/assets/logo-dmi.png";
+import { submitCadastro } from "@/services/api";
+import { generateContractPdf } from "@/services/pdf";
+import { toast } from "sonner";
 
 const RegistrationWizard = () => {
   const [step, setStep] = useState(1);
@@ -20,11 +24,39 @@ const RegistrationWizard = () => {
     documentos: initialDocumentos,
     dependentes: [],
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [finalContract, setFinalContract] = useState<Blob | null>(null);
 
-  const handleConfirm = () => {
-    console.log("=== PAYLOAD PRÉ-CADASTRO ===");
-    console.log(JSON.stringify(data, null, 2));
-    setStep(5);
+  const handleSignAndSubmit = async (signatureImageBase64: string) => {
+    setIsSubmitting(true);
+    try {
+      // 1. Envia os dados e faz upload dos documentos para o Supabase
+      await submitCadastro(data);
+      toast.success("Dados enviados com sucesso!");
+
+      // 2. Gera o PDF com a assinatura
+      const pdfBytes = await generateContractPdf(data, signatureImageBase64);
+      const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
+      setFinalContract(pdfBlob);
+
+      // 3. Inicia o download para o cliente
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(pdfBlob);
+      link.download = `contrato-dmi-${data.titular.cpf}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // 4. Avança para a tela de sucesso
+      setStep(6);
+    } catch (error: any) {
+      console.error("Falha ao finalizar cadastro:", error);
+      toast.error("Erro ao finalizar cadastro", {
+        description: error.message || "Tente novamente mais tarde.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
@@ -33,6 +65,7 @@ const RegistrationWizard = () => {
       documentos: initialDocumentos,
       dependentes: [],
     });
+    setFinalContract(null);
     setStep(1);
   };
 
@@ -53,9 +86,9 @@ const RegistrationWizard = () => {
       </header>
 
       <main className="container max-w-2xl mx-auto px-4 py-6 pb-12">
-        {step < 5 && <ProgressBar currentStep={step} totalSteps={4} />}
+        {step < 6 && <ProgressBar currentStep={step} totalSteps={5} />}
 
-        <div className={step < 5 ? "wizard-card" : ""}>
+        <div className={step < 6 ? "wizard-card" : ""}>
           {step === 1 && (
             <Step1Titular
               data={data.titular}
@@ -82,11 +115,18 @@ const RegistrationWizard = () => {
           {step === 4 && (
             <Step4Resumo
               data={data}
-              onConfirm={handleConfirm}
+              onConfirm={() => setStep(5)}
               onBack={() => setStep(3)}
             />
           )}
-          {step === 5 && <Step5Sucesso onReset={handleReset} />}
+          {step === 5 && (
+            <Step5Assinatura
+              onConfirm={handleSignAndSubmit}
+              onBack={() => setStep(4)}
+              isSubmitting={isSubmitting}
+            />
+          )}
+          {step === 6 && <Step6Sucesso onReset={handleReset} contractBlob={finalContract} />}
         </div>
       </main>
     </div>

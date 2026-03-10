@@ -16,7 +16,7 @@ const Step2Documentos = ({ data, onChange, onNext, onBack }: Step2Props) => {
   };
 
   const validate = () => {
-    if (!data.fotoRg || !data.fotoCpf || !data.fotoComprovanteResidencia) {
+    if (!data.fotoRg || !data.fotoComprovanteResidencia) {
       toast.error("Envie todos os documentos obrigatórios.");
       return false;
     }
@@ -37,7 +37,7 @@ const Step2Documentos = ({ data, onChange, onNext, onBack }: Step2Props) => {
           onChange={(v) => update("fotoRg", v)}
         />
         <FileUpload
-          label="Foto do CPF *"
+          label="Foto do CPF (Opcional)"
           value={data.fotoCpf}
           onChange={(v) => update("fotoCpf", v)}
         />

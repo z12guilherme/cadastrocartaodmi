@@ -5,7 +5,7 @@ interface ProgressBarProps {
   totalSteps: number;
 }
 
-const stepLabels = ["Dados", "Documentos", "Dependentes", "Resumo"];
+const stepLabels = ["Dados", "Documentos", "Dependentes", "Resumo", "Assinatura"];
 
 const ProgressBar = ({ currentStep, totalSteps }: ProgressBarProps) => {
   return (
@@ -20,9 +20,9 @@ const ProgressBar = ({ currentStep, totalSteps }: ProgressBarProps) => {
               <div
                 className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
                   isCompleted
-                    ? "bg-success text-success-foreground"
+                    ? "bg-[#64E627] text-black"
                     : isCurrent
-                    ? "bg-primary text-primary-foreground shadow-md"
+                    ? "bg-[#0EA5FF] text-white shadow-md"
                     : "bg-muted text-muted-foreground"
                 }`}
               >
@@ -30,7 +30,7 @@ const ProgressBar = ({ currentStep, totalSteps }: ProgressBarProps) => {
               </div>
               <span
                 className={`text-xs mt-1.5 font-medium ${
-                  isCurrent ? "text-primary" : "text-muted-foreground"
+                  isCurrent ? "text-[#0EA5FF]" : "text-muted-foreground"
                 }`}
               >
                 {label}
@@ -41,7 +41,7 @@ const ProgressBar = ({ currentStep, totalSteps }: ProgressBarProps) => {
       </div>
       <div className="w-full bg-muted rounded-full h-1.5 mt-1">
         <div
-          className="bg-primary h-1.5 rounded-full transition-all duration-500"
+          className="bg-[#0EA5FF] h-1.5 rounded-full transition-all duration-500"
           style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
         />
       </div>

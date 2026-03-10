@@ -104,3 +104,42 @@
     padding: 2rem;
   }
 }
+
+/* Swiper Custom Styles */
+.swiper-pagination-bullet {
+  height: 10px;
+  width: 10px;
+  background: #fff !important;
+  opacity: 0.5;
+  transition: 0.3s;
+}
+
+.swiper-pagination-bullet-active {
+  width: 20px;
+  opacity: 1;
+  border-radius: 7px;
+  background: #0EA5FF !important; /* DMI Blue */
+}
+
+.swiper-button-prev,
+.swiper-button-next {
+  color: #fff !important;
+  background: rgba(0, 0, 0, 0.3);
+  border: 0px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  width: 50px !important;
+  height: 50px !important;
+  transition: background 0.3s ease;
+}
+
+.swiper-button-prev:after,
+.swiper-button-next:after {
+  font-size: 20px !important;
+  font-weight: bold;
+}
+
+.swiper-button-prev:hover,
+.swiper-button-next:hover {
+  background: #0EA5FF; /* DMI Blue */
+  border: 1px solid #0EA5FF;
+}

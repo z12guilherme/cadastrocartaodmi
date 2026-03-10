@@ -123,7 +123,7 @@ const Step3Dependentes = ({ dependentes, onChange, onNext, onBack }: Step3Props)
         <Button
           variant="outline"
           onClick={addDependente}
-          className="w-full border-dashed border-2 text-primary hover:bg-secondary"
+          className="w-full border-dashed border-2 text-[#0EA5FF] hover:bg-secondary"
         >
           <Plus className="w-4 h-4 mr-2" />
           Adicionar Dependente

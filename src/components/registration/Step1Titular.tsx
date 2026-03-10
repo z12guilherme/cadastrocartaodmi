@@ -148,7 +148,7 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
           <button
             type="button"
             onClick={buscarCep}
-            className="text-xs text-primary hover:underline mt-1"
+            className="text-xs text-[#0EA5FF] hover:underline mt-1"
           >
             Buscar CEP
           </button>
