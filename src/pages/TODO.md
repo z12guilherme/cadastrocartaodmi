@@ -47,5 +47,5 @@ VITE_API_BASE_URL=https://api.seusistema.com.br/v1
 
 - [ ] **Assinatura da Diretora**:
   - Adicionar a assinatura pendente da diretora.
-- [ ] **Assinatura do Cliente**:
+- [x] **Assinatura do Cliente**:
   - Trocar a posição da assinatura do cliente.

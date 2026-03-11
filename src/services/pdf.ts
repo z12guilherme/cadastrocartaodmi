@@ -36,10 +36,10 @@ export const generateContractPdf = async (
   // Isso evita que a assinatura fique muito pequena ou invisível
   const signatureDims = signatureImage.scale(150 / signatureImage.width);
 
-  // --- Bloco da Assinatura do Cliente (Canto Inferior Direito) ---
+  // --- Bloco da Assinatura do Cliente (Canto Inferior Esquerdo) ---
   const blockWidth = 180; // Largura estimada do bloco de assinatura
-  const marginRight = 70;
-  const xPos = pageWidth - marginRight - blockWidth;
+  const marginLeft = 70;
+  const xPos = marginLeft;
   const yPosLine = 150; // Posição Y da linha da assinatura
 
   // Desenha a assinatura do cliente
