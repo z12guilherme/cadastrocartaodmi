@@ -1,25 +1,15 @@
-import { createClient } from "@supabase/supabase-js";
 import axios from "axios";
-import { RegistrationData, Titular, TitularDocumentos, Dependente } from "@/types/registration"; // Assumindo que seus tipos estão aqui
+import { RegistrationData, Titular, Dependente } from "@/types/registration"; // Assumindo que seus tipos estão aqui
 
 // --- Configuração de Ambiente ---
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const BUCKET_NAME = "documentos-cadastro"; // Nome do seu bucket no Supabase
-
-// Validação preventiva para não quebrar a aplicação sem .env
-if (!SUPABASE_URL) {
-  console.warn("ATENÇÃO: VITE_SUPABASE_URL não definida. O upload de arquivos falhará.");
-}
 
 // Inicializa clientes
-// Usa valores vazios/fictícios se não houver env para evitar crash na inicialização
-const supabase = createClient(SUPABASE_URL || "https://setup-pending.supabase.co", SUPABASE_ANON_KEY || "setup-pending");
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    "Content-Type": "application/json",
+    // O Content-Type para multipart/form-data é definido automaticamente pelo Axios
+    // ao usar um objeto FormData.
   },
 });
 
@@ -27,16 +17,13 @@ const api = axios.create({
 
 // Interface para os documentos processados (URLs)
 interface DocumentosPayload {
-  urlRg: string;
-  urlCpf: string;
-  urlComprovanteResidencia: string;
+  // Este payload não é mais necessário, pois os arquivos são enviados diretamente.
 }
 
 // Interface final enviada para a API REST (SIGPAF)
 export interface CadastroPayload {
   titular: Titular;
   dependentes: Dependente[];
-  documentos: DocumentosPayload;
   metadata: {
     origem: string;
     dataCadastro: string;
@@ -55,53 +42,6 @@ const base64ToBlob = async (base64: string): Promise<Blob> => {
   return blob;
 };
 
-/**
- * Fase 1: Upload de Arquivo para o Supabase Storage
- */
-export const uploadImageToSupabase = async (
-  fileOrBase64: string | File,
-  fileName: string
-): Promise<string> => {
-  try {
-    let fileToUpload: File | Blob;
-
-    // Tratamento para converter Base64 se necessário
-    if (typeof fileOrBase64 === "string" && fileOrBase64.startsWith("data:")) {
-      fileToUpload = await base64ToBlob(fileOrBase64);
-    } else if (fileOrBase64 instanceof File) {
-      fileToUpload = fileOrBase64;
-    } else {
-      throw new Error("Formato de arquivo inválido.");
-    }
-
-    // Gera um caminho único: cpf_timestamp_nomearquivo
-    // Nota: Idealmente passar o CPF aqui para organizar pastas, ex: `${cpf}/${fileName}`
-    const filePath = `${Date.now()}_${fileName}`;
-
-    const { data, error } = await supabase.storage
-      .from(BUCKET_NAME)
-      .upload(filePath, fileToUpload, {
-        cacheControl: "3600",
-        upsert: false,
-      });
-
-    if (error) {
-      console.error("Erro Supabase:", error);
-      throw new Error(`Falha no upload de ${fileName}`);
-    }
-
-    // Recupera URL Pública
-    const { data: publicUrlData } = supabase.storage
-      .from(BUCKET_NAME)
-      .getPublicUrl(data.path);
-
-    return publicUrlData.publicUrl;
-  } catch (error) {
-    console.error("Erro no upload:", error);
-    throw error;
-  }
-};
-
 // --- Função Principal (Orquestrador) ---
 
 interface SubmitProps {
@@ -111,8 +51,8 @@ interface SubmitProps {
 
 /**
  * Orquestra o cadastro:
- * 1. Upload das imagens para Supabase
- * 2. Montagem do FormData com JSON e PDF
+ * 1. Montagem do payload JSON com os dados do titular e dependentes.
+ * 2. Montagem do FormData com o JSON e todos os arquivos (contrato e documentos).
  * 3. POST para API REST como multipart/form-data
  */
 export const submitCadastro = async ({
@@ -126,18 +66,7 @@ export const submitCadastro = async ({
   }
 
   try {
-    // FASE 1: Uploads em paralelo para performance
-    // Usamos Promise.all para subir tudo de uma vez
-    const [urlRg, urlCpf, urlResidencia] = await Promise.all([
-      uploadImageToSupabase(documentos.fotoRg, `rg_${titular.cpf}.jpg`),
-      documentos.fotoCpf ? uploadImageToSupabase(documentos.fotoCpf, `cpf_${titular.cpf}.jpg`) : Promise.resolve(""),
-      uploadImageToSupabase(
-        documentos.fotoComprovanteResidencia,
-        `residencia_${titular.cpf}.jpg`
-      ),
-    ]);
-
-    // FASE 2: Montar Payload JSON
+    // FASE 1: Montar Payload JSON (sem as URLs dos documentos)
     const payload: CadastroPayload = {
       titular: {
         ...titular,
@@ -146,28 +75,41 @@ export const submitCadastro = async ({
         cep: titular.cep.replace(/\D/g, ""),
       },
       dependentes: dependentes,
-      documentos: {
-        urlRg,
-        urlCpf,
-        urlComprovanteResidencia: urlResidencia,
-      },
       metadata: {
         origem: "wizard-web",
         dataCadastro: new Date().toISOString(),
       },
     };
 
-    // FASE 3: Montar FormData para envio
+    // FASE 2: Montar FormData para envio
     const formData = new FormData();
-    // Adiciona o payload JSON como uma string
+
+    // Anexa o payload JSON como uma string. O backend deverá fazer o parse.
     formData.append("data", JSON.stringify(payload));
-    // Adiciona o arquivo PDF
+
+    // Anexa o arquivo PDF do contrato
     formData.append("contract", contractPdf, `contrato-${payload.titular.cpf}.pdf`);
 
-    // Envio para API REST Principal (SIGPAF) como multipart/form-data
+    // Anexa os arquivos de imagem diretamente ao FormData.
+    // O backend precisa estar preparado para receber estes campos.
+    // Os nomes dos campos ('rgFile', 'cpfFile', etc.) devem ser combinados com o backend.
+    const rgFile = typeof documentos.fotoRg === 'string' ? await base64ToBlob(documentos.fotoRg) : documentos.fotoRg;
+    formData.append("rgFile", rgFile, `rg_${titular.cpf}.jpg`);
+
+    if (documentos.fotoCpf) {
+      const cpfFile = typeof documentos.fotoCpf === 'string' ? await base64ToBlob(documentos.fotoCpf) : documentos.fotoCpf;
+      formData.append("cpfFile", cpfFile, `cpf_${titular.cpf}.jpg`);
+    }
+
+    const residenciaFile = typeof documentos.fotoComprovanteResidencia === 'string'
+      ? await base64ToBlob(documentos.fotoComprovanteResidencia)
+      : documentos.fotoComprovanteResidencia;
+    formData.append("residenciaFile", residenciaFile, `residencia_${titular.cpf}.jpg`);
+
+    // FASE 3: Envio para API REST Principal (SIGPAF) como multipart/form-data
     await api.post("/cadastros", formData, {
       headers: {
-        // Axios define o Content-Type para multipart/form-data automaticamente
+        // Axios define o Content-Type para multipart/form-data automaticamente com o boundary correto
         "Content-Type": "multipart/form-data",
       },
     });

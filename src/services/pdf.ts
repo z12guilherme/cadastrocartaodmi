@@ -3,6 +3,20 @@ import { RegistrationData } from "@/types/registration";
 import contractPdfUrl from "@/assets/contrato.pdf"; // Importa o PDF da pasta de assets
 
 /**
+ * Cria um hash SHA-256 de uma string.
+ * @param data A string para gerar o hash.
+ * @returns Uma representação hexadecimal do hash.
+ */
+async function createSha256Hash(data: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const dataBuffer = encoder.encode(data);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", dataBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  // Converte cada byte para uma string hexadecimal de 2 dígitos
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
  * Gera um PDF de contrato preenchido com os dados do titular e sua assinatura.
  *
  * @param data Os dados completos do cadastro.
@@ -74,6 +88,37 @@ export const generateContractPdf = async (
     font: helveticaFont,
     size: 8,
     color: rgb(0, 0, 0),
+  });
+
+  // --- Validação da Assinatura ---
+  // Gera o hash dos dados do titular e da assinatura para verificação
+  const dataToHash = JSON.stringify({
+    nome: data.titular.nomeCompleto,
+    cpf: data.titular.cpf,
+    assinatura: signatureImageBase64, // Inclui a própria assinatura no hash
+  });
+  const dataHash = await createSha256Hash(dataToHash);
+  const signingDateTime = new Date().toLocaleString("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+
+  // Adiciona a data e hora da assinatura
+  lastPage.drawText(`Assinado em: ${signingDateTime}`, {
+    x: xPos,
+    y: yPosLine - 45,
+    font: helveticaFont,
+    size: 7,
+    color: rgb(0.2, 0.2, 0.2),
+  });
+
+  // Adiciona o hash de verificação
+  lastPage.drawText(`Hash de Validação: ${dataHash}`, {
+    x: xPos,
+    y: yPosLine - 55,
+    font: helveticaFont,
+    size: 6,
+    color: rgb(0.5, 0.5, 0.5), // Cinza
   });
 
   // Salva o PDF e retorna os bytes
