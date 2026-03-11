@@ -234,7 +234,7 @@ const LandingPage = () => {
           </div>
 
           <div className="mt-8 pt-6 border-t border-border text-center text-sm text-muted-foreground">
-            <p>© 2025 REDEDMI. Todos os direitos reservados.</p>
+            <p>© 2026 REDEDMI. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
