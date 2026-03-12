@@ -46,5 +46,6 @@ Esta aplicação web permite o cadastro de beneficiários e dependentes, geraç�
 
 3. **Execute o projeto**:
    ```bash
-   npm run dev
+   npm run dev 
    ```
+'-'
