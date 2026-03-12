@@ -38,7 +38,7 @@ Este documento detalha as tarefas para a criação da área administrativa do si
 - [x] **Ficha do Cadastrado**:
   - [x] Criar una view de detalhe (página ou modal) para exibir todas as informações de um único usuário.
   - [x] Nesta ficha, exibir os documentos enviados pelo usuário.
-  - [ ] **Otimização**: Implementar uma rotina para comprimir os documentos/imagens antes de exibi-los na ficha, garantindo um carregamento mais rápido.
+  - [x] **Otimização**: Implementar uma rotina para comprimir os documentos/imagens antes de exibi-los na ficha, garantindo um carregamento mais rápido.
 - [x] **Gerenciamento de Cadastros**:
   - [x] Implementar lógica para aprovar um cadastro (mudar status para 'aprovado').
   - [x] Implementar lógica para reprovar um cadastro (excluir registro).

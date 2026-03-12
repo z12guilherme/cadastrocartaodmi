@@ -16,6 +16,49 @@ const base64ToBlob = async (base64: string): Promise<Blob> => {
 };
 
 /**
+ * Comprime e redimensiona uma imagem para economizar espaço no Storage.
+ * Converte para JPEG com qualidade 0.7 e largura máxima de 1200px.
+ */
+const compressImage = async (input: Blob | string, quality = 0.7, maxWidth = 1200): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = typeof input === 'string' ? input : URL.createObjectURL(input);
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      if (typeof input !== 'string') URL.revokeObjectURL(img.src);
+
+      let { width, height } = img;
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Falha no contexto do canvas'));
+
+      // Fundo branco para imagens com transparência (ex: PNG)
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Erro na compressão da imagem'));
+        },
+        'image/jpeg',
+        quality
+      );
+    };
+    img.onerror = (err) => reject(err);
+  });
+};
+
+/**
  * Converte formato DD/MM/YYYY para YYYY-MM-DD (ISO para Banco de Dados)
  */
 const formatDateToISO = (dateStr: string | undefined): string | null => {
@@ -68,7 +111,8 @@ export const submitCadastro = async ({
     if (uploadError1) throw uploadError1;
 
     // 2. Upload do RG (frente/verso ou único)
-    const rgBlob = typeof documentos.fotoRg === 'string' ? await base64ToBlob(documentos.fotoRg) : documentos.fotoRg;
+    // Comprime a imagem antes de enviar
+    const rgBlob = await compressImage(documentos.fotoRg);
     const rgPath = `${cleanCpf}/rg.jpg`;
     const { error: uploadError2 } = await supabase.storage
       .from('documentos')
@@ -77,7 +121,7 @@ export const submitCadastro = async ({
     if (uploadError2) throw uploadError2;
 
     // 3. Upload do Comprovante de Residência
-    const resBlob = typeof documentos.fotoComprovanteResidencia === 'string' ? await base64ToBlob(documentos.fotoComprovanteResidencia) : documentos.fotoComprovanteResidencia;
+    const resBlob = await compressImage(documentos.fotoComprovanteResidencia);
     const resPath = `${cleanCpf}/residencia.jpg`;
     const { error: uploadError3 } = await supabase.storage
       .from('documentos')
@@ -89,7 +133,7 @@ export const submitCadastro = async ({
     const dependentesProcessados = await Promise.all(dependentes.map(async (dep, index) => {
       let fotoUrl = null;
       if (dep.fotoDocumento) {
-        const depBlob = typeof dep.fotoDocumento === 'string' ? await base64ToBlob(dep.fotoDocumento) : dep.fotoDocumento;
+        const depBlob = await compressImage(dep.fotoDocumento);
         const safeCpf = dep.cpf.replace(/\D/g, "") || "nocpf";
         const depPath = `${cleanCpf}/dependente_${index}_${safeCpf}.jpg`;
         
