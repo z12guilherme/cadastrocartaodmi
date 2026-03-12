@@ -1,6 +1,6 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { RegistrationData } from "@/types/registration";
-import contractPdfUrl from "@/assets/contrato.pdf"; // Importa o PDF da pasta de assets
+const contractPdfUrl = "/contrato.pdf"; // Referencia o PDF a partir da pasta 'public'
 
 /**
  * Cria um hash SHA-256 de uma string.
