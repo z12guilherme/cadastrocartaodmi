@@ -56,4 +56,4 @@ Este documento detalha as tarefas para a criação da área administrativa do si
 - [x] Instalar dependência: `npm install vite-plugin-pwa -D`
 - [x] Configurar `vite.config.ts` com o plugin PWA.
 - [x] Adicionar ícones do PWA na pasta public (`public/android/*.png`).
-- [ ] Implementar prompt de atualização de versão (SW).
+- [x] Implementar prompt de atualização de versão (SW).

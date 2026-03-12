@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound.tsx";
 import Login from './pages/admin/Login';
 import Dashboard from './pages/admin/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import { ReloadPrompt } from "./components/ReloadPrompt";
 
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <ReloadPrompt />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
