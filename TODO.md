@@ -55,5 +55,5 @@ Este documento detalha as tarefas para a criação da área administrativa do si
 ## 5. PWA (Progressive Web App)
 - [x] Instalar dependência: `npm install vite-plugin-pwa -D`
 - [x] Configurar `vite.config.ts` com o plugin PWA.
-- [x] Adicionar ícones do PWA na pasta public (`public/android/*.jpg`).
+- [x] Adicionar ícones do PWA na pasta public (`public/android/*.png`).
 - [ ] Implementar prompt de atualização de versão (SW).
