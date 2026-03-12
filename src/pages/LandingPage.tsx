@@ -37,7 +37,7 @@ const LandingPage = () => {
             <Link to="/admin/login">
               <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
                 <Lock className="w-4 h-4" />
-                <span className="hidden sm:inline">Admin</span>
+                <span className="hidden sm:inline">Área Admin</span>
               </Button>
             </Link>
             <Link to="/cadastro">
