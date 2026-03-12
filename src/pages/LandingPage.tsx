@@ -18,6 +18,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Instagram,
+  Lock,
 } from "lucide-react";
 import heroImg from "@/assets/hero-family.jpg";
 import logoDmi from "@/assets/logo-dmi.png";
@@ -32,9 +33,17 @@ const LandingPage = () => {
             <img src={logoDmi} alt="Cartão DMI" className="w-10 h-10 object-contain" />
             <span className="font-bold text-lg text-foreground">Cartão DMI</span>
           </div>
-          <Link to="/cadastro">
-            <Button className="bg-[#0EA5FF] hover:bg-[#0EA5FF]/90 text-white">Fazer Pré-Cadastro</Button>
-          </Link>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link to="/admin/login">
+              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+                <Lock className="w-4 h-4" />
+                <span className="hidden sm:inline">Admin</span>
+              </Button>
+            </Link>
+            <Link to="/cadastro">
+              <Button className="bg-[#0EA5FF] hover:bg-[#0EA5FF]/90 text-white">Fazer Pré-Cadastro</Button>
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -233,8 +242,11 @@ const LandingPage = () => {
             </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-border text-center text-sm text-muted-foreground">
+          <div className="mt-8 pt-6 border-t border-border text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
             <p>© 2026 REDEDMI. Todos os direitos reservados.</p>
+            <Link to="/admin/login" className="text-xs hover:text-foreground underline opacity-70 hover:opacity-100 transition-opacity">
+              Área Administrativa
+            </Link>
           </div>
         </div>
       </footer>
