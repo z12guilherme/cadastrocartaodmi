@@ -48,4 +48,3 @@ Esta aplicação web permite o cadastro de beneficiários e dependentes, geraç�
    ```bash
    npm run dev 
    ```
-'-'
