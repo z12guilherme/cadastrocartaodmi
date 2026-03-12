@@ -51,3 +51,9 @@ Este documento detalha as tarefas para a criação da área administrativa do si
 - [x] Validar se os dados dos cadastrados são exibidos corretamente no dashboard.
 - [x] Verificar se a contagem de inscrições está funcionando.
 - [x] Corrigir permissões de RLS para Aprovar (Update) e Reprovar (Delete).
+
+## 5. PWA (Progressive Web App)
+- [x] Instalar dependência: `npm install vite-plugin-pwa -D`
+- [x] Configurar `vite.config.ts` com o plugin PWA.
+- [x] Adicionar ícones do PWA na pasta public (`public/android/*.jpg`).
+- [ ] Implementar prompt de atualização de versão (SW).

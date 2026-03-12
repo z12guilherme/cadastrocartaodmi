@@ -22,6 +22,7 @@ Esta aplicação web permite o cadastro de beneficiários e dependentes, geraç�
   - Visualização detalhada da ficha do beneficiário (Dados, Documentos, Dependentes).
   - Ações de **Aprovar** ou **Reprovar** (Excluir) cadastros.
 - **Autenticação Segura**: Acesso restrito via E-mail e Senha.
+- **PWA (Progressive Web App)**: Aplicativo instalável e com suporte offline.
 
 ## Tecnologias Utilizadas
 
