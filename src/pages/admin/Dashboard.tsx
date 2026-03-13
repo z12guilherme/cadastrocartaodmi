@@ -2,6 +2,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { X, FileText, Image as ImageIcon, User, Loader2, Check, AlertTriangle } from 'lucide-react';
+import { generateContractPdf } from '@/components/registration/pdf';
+import { RegistrationData } from '@/types/registration';
 
 interface Inscricao {
   id: string;
@@ -17,7 +19,15 @@ interface Inscricao {
   status: string;
   foto_url: string; // Caminho do RG
   anexo_documento_url: string; // Caminho do Contrato
+  assinatura_url?: string; // Caminho da Assinatura
+  comprovante_pagamento_url?: string;
   observacoes: string;
+  naturalidade?: string;
+  estado_civil?: string;
+  cargo?: string;
+  metodo_pagamento?: string;
+  dia_vencimento?: string;
+  protocolo?: string;
 }
 
 export default function Dashboard() {
@@ -90,6 +100,18 @@ export default function Dashboard() {
         const { data: resData } = await supabase.storage.from('documentos').createSignedUrl(`${cleanCpf}/residencia.jpg`, 3600);
         if (resData) urls.residencia = resData.signedUrl;
 
+        // Assinatura
+        if (selectedInscricao.assinatura_url) {
+            const { data: sigData } = await supabase.storage.from('documentos').createSignedUrl(selectedInscricao.assinatura_url, 3600);
+            if (sigData) urls.assinatura = sigData.signedUrl;
+        }
+
+        // Comprovante Pagamento
+        if (selectedInscricao.comprovante_pagamento_url) {
+            const { data: cpData } = await supabase.storage.from('documentos').createSignedUrl(selectedInscricao.comprovante_pagamento_url, 3600);
+            if (cpData) urls.comprovantePagamento = cpData.signedUrl;
+        }
+
         // Tenta buscar imagens dos dependentes se houver JSON nas observações
         if (selectedInscricao.observacoes && selectedInscricao.observacoes.startsWith('[')) {
           try {
@@ -131,11 +153,83 @@ export default function Dashboard() {
     navigate('/admin/login');
   };
 
+  // Função auxiliar para converter Blob para Base64 (necessário para o gerador de PDF)
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
   const handleUpdateStatus = async (id: string, status: 'aprovado' | 'pendente') => {
     setIsSubmitting(true);
+
+    let updateData: any = { status };
+
+    // SE FOR APROVAR: Gerar Contrato
+    if (status === 'aprovado' && selectedInscricao) {
+        try {
+            if (!selectedInscricao.assinatura_url) {
+                throw new Error("Assinatura do cliente não encontrada.");
+            }
+
+            // 1. Baixar a imagem da assinatura
+            const { data: sigBlob, error: sigError } = await supabase.storage
+                .from('documentos')
+                .download(selectedInscricao.assinatura_url);
+            
+            if (sigError || !sigBlob) throw new Error("Erro ao baixar assinatura para gerar contrato.");
+            
+            const sigBase64 = await blobToBase64(sigBlob);
+
+            // 2. Montar objeto RegistrationData para o gerador de PDF
+            // Precisamos reconstruir a estrutura que o PDF espera
+            const regData: RegistrationData = {
+                titular: {
+                    nomeCompleto: selectedInscricao.nome_completo,
+                    cpf: selectedInscricao.cpf,
+                    rg: selectedInscricao.rg,
+                    dataNascimento: selectedInscricao.data_nascimento, // formato YYYY-MM-DD funciona no PDF? O pdf.ts usa JSON.stringify, mas vamos checar.
+                    // O pdf.ts usa apenas nome e CPF visíveis, o resto é hash.
+                    // Mas para garantir integridade, passamos o que temos.
+                    naturalidade: selectedInscricao.naturalidade || '',
+                    estadoCivil: selectedInscricao.estado_civil || '',
+                    profissao: selectedInscricao.cargo || '',
+                    telefone: selectedInscricao.telefone,
+                    email: selectedInscricao.email,
+                    // Endereço no banco é string única, no PDF não é usado explicitamente nos campos de texto desenhados (apenas Hash), 
+                    // mas vamos passar campos vazios obrigatórios para satisfazer o TS
+                    cep: '', logradouro: selectedInscricao.endereco, numero: '', bairro: '', cidade: '', uf: ''
+                },
+                documentos: { fotoRg: '', fotoComprovanteResidencia: '' }, // Não usado no PDF
+                dependentes: [] // Não usado no PDF atual (só titular assina)
+            };
+
+            // 3. Gerar PDF
+            const pdfBytes = await generateContractPdf(regData, sigBase64);
+            const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
+
+            // 4. Upload do Contrato Gerado
+            const cleanCpf = selectedInscricao.cpf.replace(/\D/g, "");
+            const contractPath = `${cleanCpf}/contrato_final.pdf`;
+            
+            await supabase.storage.from('documentos').upload(contractPath, pdfBlob, { upsert: true });
+
+            updateData.anexo_documento_url = contractPath;
+
+        } catch (error: any) {
+            console.error("Erro ao gerar contrato:", error);
+            alert(`Erro ao gerar contrato: ${error.message}`);
+            setIsSubmitting(false);
+            return;
+        }
+    }
+
     const { error } = await supabase
       .from('inscricoes')
-      .update({ status })
+      .update(updateData)
       .eq('id', id);
 
     if (error) {
@@ -319,6 +413,10 @@ export default function Dashboard() {
                     <div className="bg-gray-50 p-4 rounded-lg space-y-3 border border-gray-100">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
+                          <label className="text-xs text-gray-500 block">Protocolo</label>
+                          <span className="text-sm font-bold text-blue-600 select-all">{selectedInscricao.protocolo || '-'}</span>
+                        </div>
+                        <div>
                           <label className="text-xs text-gray-500 block">Nome Completo</label>
                           <span className="text-sm font-medium text-gray-900">{selectedInscricao.nome_completo}</span>
                         </div>
@@ -346,7 +444,7 @@ export default function Dashboard() {
                       </div>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
+                        <div className="sm:col-span-1">
                           <label className="text-xs text-gray-500 block">Telefone</label>
                           <span className="text-sm font-medium text-gray-900">{selectedInscricao.telefone || '-'}</span>
                         </div>
@@ -355,8 +453,24 @@ export default function Dashboard() {
                           <span className="text-sm font-medium text-gray-900 break-all">{selectedInscricao.email || '-'}</span>
                         </div>
                         <div>
-                          <label className="text-xs text-gray-500 block">Valor</label>
-                          <span className="text-sm font-medium text-gray-900">{selectedInscricao.valor || '-'}</span>
+                          <label className="text-xs text-gray-500 block">Valor do Plano</label>
+                          <span className="text-lg font-bold text-green-600">{selectedInscricao.valor || '-'}</span>
+                        </div>
+                      </div>
+
+                      {/* Dados Financeiros */}
+                      <div className="pt-2 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs text-gray-500 block">Forma de Pagamento (Adesão)</label>
+                          <span className="text-sm font-medium text-gray-900 capitalize">
+                            {selectedInscricao.metodo_pagamento || 'PIX'}
+                          </span>
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 block">Dia Vencimento (Boleto)</label>
+                          <span className="text-sm font-medium text-gray-900">
+                            {selectedInscricao.dia_vencimento ? `Dia ${selectedInscricao.dia_vencimento}` : '-'}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -419,7 +533,11 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900">Contrato Assinado</p>
-                          <p className="text-xs text-gray-500">PDF Gerado automaticamente</p>
+                          {selectedInscricao.status === 'pendente' ? (
+                             <p className="text-xs text-amber-600 font-medium">Será gerado ao aprovar</p>
+                          ) : (
+                             <p className="text-xs text-gray-500">PDF Disponível</p>
+                          )}
                         </div>
                       </div>
                       {imageUrls.contrato ? (
@@ -432,7 +550,7 @@ export default function Dashboard() {
                           Abrir PDF
                         </a>
                       ) : (
-                        <span className="text-xs text-gray-400">Carregando...</span>
+                        <span className="text-xs text-gray-400">-</span>
                       )}
                     </div>
 
@@ -473,6 +591,38 @@ export default function Dashboard() {
                         )}
                       </div>
                     </div>
+
+                    {/* Comprovante PIX */}
+                    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50/50">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="bg-blue-100 p-2 rounded-lg">
+                          <FileText className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <p className="text-sm font-medium text-gray-900">Comprovante PIX</p>
+                      </div>
+                      <div className="bg-white rounded-lg overflow-hidden h-48 flex items-center justify-center border border-gray-100">
+                        {imageUrls.comprovantePagamento ? (
+                          <a href={imageUrls.comprovantePagamento} target="_blank" rel="noopener noreferrer">
+                            <img src={imageUrls.comprovantePagamento} alt="Comprovante" className="h-full w-full object-contain hover:scale-105 transition-transform duration-300" />
+                          </a>
+                        ) : (
+                          <span className="text-xs text-gray-400">Não anexado</span>
+                        )}
+                      </div>
+                    </div>
+
+
+                    {/* Assinatura (Preview) */}
+                    <div className="border border-gray-200 rounded-lg p-4">
+                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Assinatura Coletada</p>
+                       <div className="bg-white border border-gray-100 rounded p-2 h-20 flex items-center justify-center">
+                         {imageUrls.assinatura ? (
+                            <img src={imageUrls.assinatura} alt="Assinatura" className="max-h-full max-w-full object-contain" />
+                         ) : (
+                            <span className="text-xs text-gray-400">Sem assinatura</span>
+                         )}
+                       </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -499,7 +649,7 @@ export default function Dashboard() {
                   disabled={isSubmitting}
                   className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center w-36"
                 >
-                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4 mr-2"/> Aprovar</>}
+                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4 mr-2"/> Confirmar Pgto</>}
                 </button>
               )}
               {selectedInscricao.status === 'aprovado' && (

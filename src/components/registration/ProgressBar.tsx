@@ -5,7 +5,7 @@ interface ProgressBarProps {
   totalSteps: number;
 }
 
-const stepLabels = ["Dados", "Documentos", "Dependentes", "Resumo", "Assinatura"];
+const stepLabels = ["Dados", "Documentos", "Dependentes", "Resumo", "Pagamento", "Assinatura"];
 
 const ProgressBar = ({ currentStep, totalSteps }: ProgressBarProps) => {
   return (

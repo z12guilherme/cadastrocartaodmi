@@ -8,6 +8,7 @@ import Cadastro from "./pages/Cadastro.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Login from './pages/admin/Login';
 import Dashboard from './pages/admin/Dashboard';
+import ConsultaStatus from './pages/ConsultaStatus';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ReloadPrompt } from "./components/ReloadPrompt";
 
@@ -23,6 +24,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/cadastro" element={<Cadastro />} />
+          <Route path="/consulta" element={<ConsultaStatus />} />
           <Route path="/admin/login" element={<Login />} />
           
           {/* Rotas Protegidas */}

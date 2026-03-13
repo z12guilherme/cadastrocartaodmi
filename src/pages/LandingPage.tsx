@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Instagram,
   Lock,
+  Search,
 } from "lucide-react";
 import heroImg from "@/assets/hero-family.jpg";
 import logoDmi from "@/assets/logo-dmi.png";
@@ -38,6 +39,12 @@ const LandingPage = () => {
               <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
                 <Lock className="w-4 h-4" />
                 <span className="hidden sm:inline">Área Admin</span>
+              </Button>
+            </Link>
+            <Link to="/consulta">
+              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+                <Search className="w-4 h-4" />
+                <span className="hidden sm:inline">Consultar Status</span>
               </Button>
             </Link>
             <Link to="/cadastro">
@@ -81,6 +88,11 @@ const LandingPage = () => {
                 <Link to="/cadastro">
                   <button className="bg-[#0EA5FF] hover:bg-[#0EA5FF]/80 text-white px-8 py-3 rounded-full font-medium transition-all animate__animated animate__fadeInBottomLeft">
                     Solicitar Cartão
+                  </button>
+                </Link>
+                <Link to="/consulta">
+                  <button className="border-2 border-white text-white hover:bg-white hover:text-[#3532EA] px-8 py-3 rounded-full font-medium transition-all animate__animated animate__fadeInBottomRight">
+                    Consultar Status
                   </button>
                 </Link>
                 <a href="https://play.google.com/store/apps/details?id=com.sigpaf.dmicliente&pcampaignid=web_share" target="_blank" rel="noopener noreferrer">

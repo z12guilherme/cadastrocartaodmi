@@ -3,7 +3,7 @@ import { RegistrationData } from "@/types/registration";
 
 interface SubmitProps {
   data: RegistrationData;
-  contractPdf: Blob;
+  signatureBase64: string;
 }
 
 /**
@@ -89,9 +89,9 @@ const cleanAddressPart = (part: string | undefined | null) => {
  */
 export const submitCadastro = async ({
   data,
-  contractPdf,
-}: SubmitProps): Promise<void> => {
-  const { titular, documentos, dependentes } = data;
+  signatureBase64,
+}: SubmitProps): Promise<string> => {
+  const { titular, documentos, dependentes, comprovantePagamento, metodoPagamento, diaVencimento } = data as any;
 
   // Validação básica
   if (!documentos.fotoRg || !documentos.fotoComprovanteResidencia) {
@@ -101,14 +101,20 @@ export const submitCadastro = async ({
   // Remove caracteres não numéricos do CPF para usar como nome de pasta/arquivo
   const cleanCpf = titular.cpf.replace(/\D/g, "");
 
+  // Gera Protocolo: DATA (YYYYMMDD) + 4 dígitos aleatórios
+  const datePart = new Date().toISOString().slice(0,10).replace(/-/g, '');
+  const randomPart = Math.floor(1000 + Math.random() * 9000);
+  const protocolo = `${datePart}${randomPart}`; // Ex: 202310251234
+
   try {
-    // 1. Upload do Contrato PDF
-    const contractPath = `${cleanCpf}/contrato.pdf`;
-    const { error: uploadError1 } = await supabase.storage
+    // 1. Upload da Assinatura (PNG)
+    const signatureBlob = await base64ToBlob(signatureBase64);
+    const signaturePath = `${cleanCpf}/assinatura.png`;
+    const { error: uploadSigError } = await supabase.storage
       .from('documentos')
-      .upload(contractPath, contractPdf, { upsert: true });
+      .upload(signaturePath, signatureBlob, { upsert: true });
     
-    if (uploadError1) throw uploadError1;
+    if (uploadSigError) throw uploadSigError;
 
     // 2. Upload do RG (frente/verso ou único)
     // Comprime a imagem antes de enviar
@@ -151,6 +157,17 @@ export const submitCadastro = async ({
       };
     }));
 
+    // 3.8 Upload Comprovante Pagamento
+    let comprovantePath = null;
+    if (comprovantePagamento) {
+        const cpBlob = await compressImage(comprovantePagamento);
+        comprovantePath = `${cleanCpf}/comprovante_pagamento.jpg`;
+        const { error: cpError } = await supabase.storage
+          .from('documentos')
+          .upload(comprovantePath, cpBlob, { upsert: true });
+        if (cpError) throw cpError;
+    }
+
     // --- Regra de Negócio para o Valor da Mensalidade ---
     let valorTotal = 0;
     const numPessoas = 1 + dependentesProcessados.length;
@@ -184,19 +201,44 @@ export const submitCadastro = async ({
           .filter(Boolean)
           .join(' - '),
         foto_url: rgPath,
-        anexo_documento_url: contractPath,
+        assinatura_url: signaturePath, // Salva o caminho da assinatura
         cargo: titular.profissao,
         valor: valorFormatado,
         // Salva os dependentes como JSON string para manter os dados estruturados com os links das fotos
         observacoes:
           dependentesProcessados.length > 0 ? JSON.stringify(dependentesProcessados) : '',
-        status: 'pendente'
+        status: 'pendente',
+        protocolo: protocolo,
+        comprovante_pagamento_url: comprovantePath,
+        metodo_pagamento: metodoPagamento,
+        dia_vencimento: diaVencimento
       });
 
     if (insertError) throw insertError;
+    
+    return protocolo;
 
   } catch (error: any) {
     console.error("Erro no cadastro:", error.message || error);
     throw new Error(error.message || "Erro ao processar cadastro.");
   }
+};
+
+export const consultarStatusPorProtocolo = async (protocolo: string) => {
+  const { data, error } = await supabase
+    .from('inscricoes')
+    .select('nome_completo, status, anexo_documento_url, valor')
+    .eq('protocolo', protocolo)
+    .single();
+
+  if (error) throw error;
+
+  // Se aprovado, gerar link de download
+  let downloadUrl = null;
+  if (data.status === 'aprovado' && data.anexo_documento_url) {
+    const { data: urlData } = await supabase.storage.from('documentos').createSignedUrl(data.anexo_documento_url, 3600);
+    if (urlData) downloadUrl = urlData.signedUrl;
+  }
+
+  return { ...data, downloadUrl };
 };

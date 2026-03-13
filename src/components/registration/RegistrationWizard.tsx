@@ -7,6 +7,7 @@ import Step3Dependentes from "./Step3Dependentes";
 import Step4Resumo from "./Step4Resumo";
 import Step5Assinatura from "./Step5Assinatura";
 import Step6Sucesso from "./Step6Sucesso"; // Renomeadoo
+import StepPagamento from "./StepPagamento"; // Novo componente
 import {
   RegistrationData,
   initialTitular,
@@ -14,7 +15,7 @@ import {
 } from "@/types/registration";
 import logoDmi from "@/assets/logo-dmi.png";
 import { submitCadastro } from "@/services/api";
-import { generateContractPdf, savePdfFile } from "./pdf";
+// import { generateContractPdf, savePdfFile } from "./pdf"; // Não gera mais no client
 import { toast } from "sonner";
 
 const RegistrationWizard = () => {
@@ -23,30 +24,29 @@ const RegistrationWizard = () => {
     titular: initialTitular,
     documentos: initialDocumentos,
     dependentes: [],
+    // @ts-ignore - Adicionando campo dinamicamente se não estiver no tipo
+    comprovantePagamento: null, 
+    metodoPagamento: "",
+    diaVencimento: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [finalContract, setFinalContract] = useState<Blob | null>(null);
+  // const [finalContract, setFinalContract] = useState<Blob | null>(null);
+  const [protocolo, setProtocolo] = useState<string | null>(null);
 
   const handleSignAndSubmit = async (signatureImageBase64: string) => {
     setIsSubmitting(true);
     try {
-      // 1. Gera o PDF com a assinatura e o hash
-      toast.info("Gerando contrato, por favor aguarde...");
-      const pdfBytes = await generateContractPdf(data, signatureImageBase64);
-      const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
-      setFinalContract(pdfBlob);
+      // 1. Envia os dados e a assinatura para a API
+      toast.info("Enviando solicitação de cadastro...");
+      
+      // Agora passamos a assinatura pura, o contrato será gerado pelo Admin após pagamento
+      const novoProtocolo = await submitCadastro({ data, signatureBase64: signatureImageBase64 });
+      setProtocolo(novoProtocolo);
 
-      // 2. Envia os dados e o contrato para a API
-      toast.info("Enviando seu cadastro...");
-      await submitCadastro({ data, contractPdf: pdfBlob });
-      toast.success("Cadastro enviado com sucesso!");
+      toast.success("Solicitação enviada com sucesso!");
 
-      // 3. Inicia o download para o cliente
-      savePdfFile(pdfBytes, `contrato-dmi-${data.titular.cpf}.pdf`);
-      toast.info("O download do seu contrato foi iniciado.");
-
-      // 4. Avança para a tela de sucesso
-      setStep(6);
+      // 4. Avança para a tela de sucesso (agora passo 7)
+      setStep(7);
     } catch (error: any) {
       console.error("Falha ao finalizar cadastro:", error);
       toast.error("Erro ao finalizar cadastro", {
@@ -62,8 +62,13 @@ const RegistrationWizard = () => {
       titular: initialTitular,
       documentos: initialDocumentos,
       dependentes: [],
+      // @ts-ignore
+      comprovantePagamento: null,
+      metodoPagamento: "",
+      diaVencimento: "",
     });
-    setFinalContract(null);
+    // setFinalContract(null);
+    setProtocolo(null);
     setStep(1);
   };
 
@@ -84,9 +89,9 @@ const RegistrationWizard = () => {
       </header>
 
       <main className="container max-w-2xl mx-auto px-4 py-6 pb-12">
-        {step < 6 && <ProgressBar currentStep={step} totalSteps={5} />}
+        {step < 7 && <ProgressBar currentStep={step} totalSteps={6} />}
 
-        <div className={step < 6 ? "wizard-card" : ""}>
+        <div className={step < 7 ? "wizard-card" : ""}>
           {step === 1 && (
             <Step1Titular
               data={data.titular}
@@ -118,13 +123,26 @@ const RegistrationWizard = () => {
             />
           )}
           {step === 5 && (
+            <StepPagamento
+              // @ts-ignore
+              values={{
+                comprovantePagamento: (data as any).comprovantePagamento,
+                metodoPagamento: (data as any).metodoPagamento,
+                diaVencimento: (data as any).diaVencimento,
+              }}
+              onChange={(field, value) => setData({ ...data, [field]: value })}
+              onNext={() => setStep(6)}
+              onBack={() => setStep(4)}
+            />
+          )}
+          {step === 6 && (
             <Step5Assinatura
               onConfirm={handleSignAndSubmit}
-              onBack={() => setStep(4)}
+              onBack={() => setStep(5)}
               isSubmitting={isSubmitting}
             />
           )}
-          {step === 6 && <Step6Sucesso onReset={handleReset} contractBlob={finalContract} />}
+          {step === 7 && <Step6Sucesso onReset={handleReset} protocolo={protocolo} />}
         </div>
       </main>
     </div>
