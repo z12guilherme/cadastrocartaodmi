@@ -6,7 +6,7 @@ import Step2Documentos from "./Step2Documentos";
 import Step3Dependentes from "./Step3Dependentes";
 import Step4Resumo from "./Step4Resumo";
 import Step5Assinatura from "./Step5Assinatura";
-import Step6Sucesso from "./Step6Sucesso"; // Renomeado
+import Step6Sucesso from "./Step6Sucesso"; // Renomeadoo
 import {
   RegistrationData,
   initialTitular,
