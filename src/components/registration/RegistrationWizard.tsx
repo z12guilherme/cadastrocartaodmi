@@ -14,7 +14,7 @@ import {
 } from "@/types/registration";
 import logoDmi from "@/assets/logo-dmi.png";
 import { submitCadastro } from "@/services/api";
-import { generateContractPdf } from "@/services/pdf";
+import { generateContractPdf, savePdfFile } from "./pdf";
 import { toast } from "sonner";
 
 const RegistrationWizard = () => {
@@ -47,12 +47,7 @@ const RegistrationWizard = () => {
       }
 
       // 3. Inicia o download para o cliente
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(pdfBlob);
-      link.download = `contrato-dmi-${data.titular.cpf}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      savePdfFile(pdfBytes, `contrato-dmi-${data.titular.cpf}.pdf`);
       toast.info("O download do seu contrato foi iniciado.");
 
       // 4. Avança para a tela de sucesso

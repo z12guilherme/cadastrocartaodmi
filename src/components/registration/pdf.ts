@@ -72,18 +72,14 @@ export const generateContractPdf = async (
   }
   const existingPdfBytes = await response.arrayBuffer();
 
-  // Verifica se o arquivo começa com o cabeçalho de PDF "%PDF-"
-  const header = new Uint8Array(existingPdfBytes.slice(0, 5));
-  const headerStr = String.fromCharCode(...header);
-  
   let pdfDoc: PDFDocument;
 
-  if (headerStr !== '%PDF-') {
-    console.warn("Arquivo de contrato contém texto (OCR). Convertendo para PDF dinamicamente...");
+  try {
+    // Tenta carregar como PDF binário. Se falhar (ex: arquivo de texto/OCR), cai no catch.
+    pdfDoc = await PDFDocument.load(existingPdfBytes, { ignoreEncryption: true });
+  } catch (error) {
+    console.warn("O arquivo não é um PDF binário padrão. Tentando converter a partir do texto (OCR)...", error);
     pdfDoc = await regeneratePdfFromOCR(existingPdfBytes);
-  } else {
-    // Carrega o documento PDF binário normal
-    pdfDoc = await PDFDocument.load(existingPdfBytes);
   }
 
   const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -158,4 +154,20 @@ export const generateContractPdf = async (
 
   // Salva o PDF e retorna os bytes
   return await pdfDoc.save();
+};
+
+/**
+ * Helper para iniciar o download do PDF gerado no navegador.
+ * @param pdfBytes Os bytes do PDF (retorno de generateContractPdf).
+ * @param fileName O nome do arquivo a ser salvo (ex: "contrato.pdf").
+ */
+export const savePdfFile = (pdfBytes: Uint8Array, fileName: string) => {
+  const blob = new Blob([pdfBytes], { type: "application/pdf" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
 };
