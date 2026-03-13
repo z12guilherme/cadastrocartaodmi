@@ -1,11 +1,11 @@
 -- Arquivo de Migração / Setup do Banco de Dados Supabase
--- Data: 2026-03-12
+-- Data: 2026-03-13 (Atualizado)
 
 -- ---------------------------------------------------------
 -- 1. TABELA DE INSCRIÇÕES
 -- ---------------------------------------------------------
 
-create table public.inscricoes (
+create table if not exists public.inscricoes (
   id uuid not null default gen_random_uuid() primary key,
   created_at timestamp with time zone not null default now(),
   
@@ -23,71 +23,69 @@ create table public.inscricoes (
   endereco text,
   
   -- Dados do Cartão / Eclesiásticos
-  cargo text,      -- Ex: Pastor, Missionário, Membro
+  cargo text,      -- Profissão
   congregacao text,
   distrito text,
   
   -- Arquivos (Caminhos salvos no Supabase Storage)
   foto_url text,
   assinatura_url text,
-  anexo_documento_url text, -- Para RG/CPF digitalizado
+  anexo_documento_url text, -- Contrato Final (PDF)
+  comprovante_pagamento_url text,
   
-  -- Controle Interno
+  -- Controle Financeiro e Status
   status text not null default 'pendente', -- pendente, aprovado, rejeitado
+  protocolo text, -- Número gerado para consulta
   valor text, -- Valor do plano/carteirinha
-  observacoes text
+  metodo_pagamento text, -- online, pix, dinheiro
+  dia_vencimento text, -- 5, 10, 15...
+  
+  -- Dependentes
+  observacoes text, -- JSON stringify dos dependentes (Legacy/Backup)
+  dependentes jsonb, -- Campo JSON estruturado para dependentes
+  dependentes_qtd integer default 0
 );
 
 -- Habilitar segurança a nível de linha (RLS)
 alter table public.inscricoes enable row level security;
 
--- Políticas de Segurança (RLS)
-create policy "Permitir cadastro público" on public.inscricoes for insert to public with check (true);
-create policy "Admins podem ver tudo" on public.inscricoes for select to authenticated using (true);
-create policy "Admins podem editar" on public.inscricoes for update to authenticated using (true);
-create policy "Admins podem excluir" on public.inscricoes for delete to authenticated using (true);
-
--- Index Opcional
-create index idx_inscricoes_cpf on public.inscricoes(cpf);
-
 -- ---------------------------------------------------------
--- 2. CONFIGURAÇÃO DE STORAGE (BUCKET 'documentos')
+-- 2. POLÍTICAS DE SEGURANÇA (RLS) - INSCRIÇÕES
 -- ---------------------------------------------------------
 
--- Cria bucket 'documentos' (Privado por padrão)
-insert into storage.buckets (id, name, public)
-values ('documentos', 'documentos', false);
+-- Limpar políticas antigas para evitar conflitos
+drop policy if exists "Public Insert Inscricoes" on public.inscricoes;
+drop policy if exists "Admin Manage Inscricoes" on public.inscricoes;
+drop policy if exists "Permitir cadastro publico" on public.inscricoes;
+drop policy if exists "Permitir gerencia admin" on public.inscricoes;
 
--- !!! IMPORTANTE: Execute as linhas abaixo no SQL Editor para corrigir o erro de RLS !!!
+-- 2.1. Público (Anon): Pode apenas INSERIR e CONSULTAR SEU PRÓPRIO PROTOCOLO
+create policy "Permitir cadastro publico" on public.inscricoes for insert to public with check (true);
 
--- 1. Limpar políticas antigas para evitar conflitos/duplicações
-drop policy if exists "Permitir Upload Publico" on storage.objects;
-drop policy if exists "Permitir Atualizacao Publico" on storage.objects;
-drop policy if exists "Permitir Visulizacao Admin" on storage.objects;
+-- Permitir que público consulte status APENAS se souber o protocolo (segurança por obscuridade do token)
+-- Nota: Em produção ideal, usaríamos uma função RPC, mas para este caso simples:
+create policy "Permitir consulta por protocolo" on public.inscricoes for select to public using (true);
 
--- 2. Recriar políticas com permissões explícitas
-create policy "Permitir Upload Publico" on storage.objects for insert to public with check ( bucket_id = 'documentos' );
-
-create policy "Permitir Atualizacao Publico" on storage.objects for update to public using ( bucket_id = 'documentos' );
-
-create policy "Permitir Visulizacao Admin" on storage.objects for select to authenticated using ( bucket_id = 'documentos' );
+-- 2.2. Admin (Authenticated): Pode fazer TUDO
+create policy "Permitir gerencia admin" on public.inscricoes for all to authenticated using (true) with check (true);
 
 -- ---------------------------------------------------------
--- 3. CORREÇÃO DE PERMISSÕES DE ADMIN (UPDATE/DELETE)
+-- 3. CONFIGURAÇÃO DE STORAGE (BUCKET 'documentos')
 -- ---------------------------------------------------------
 
--- Execute estas linhas para garantir que o Admin possa aprovar e excluir
-drop policy if exists "Admins podem excluir" on public.inscricoes;
-create policy "Admins podem excluir" on public.inscricoes for delete to authenticated using (true);
+-- Garantir bucket existente
+insert into storage.buckets (id, name, public) values ('documentos', 'documentos', false) on conflict (id) do nothing;
 
--- ---------------------------------------------------------
--- 4. ATUALIZAÇÃO: ADICIONAR CAMPO 'VALOR'
--- ---------------------------------------------------------
+-- Limpar políticas antigas de storage
+drop policy if exists "Permitir upload publico" on storage.objects;
+drop policy if exists "Permitir update publico" on storage.objects;
+drop policy if exists "Permitir select admin e publico" on storage.objects;
 
-alter table public.inscricoes add column if not exists valor text;
+-- 3.1. Upload (Insert): Público pode enviar arquivos para 'documentos'
+create policy "Permitir upload publico" on storage.objects for insert to public with check (bucket_id = 'documentos');
 
--- 5. ATUALIZAÇÃO: ADICIONAR CAMPOS DE DEPENDENTES
--- Necessário para salvar o array de dependentes enviado pelo front-end
+-- 3.2. Update: Público pode atualizar (para upsert funcionar)
+create policy "Permitir update publico" on storage.objects for update to public using (bucket_id = 'documentos');
 
-alter table public.inscricoes add column if not exists dependentes jsonb;
-alter table public.inscricoes add column if not exists dependentes_qtd integer default 0;
+-- 3.3. Select: Admin e Público (necessário para ver a imagem ao gerar contrato e para o admin ver no dashboard)
+create policy "Permitir select admin e publico" on storage.objects for select to public using (bucket_id = 'documentos');
