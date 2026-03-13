@@ -28,9 +28,18 @@ export const generateContractPdf = async (
   signatureImageBase64: string
 ): Promise<Uint8Array> => {
   // Carrega o template do contrato da pasta de assets
-  const existingPdfBytes = await fetch(contractPdfUrl).then((res) =>
-    res.arrayBuffer()
-  );
+  const response = await fetch(contractPdfUrl);
+  if (!response.ok) {
+    throw new Error(`Falha ao baixar o modelo do contrato: ${response.status} ${response.statusText}`);
+  }
+  const existingPdfBytes = await response.arrayBuffer();
+
+  // Verifica se o arquivo começa com o cabeçalho de PDF "%PDF-"
+  const header = new Uint8Array(existingPdfBytes.slice(0, 5));
+  const headerStr = String.fromCharCode(...header);
+  if (headerStr !== '%PDF-') {
+    throw new Error('O arquivo carregado não é um PDF válido. Provavelmente é uma página de erro ou o arquivo está corrompido na pasta src/assets.');
+  }
 
   // Carrega o documento PDF
   const pdfDoc = await PDFDocument.load(existingPdfBytes);
