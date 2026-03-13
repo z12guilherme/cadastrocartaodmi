@@ -592,13 +592,13 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    {/* Comprovante PIX */}
+                    {/* Comprovante de Pagamento */}
                     <div className="border border-blue-200 rounded-lg p-4 bg-blue-50/50">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="bg-blue-100 p-2 rounded-lg">
                           <FileText className="h-6 w-6 text-blue-600" />
                         </div>
-                        <p className="text-sm font-medium text-gray-900">Comprovante PIX</p>
+                        <p className="text-sm font-medium text-gray-900">Comprovante de Pagamento</p>
                       </div>
                       <div className="bg-white rounded-lg overflow-hidden h-48 flex items-center justify-center border border-gray-100">
                         {imageUrls.comprovantePagamento ? (
