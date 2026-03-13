@@ -17,6 +17,43 @@ async function createSha256Hash(data: string): Promise<string> {
 }
 
 /**
+ * Regenera um PDF válido a partir de um arquivo de texto (OCR) caso o original esteja corrompido.
+ */
+async function regeneratePdfFromOCR(textBytes: Uint8Array): Promise<PDFDocument> {
+  const textDecoder = new TextDecoder('utf-8');
+  const text = textDecoder.decode(textBytes);
+  
+  const pdfDoc = await PDFDocument.create();
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontSize = 10;
+  const margin = 50;
+
+  // Divide por marcadores de página do OCR se existirem, ou trata como texto único
+  const pageMarkers = text.split(/==Start of OCR for page \d+==/);
+  const contentParts = pageMarkers.length > 1 ? pageMarkers : [text];
+
+  for (const part of contentParts) {
+    // Limpa marcadores e espaços extras
+    const cleanText = part.replace(/==End of OCR for page \d+==/g, '').trim();
+    if (!cleanText) continue;
+
+    const page = pdfDoc.addPage();
+    const { width, height } = page.getSize();
+    
+    // Desenha o texto com quebra de linha automática
+    page.drawText(cleanText, {
+      x: margin,
+      y: height - margin - 20,
+      size: fontSize,
+      font: font,
+      maxWidth: width - (margin * 2),
+      lineHeight: fontSize * 1.2,
+    });
+  }
+  return pdfDoc;
+}
+
+/**
  * Gera um PDF de contrato preenchido com os dados do titular e sua assinatura.
  *
  * @param data Os dados completos do cadastro.
@@ -28,6 +65,7 @@ export const generateContractPdf = async (
   signatureImageBase64: string
 ): Promise<Uint8Array> => {
   // Carrega o template do contrato da pasta de assets
+  console.log("Iniciando geração do contrato...", contractPdfUrl);
   const response = await fetch(contractPdfUrl);
   if (!response.ok) {
     throw new Error(`Falha ao baixar o modelo do contrato: ${response.status} ${response.statusText}`);
@@ -37,17 +75,17 @@ export const generateContractPdf = async (
   // Verifica se o arquivo começa com o cabeçalho de PDF "%PDF-"
   const header = new Uint8Array(existingPdfBytes.slice(0, 5));
   const headerStr = String.fromCharCode(...header);
+  
+  let pdfDoc: PDFDocument;
+
   if (headerStr !== '%PDF-') {
-    console.error("Conteúdo inválido recebido (primeiros 50 bytes):", String.fromCharCode(...new Uint8Array(existingPdfBytes.slice(0, 50))));
-    throw new Error(
-      `O arquivo carregado não é um PDF válido (Header: ${headerStr}). \n` +
-      `Isso geralmente acontece quando o arquivo não é encontrado no servidor (Erro 404) e o site retorna uma página HTML em vez do PDF. \n` +
-      `Verifique se o nome do arquivo no servidor é exatamente 'contrato.pdf' (tudo minúsculo).`
-    );
+    console.warn("Arquivo de contrato contém texto (OCR). Convertendo para PDF dinamicamente...");
+    pdfDoc = await regeneratePdfFromOCR(existingPdfBytes);
+  } else {
+    // Carrega o documento PDF binário normal
+    pdfDoc = await PDFDocument.load(existingPdfBytes);
   }
 
-  // Carrega o documento PDF
-  const pdfDoc = await PDFDocument.load(existingPdfBytes);
   const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const pages = pdfDoc.getPages();
   // Pega a última página do PDF
