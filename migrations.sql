@@ -85,3 +85,9 @@ create policy "Admins podem excluir" on public.inscricoes for delete to authenti
 -- ---------------------------------------------------------
 
 alter table public.inscricoes add column if not exists valor text;
+
+-- 5. ATUALIZAÇÃO: ADICIONAR CAMPOS DE DEPENDENTES
+-- Necessário para salvar o array de dependentes enviado pelo front-end
+
+alter table public.inscricoes add column if not exists dependentes jsonb;
+alter table public.inscricoes add column if not exists dependentes_qtd integer default 0;

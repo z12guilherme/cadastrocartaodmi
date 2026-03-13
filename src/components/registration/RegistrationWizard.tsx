@@ -38,13 +38,8 @@ const RegistrationWizard = () => {
 
       // 2. Envia os dados e o contrato para a API
       toast.info("Enviando seu cadastro...");
-      try {
-        await submitCadastro({ data, contractPdf: pdfBlob });
-        toast.success("Cadastro enviado com sucesso!");
-      } catch (apiError) {
-        console.warn("Erro ao enviar para API (Ignorado para testes):", apiError);
-        toast.warning("Modo Teste: Falha no envio ignorada para visualização do PDF.");
-      }
+      await submitCadastro({ data, contractPdf: pdfBlob });
+      toast.success("Cadastro enviado com sucesso!");
 
       // 3. Inicia o download para o cliente
       savePdfFile(pdfBytes, `contrato-dmi-${data.titular.cpf}.pdf`);
