@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    // Permite que qualquer host (incluindo os gerados pelo ngrok) acesse o servidor de desenvolvimento.
+    // Permite que qualquer host (incluindo os gerados pelo ngrok) acesse o servidor de desenvolvimento
     // Isso é útil para testes em dispositivos móveis, mas deve ser usado com cautela.
     // Em produção, essa opção não tem efeito.
     allowedHosts: true,
