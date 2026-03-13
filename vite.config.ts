@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => ({
       devOptions: {
         enabled: true,
       },
-      includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg", "contrato.pdf"],
+      includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
       manifest: {
         name: "Cartão DMI",
         id: "/",

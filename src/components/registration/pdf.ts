@@ -38,7 +38,12 @@ export const generateContractPdf = async (
   const header = new Uint8Array(existingPdfBytes.slice(0, 5));
   const headerStr = String.fromCharCode(...header);
   if (headerStr !== '%PDF-') {
-    throw new Error('O arquivo carregado não é um PDF válido. Provavelmente é uma página de erro ou o arquivo está corrompido na pasta src/assets.');
+    console.error("Conteúdo inválido recebido (primeiros 50 bytes):", String.fromCharCode(...new Uint8Array(existingPdfBytes.slice(0, 50))));
+    throw new Error(
+      `O arquivo carregado não é um PDF válido (Header: ${headerStr}). \n` +
+      `Isso geralmente acontece quando o arquivo não é encontrado no servidor (Erro 404) e o site retorna uma página HTML em vez do PDF. \n` +
+      `Verifique se o nome do arquivo no servidor é exatamente 'contrato.pdf' (tudo minúsculo).`
+    );
   }
 
   // Carrega o documento PDF
