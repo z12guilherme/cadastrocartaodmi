@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { X, FileText, Image as ImageIcon, User, Loader2, Check, AlertTriangle } from 'lucide-react';
+import { X, FileText, Image as ImageIcon, User, Loader2, Check, AlertTriangle, Search, Users, Clock, CheckCircle, LogOut, Eye } from 'lucide-react';
 import { generateContractPdf } from '@/components/registration/pdf';
 import { RegistrationData } from '@/types/registration';
 
@@ -39,6 +39,7 @@ export default function Dashboard() {
   const [imageUrls, setImageUrls] = useState<{ [key: string]: string }>({});
   const [activeTab, setActiveTab] = useState<'pendentes' | 'aprovados'>('pendentes');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     // 1. Verifica a sessão logo ao montar o componente
@@ -276,8 +277,14 @@ export default function Dashboard() {
   const aprovadosCount = useMemo(() => inscricoes.filter(i => i.status === 'aprovado').length, [inscricoes]);
 
   const filteredInscricoes = useMemo(() => {
-    return inscricoes.filter(i => i.status === (activeTab === 'pendentes' ? 'pendente' : 'aprovado'));
-  }, [inscricoes, activeTab]);
+    return inscricoes.filter(i => {
+      const matchesTab = i.status === (activeTab === 'pendentes' ? 'pendente' : 'aprovado');
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = i.nome_completo.toLowerCase().includes(searchLower) || 
+                            (i.cpf && i.cpf.includes(searchLower));
+      return matchesTab && matchesSearch;
+    });
+  }, [inscricoes, activeTab, searchTerm]);
 
 
   return (
@@ -285,60 +292,94 @@ export default function Dashboard() {
       {/* Navbar */}
       <nav className="bg-white shadow-sm sticky top-0 z-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 justify-between items-center">
+          <div className="flex h-16 justify-between items-center border-b border-gray-100">
             <div className="flex items-center gap-2">
-              <User className="h-6 w-6 text-blue-600" />
-              <h1 className="text-xl font-bold text-gray-800">Admin DMI</h1>
+              <div className="bg-[#0EA5FF]/10 p-2 rounded-lg">
+                <Users className="h-5 w-5 text-[#0EA5FF]" />
+              </div>
+              <h1 className="text-xl font-bold text-gray-900 tracking-tight">Admin DMI</h1>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600 hidden sm:block">{userEmail}</span>
+              <div className="hidden sm:flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
+                <User className="w-4 h-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">{userEmail}</span>
+              </div>
               <button
                 onClick={handleLogout}
-                className="rounded-md bg-red-50 text-red-600 px-3 py-2 text-sm font-medium hover:bg-red-100 transition-colors"
+                className="flex items-center gap-2 rounded-lg bg-red-50 text-red-600 px-3 py-2 text-sm font-medium hover:bg-red-100 transition-colors"
               >
-                Sair
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Sair</span>
               </button>
             </div>
           </div>
         </div>
       </nav>
 
-      <main className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        {/* Header Stats */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold text-gray-900">Solicitações de Cadastro</h2>
-          <div className="flex gap-3">
-            <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 flex flex-col items-center">
-              <span className="text-xs text-gray-500 uppercase font-semibold">Total Geral</span>
-              <span className="text-xl font-bold text-blue-600">{inscricoes.length}</span>
+      <main className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+        
+        {/* Cards de Resumo */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><Users className="w-6 h-6" /></div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Total de Cadastros</p>
+              <h3 className="text-2xl font-bold text-gray-900">{inscricoes.length}</h3>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="p-3 bg-amber-50 text-amber-600 rounded-xl"><Clock className="w-6 h-6" /></div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Aguardando Aprovação</p>
+              <h3 className="text-2xl font-bold text-gray-900">{pendentesCount}</h3>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="p-3 bg-green-50 text-green-600 rounded-xl"><CheckCircle className="w-6 h-6" /></div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Aprovados</p>
+              <h3 className="text-2xl font-bold text-gray-900">{aprovadosCount}</h3>
             </div>
           </div>
         </div>
 
-        {/* Abas de Navegação */}
-        <div className="border-b border-gray-200 mb-6">
-          <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+        {/* Controles: Abas e Busca */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-2 rounded-xl border border-gray-200 shadow-sm">
+          <nav className="flex space-x-2" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('pendentes')}
-              className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+              className={`whitespace-nowrap px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors ${
                 activeTab === 'pendentes'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'bg-amber-50 text-amber-700'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
               }`}
             >
-              Pendentes <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${activeTab === 'pendentes' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}>{pendentesCount}</span>
+              Fila de Pendentes
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'pendentes' ? 'bg-amber-200/50 text-amber-800' : 'bg-gray-100 text-gray-600'}`}>{pendentesCount}</span>
             </button>
             <button
               onClick={() => setActiveTab('aprovados')}
-              className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+              className={`whitespace-nowrap px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors ${
                 activeTab === 'aprovados'
-                  ? 'border-green-500 text-green-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'bg-green-50 text-green-700'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
               }`}
             >
-              Aprovados <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${activeTab === 'aprovados' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'}`}>{aprovadosCount}</span>
+              Contratos Aprovados
+              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'aprovados' ? 'bg-green-200/50 text-green-800' : 'bg-gray-100 text-gray-600'}`}>{aprovadosCount}</span>
             </button>
           </nav>
+          
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Buscar cliente ou CPF..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0EA5FF] focus:border-transparent transition-all"
+            />
+          </div>
         </div>
 
         {/* Tabela de Inscrições */}
@@ -348,12 +389,18 @@ export default function Dashboard() {
               <Loader2 className="h-8 w-8 animate-spin mr-2" />
               Carregando inscrições...
             </div>
-          ) : inscricoes.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">Nenhuma inscrição encontrada.</div>
+          ) : filteredInscricoes.length === 0 ? (
+            <div className="p-16 flex flex-col items-center justify-center text-center">
+              <div className="bg-gray-50 p-4 rounded-full mb-4">
+                <Search className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-1">Nenhum resultado</h3>
+              <p className="text-gray-500 text-sm">Não encontramos nenhuma inscrição com esses filtros.</p>
+            </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto min-h-[400px]">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50/80">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
@@ -368,25 +415,26 @@ export default function Dashboard() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(inscricao.created_at).toLocaleDateString('pt-BR')}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                         {inscricao.nome_completo}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono">
                         {inscricao.cpf}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                          ${inscricao.status === 'aprovado' ? 'bg-green-100 text-green-800' : 
-                            inscricao.status === 'rejeitado' ? 'bg-red-100 text-red-800' : 
-                            'bg-yellow-100 text-yellow-800'}`}>
-                          {inscricao.status}
+                        <span className={`px-2.5 py-1 inline-flex text-xs font-bold rounded-full border
+                          ${inscricao.status === 'aprovado' ? 'bg-green-50 text-green-700 border-green-200' : 
+                            inscricao.status === 'rejeitado' ? 'bg-red-50 text-red-700 border-red-200' : 
+                            'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                          {inscricao.status.toUpperCase()}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button 
                           onClick={() => setSelectedInscricao(inscricao)}
-                          className="text-blue-600 hover:text-blue-900 font-semibold hover:underline"
+                          className="inline-flex items-center gap-1.5 text-[#0EA5FF] hover:text-blue-800 font-semibold text-sm transition-colors bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg"
                         >
+                          <Eye className="w-4 h-4" />
                           Ver Detalhes
                         </button>
                       </td>
@@ -401,31 +449,36 @@ export default function Dashboard() {
 
       {/* Modal de Detalhes */}
       {selectedInscricao && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 backdrop-blur-sm bg-black/40">
           <div 
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" 
+            className="absolute inset-0 transition-opacity" 
             onClick={() => setSelectedInscricao(null)}
           />
-          <div className="relative bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200 border border-gray-100">
             {/* Header Modal */}
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-              <h3 className="text-lg font-bold text-gray-900">Ficha do Cadastrado</h3>
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white z-10 shadow-sm">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Ficha Cadastral</h3>
+                <p className="text-xs text-gray-500 font-mono mt-0.5">ID: {selectedInscricao.id}</p>
+              </div>
               <button 
                 onClick={() => setSelectedInscricao(null)}
-                className="text-gray-400 hover:text-gray-500 p-1 rounded-full hover:bg-gray-200 transition-colors"
+                className="text-gray-400 hover:text-gray-700 bg-gray-50 p-2 rounded-full hover:bg-gray-200 transition-colors"
               >
                 <X className="h-6 w-6" />
               </button>
             </div>
 
             {/* Content Modal */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Dados Pessoais */}
                 <div className="space-y-6">
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Dados Pessoais</h4>
-                    <div className="bg-gray-50 p-4 rounded-lg space-y-3 border border-gray-100">
+                  <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <h4 className="text-sm font-bold text-[#0EA5FF] uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <User className="w-4 h-4" /> Dados Pessoais
+                    </h4>
+                    <div className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="text-xs text-gray-500 block">Protocolo</label>
@@ -433,7 +486,7 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <label className="text-xs text-gray-500 block">Nome Completo</label>
-                          <span className="text-sm font-medium text-gray-900">{selectedInscricao.nome_completo}</span>
+                          <span className="text-sm font-bold text-gray-900">{selectedInscricao.nome_completo}</span>
                         </div>
                         <div>
                           <label className="text-xs text-gray-500 block">CPF</label>
@@ -455,10 +508,10 @@ export default function Dashboard() {
                       
                       <div className="pt-2 border-t border-gray-200">
                         <label className="text-xs text-gray-500 block">Endereço</label>
-                        <span className="text-sm font-medium text-gray-900">{selectedInscricao.endereco || '-'}</span>
+                        <span className="text-sm font-medium text-gray-900 break-words">{selectedInscricao.endereco || '-'}</span>
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-200">
                         <div className="sm:col-span-1">
                           <label className="text-xs text-gray-500 block">Telefone</label>
                           <span className="text-sm font-medium text-gray-900">{selectedInscricao.telefone || '-'}</span>
@@ -467,6 +520,16 @@ export default function Dashboard() {
                           <label className="text-xs text-gray-500 block">E-mail</label>
                           <span className="text-sm font-medium text-gray-900 break-all">{selectedInscricao.email || '-'}</span>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <h4 className="text-sm font-bold text-green-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <FileText className="w-4 h-4" /> Resumo do Plano
+                    </h4>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                           <label className="text-xs text-gray-500 block">Valor do Plano</label>
                           <span className="text-lg font-bold text-green-600">{selectedInscricao.valor || '-'}</span>
@@ -492,18 +555,20 @@ export default function Dashboard() {
                   </div>
 
                   {selectedInscricao.observacoes && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Observações / Dependentes</h4>
-                      <div className="text-sm text-gray-700">
+                    <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                      <h4 className="text-sm font-bold text-purple-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <Users className="w-4 h-4" /> Dependentes / Observações
+                      </h4>
+                      <div className="text-sm text-gray-700 space-y-3">
                         {selectedInscricao.observacoes.startsWith('[') ? (
                           <div className="space-y-3">
                             {(() => {
                               try {
                                 const deps = JSON.parse(selectedInscricao.observacoes);
                                 return deps.map((d: any, i: number) => (
-                                  <div key={i} className="bg-gray-50 p-3 rounded-lg border border-gray-200 flex justify-between items-start">
+                                  <div key={i} className="bg-gray-50 p-3 rounded-lg border border-gray-100 flex justify-between items-center">
                                     <div>
-                                      <p className="font-medium text-gray-900">{d.nomeCompleto}</p>
+                                      <p className="font-bold text-gray-900">{d.nomeCompleto}</p>
                                       <p className="text-xs text-gray-500">{d.parentesco} • CPF: {d.cpf}</p>
                                     </div>
                                     {imageUrls[`dep_${i}`] ? (
@@ -511,7 +576,7 @@ export default function Dashboard() {
                                         href={imageUrls[`dep_${i}`]} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
-                                        className="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1 font-medium bg-white px-2 py-1 rounded border border-blue-100"
+                                        className="text-[#0EA5FF] hover:text-blue-800 text-xs flex items-center gap-1 font-medium bg-white px-3 py-1.5 rounded-md border border-blue-100 shadow-sm transition-all hover:shadow"
                                       >
                                         <ImageIcon className="w-3 h-3" /> Ver Documento
                                       </a>
@@ -526,7 +591,7 @@ export default function Dashboard() {
                             })()}
                           </div>
                         ) : (
-                          <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-100 text-yellow-800">
+                          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-700">
                             {selectedInscricao.observacoes}
                           </div>
                         )}
@@ -537,11 +602,13 @@ export default function Dashboard() {
 
                 {/* Documentos */}
                 <div className="space-y-6">
-                  <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Documentos Anexados</h4>
-                  
-                  <div className="grid gap-4">
+                  <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                      <ImageIcon className="w-4 h-4" /> Documentos Anexados
+                    </h4>
+                    <div className="grid gap-4">
                     {/* Contrato */}
-                    <div className="border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <div className="border border-gray-100 rounded-xl p-4 flex items-center justify-between bg-slate-50 hover:bg-slate-100 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="bg-red-100 p-2 rounded-lg">
                           <FileText className="h-6 w-6 text-red-600" />
@@ -560,24 +627,24 @@ export default function Dashboard() {
                           href={imageUrls.contrato} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-sm font-semibold text-blue-600 hover:text-blue-800"
+                          className="text-sm font-semibold text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg shadow-sm transition-colors"
                         >
                           Abrir PDF
                         </a>
                       ) : (
-                        <span className="text-xs text-gray-400">-</span>
+                        <span className="text-xs font-medium text-gray-400 px-3 py-1 bg-gray-200 rounded-full">Indisponível</span>
                       )}
                     </div>
 
                     {/* RG */}
-                    <div className="border border-gray-200 rounded-lg p-4">
+                    <div className="border border-gray-100 rounded-xl p-4">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="bg-blue-100 p-2 rounded-lg">
                           <ImageIcon className="h-6 w-6 text-blue-600" />
                         </div>
                         <p className="text-sm font-medium text-gray-900">Foto do RG</p>
                       </div>
-                      <div className="bg-gray-100 rounded-lg overflow-hidden h-48 flex items-center justify-center">
+                      <div className="bg-gray-100/50 rounded-lg overflow-hidden h-48 flex items-center justify-center border border-gray-100">
                         {imageUrls.rg ? (
                           <a href={imageUrls.rg} target="_blank" rel="noopener noreferrer">
                             <img src={imageUrls.rg} alt="RG" className="h-full w-full object-contain hover:scale-105 transition-transform duration-300" />
@@ -589,14 +656,14 @@ export default function Dashboard() {
                     </div>
 
                     {/* Comprovante */}
-                    <div className="border border-gray-200 rounded-lg p-4">
+                    <div className="border border-gray-100 rounded-xl p-4">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="bg-green-100 p-2 rounded-lg">
                           <ImageIcon className="h-6 w-6 text-green-600" />
                         </div>
                         <p className="text-sm font-medium text-gray-900">Comprovante de Residência</p>
                       </div>
-                      <div className="bg-gray-100 rounded-lg overflow-hidden h-48 flex items-center justify-center">
+                      <div className="bg-gray-100/50 rounded-lg overflow-hidden h-48 flex items-center justify-center border border-gray-100">
                         {imageUrls.residencia ? (
                           <a href={imageUrls.residencia} target="_blank" rel="noopener noreferrer">
                             <img src={imageUrls.residencia} alt="Residência" className="h-full w-full object-contain hover:scale-105 transition-transform duration-300" />
@@ -608,7 +675,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Comprovante de Pagamento */}
-                    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50/50">
+                    <div className="border border-[#0EA5FF]/20 rounded-xl p-4 bg-[#0EA5FF]/5">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="bg-blue-100 p-2 rounded-lg">
                           <FileText className="h-6 w-6 text-blue-600" />
@@ -628,9 +695,9 @@ export default function Dashboard() {
 
 
                     {/* Assinatura (Preview) */}
-                    <div className="border border-gray-200 rounded-lg p-4">
-                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Assinatura Coletada</p>
-                       <div className="bg-white border border-gray-100 rounded p-2 h-20 flex items-center justify-center">
+                    <div className="border border-gray-100 rounded-xl p-4">
+                       <p className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2"><FileText className="w-4 h-4 text-gray-400" /> Assinatura Coletada</p>
+                       <div className="bg-gray-50 border border-gray-200 border-dashed rounded-lg p-2 h-24 flex items-center justify-center">
                          {imageUrls.assinatura ? (
                             <img src={imageUrls.assinatura} alt="Assinatura" className="max-h-full max-w-full object-contain" />
                          ) : (
@@ -638,23 +705,24 @@ export default function Dashboard() {
                          )}
                        </div>
                     </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Footer Modal */}
-            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+            <div className="bg-white px-6 py-4 border-t border-gray-100 flex justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10">
               <button 
                 onClick={() => setSelectedInscricao(null)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                Fechar
+                Voltar
               </button>
               <button
                 onClick={() => handleReject(selectedInscricao.id)}
                 disabled={isSubmitting}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center w-28"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[120px] transition-colors"
               >
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><X className="w-4 h-4 mr-2"/> Reprovar</>}
               </button>
@@ -662,7 +730,7 @@ export default function Dashboard() {
                 <button
                   onClick={() => handleUpdateStatus(selectedInscricao.id, 'aprovado')}
                   disabled={isSubmitting}
-                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center w-36"
+                  className="px-4 py-2 text-sm font-medium text-white bg-[#64E627] hover:bg-[#52C51D] rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[150px] transition-colors text-gray-900"
                 >
                   {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4 mr-2"/> Confirmar Pgto</>}
                 </button>
@@ -671,7 +739,7 @@ export default function Dashboard() {
                 <button
                   onClick={() => handleUpdateStatus(selectedInscricao.id, 'pendente')}
                   disabled={isSubmitting}
-                  className="px-4 py-2 text-sm font-medium text-white bg-yellow-500 rounded-md hover:bg-yellow-600 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center w-44"
+                  className="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[180px] transition-colors"
                 >
                   {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><AlertTriangle className="w-4 h-4 mr-2"/> Mover p/ Pendente</>}
                 </button>
