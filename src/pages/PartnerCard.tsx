@@ -1,4 +1,4 @@
-import './PartnerCard.css';
+import '@/components/landing/PartnerCard.css';
 
 interface PartnerCardProps {
   name: string;
