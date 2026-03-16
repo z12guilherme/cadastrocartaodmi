@@ -1,6 +1,8 @@
-import { Upload, Check, X } from "lucide-react";
-import { useCallback, useRef } from "react";
+import { Upload, Check, X, Loader2 } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import imageCompression from "browser-image-compression";
+import { toast } from "sonner";
 
 interface FileUploadProps {
   label: string;
@@ -10,12 +12,35 @@ interface FileUploadProps {
 
 const FileUpload = ({ label, value, onChange }: FileUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   const handleFile = useCallback(
-    (file: File) => {
-      const reader = new FileReader();
-      reader.onload = () => onChange(reader.result as string);
-      reader.readAsDataURL(file);
+    async (file: File) => {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Por favor, envie apenas arquivos de imagem (JPG, PNG).");
+        return;
+      }
+
+      setIsCompressing(true);
+      try {
+        const options = {
+          maxSizeMB: 0.5, // Limita a imagem a no máximo 500KB
+          maxWidthOrHeight: 1280, // Reduz dimensões gigantescas da câmera
+          useWebWorker: true,
+          fileType: "image/jpeg", // Força JPEG que é mais leve
+        };
+
+        const compressedFile = await imageCompression(file, options);
+        
+        const reader = new FileReader();
+        reader.onload = () => onChange(reader.result as string);
+        reader.readAsDataURL(compressedFile);
+      } catch (error) {
+        console.error("Erro ao comprimir imagem:", error);
+        toast.error("Erro ao processar a imagem. Tente novamente.");
+      } finally {
+        setIsCompressing(false);
+      }
     },
     [onChange]
   );
@@ -50,12 +75,21 @@ const FileUpload = ({ label, value, onChange }: FileUploadProps) => {
         <div
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
-          onClick={() => inputRef.current?.click()}
-          className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-[#0EA5FF] hover:bg-secondary/50 transition-colors"
+          onClick={() => !isCompressing && inputRef.current?.click()}
+          className={`border-2 border-dashed border-border rounded-lg p-6 text-center transition-colors ${
+            isCompressing
+              ? "opacity-70 cursor-not-allowed"
+              : "cursor-pointer hover:border-[#0EA5FF] hover:bg-secondary/50"
+          }`}
         >
-          <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+          {isCompressing ? (
+            <Loader2 className="w-8 h-8 mx-auto text-[#0EA5FF] mb-2 animate-spin" />
+          ) : (
+            <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+          )}
+          
           <p className="text-sm text-muted-foreground">
-            Arraste ou toque para enviar
+            {isCompressing ? "Otimizando imagem..." : "Arraste ou toque para enviar"}
           </p>
           <input
             ref={inputRef}

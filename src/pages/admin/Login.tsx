@@ -1,18 +1,28 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, ShieldCheck, Mail, Lock } from "lucide-react";
+import { toast } from "sonner";
+import logoDmi from "@/assets/logo-dmi.png";
 
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error("Preencha todos os campos.");
+      return;
+    }
+
     setLoading(true);
-    setError(null);
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -23,69 +33,103 @@ export default function Login() {
       if (error) throw error;
 
       if (data.session) {
-        // Login com sucesso, redirecionar para o dashboard
+        toast.success("Login realizado com sucesso!");
         navigate('/admin/dashboard');
       }
     } catch (err: any) {
-      setError(err.message || 'Erro ao fazer login');
+      toast.error('Erro ao fazer login', {
+        description: err.message || 'Verifique suas credenciais e tente novamente.'
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-800">Área Administrativa</h1>
-          <p className="text-sm text-gray-600">Cartão DMI - Acesso Restrito</p>
+    <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0EA5FF]/10 via-background to-background p-4 relative overflow-hidden">
+      
+      {/* Elementos decorativos de fundo */}
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-[#0EA5FF]/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-[#64E627]/5 rounded-full blur-3xl" />
+
+      {/* Container Principal */}
+      <div className="w-full max-w-md bg-card/80 backdrop-blur-md border border-border rounded-2xl shadow-2xl p-8 relative z-10 animate-in fade-in zoom-in-95 duration-500">
+        
+        {/* Cabeçalho */}
+        <div className="flex flex-col items-center mb-8 text-center space-y-4">
+          <div className="bg-white p-3 rounded-full shadow-sm border border-border/50">
+            <img 
+              src={logoDmi} 
+              alt="Logo Cartão DMI" 
+              className="w-16 h-16 object-contain" 
+            />
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Acesso Restrito
+            </h1>
+            <p className="text-sm text-muted-foreground flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-[#0EA5FF]" />
+              Painel de Gestão - Cartão DMI
+            </p>
+          </div>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded bg-red-50 p-3 text-sm text-red-600 border border-red-200">
-            {error}
-          </div>
-        )}
+        {/* Formulário */}
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail Corporativo</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="admin@cartaodmi.com.br"
+                  className="pl-9 bg-background/50 focus:bg-background transition-colors"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+            </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              E-mail
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="admin@exemplo.com"
-              required
-            />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Senha</Label>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  className="pl-9 bg-background/50 focus:bg-background transition-colors"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Senha
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
+          <Button 
+            type="submit" 
+            className="w-full bg-[#0EA5FF] hover:bg-[#0EA5FF]/90 text-white shadow-md transition-all hover:shadow-lg h-11" 
             disabled={loading}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
           >
-            {loading ? 'Entrando...' : 'Entrar'}
-          </button>
+            {loading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              "Entrar no Sistema"
+            )}
+          </Button>
         </form>
+
+        {/* Rodapé */}
+        <div className="mt-8 text-center text-xs text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} Rede DMI. Todos os direitos reservados.</p>
+        </div>
       </div>
     </div>
   );

@@ -33,8 +33,8 @@ Este documento detalha as tarefas para a criação da área administrativa do si
 - [x] **Contador de Inscrições**:
   - [x] Conectar o widget de contagem à API do Supabase para buscar o número total de registros na tabela.
 - [x] **Visualização de Dados**:
-  - [x] Implementar a busca e exibição dos dados dos cadastrados na tabela principal.
-  - Adicionar paginação ou scroll infinito para lidar com grandes volumes de dados.
+  - [x] Implementar a listagem e exibição dos dados dos cadastrados na tabela principal.
+  - [ ] Adicionar paginação ou scroll infinito para lidar com grandes volumes de dados.
 - [x] **Ficha do Cadastrado**:
   - [x] Criar una view de detalhe (página ou modal) para exibir todas as informações de um único usuário.
   - [x] Nesta ficha, exibir os documentos enviados pelo usuário.
@@ -58,6 +58,8 @@ Este documento detalha as tarefas para a criação da área administrativa do si
 - [x] Adicionar ícones do PWA na pasta public (`public/android/*.png`).
 - [x] Implementar prompt de atualização de versão (SW).
 
+--
+
 ## 6. Integração com Stone (Pagamento Automático via Webhook)
 O Roteiro do Webhook (Stone + Supabase Edge Functions)
 
@@ -65,6 +67,6 @@ O Roteiro do Webhook (Stone + Supabase Edge Functions)
 - [ ] **Cadastrar a Rota**: Adicionar a URL onde seu sistema vai escutar os eventos (ex: URL da sua Supabase Edge Function). Lembre de marcar para ouvir o evento de "Pagamento Aprovado" (ex: `order.paid`).
 - [ ] **Pegar a Chave**: Copiar o `WEBHOOK_SECRET` (chave de assinatura) que a Stone vai gerar para essa URL específica.
 - [ ] **Variáveis de Ambiente no Supabase**: Adicionar a chave "Secret" no Supabase (`STONE_WEBHOOK_SECRET`) para que a Edge Function possa validar a autenticidade do evento da Stone.
-- [ ] **Criar Webhook (Edge Function)**: Criar uma Supabase Edge Function (Deno/Typescript) com a lógica de validação do hash (HMAC) e o update direto no banco usando a `SUPABASE_SERVICE_ROLE_KEY` (mudando status para 'aprovado').
-- [ ] **Deploy da Função**: Fazer o deploy da função no projeto Supabase (ex: `supabase functions deploy webhook-stone`).
+- [x] **Criar Webhook (Edge Function)**: Criar uma Supabase Edge Function (Deno/Typescript) com a lógica de validação do hash (HMAC) e o update direto no banco usando a `SUPABASE_SERVICE_ROLE_KEY` (mudando status para 'aprovado').
+- [x] **Deploy da Função**: Fazer o deploy da função no projeto Supabase (ex: `supabase functions deploy webhook-stone`).
 - [ ] **Teste de Fogo**: Fazer um pagamento de teste (ou simular no próprio painel da Stone) e assistir a mágica do status mudando para "Aprovado" sozinho na tabela do Supabase.
