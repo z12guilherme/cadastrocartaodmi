@@ -41,13 +41,27 @@ export default function Dashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setUserEmail(user.email);
+    // 1. Verifica a sessão logo ao montar o componente
+    const checkAuthAndLoad = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate('/admin/login', { replace: true });
+        return;
+      }
+      
+      setUserEmail(session.user.email);
+      fetchInscricoes(); // Só busca os dados se estiver logado
+    };
+
+    checkAuthAndLoad();
+
+    // 2. Desloga e expulsa o usuário automaticamente se a sessão expirar
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        navigate('/admin/login', { replace: true });
       }
     });
-
-    fetchInscricoes();
 
     const channel = supabase
       .channel('inscricoes-realtime')
@@ -76,8 +90,9 @@ export default function Dashboard() {
 
     return () => {
       supabase.removeChannel(channel);
+      authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   // Busca URLs assinadas quando um usuário é selecionado
   useEffect(() => {
