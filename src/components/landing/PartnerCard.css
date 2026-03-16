@@ -1,0 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+.partner-card {
+  --bg: #fff;
+  --title-color: #fff;
+  --title-color-hover: #000;
+  --text-color: #666;
+  --button-color: #eee;
+  --button-color-hover: #ddd;
+  background: var(--bg);
+  border-radius: 2rem;
+  padding: 0.5rem;
+  width: 20rem;
+  height: 30rem;
+  overflow: hidden;
+  position: relative;
+  font-family: Lato, Montserrat, Helvetica, Arial, sans-serif;
+  transition: all 0.3s ease;
+}
+
+.partner-card.dark {
+  --bg: #222;
+  --title-color: #fff;
+  --title-color-hover: #fff;
+  --text-color: #ccc;
+  --button-color: #555;
+  --button-color-hover: #444;
+}
+
+.partner-card::before {
+  content: "";
+  position: absolute;
+  width: calc(100% - 1rem);
+  height: 30%;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  mask: linear-gradient(#0000, #000f 80%);
+  -webkit-mask: linear-gradient(#0000, #000f 80%);
+  backdrop-filter: blur(1rem);
+  border-radius: 0 0 1.5rem 1.5rem;
+  translate: 0 0;
+  transition: translate 0.25s;
+  z-index: 10;
+}
+
+.partner-card > img {
+  max-width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  object-position: 50% 5%;
+  border-radius: 1.5rem;
+  display: block;
+  transition: aspect-ratio 0.25s, object-position 0.5s;
+  width: 100%;
+  height: auto;
+}
+
+.partner-card > section {
+  margin: 1rem;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(33.3333% - 1rem);
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.partner-card > section h2 {
+  margin: 0;
+  margin-block-end: 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  translate: 0 -200%;
+  opacity: 1;
+  color: var(--title-color);
+  transition: color 0.5s, margin-block-end 0.25s, opacity 1s, translate 0.25s;
+}
+
+.partner-card > section p {
+  font-size: 0.95rem;
+  line-height: 1.3;
+  color: var(--text-color);
+  opacity: 0;
+  margin: 0;
+  translate: 0 100%;
+  transition: margin-block-end 0.25s, opacity 1s 0.2s, translate 0.25s 0.2s;
+}
+
+.partner-card > section > div {
+  flex: 1;
+  align-items: flex-end;
+  display: flex;
+  justify-content: space-between;
+  opacity: 0;
+  transition: translate 0.25s 0.2s, opacity 1s;
+}
+
+.partner-card > section .tag {
+  align-self: center;
+  color: var(--title-color-hover);
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.partner-card button {
+  border: none;
+  border-radius: 1.25rem 1.25rem 1.5rem 1.25rem;
+  font-size: 1rem;
+  padding: 0.8rem 1.5rem;
+  background: var(--button-color);
+  transition: background 0.33s;
+  color: var(--title-color-hover);
+  cursor: pointer;
+  font-weight: 600;
+  pointer-events: auto;
+}
+
+.partner-card button:hover {
+  background: var(--button-color-hover);
+}
+
+/* Hover States */
+.partner-card:hover::before,
+.partner-card:focus-within::before {
+  translate: 0 100%;
+}
+
+.partner-card:hover > img,
+.partner-card:focus-within > img {
+  aspect-ratio: 1 / 1;
+  object-position: 50% 10%;
+  transition: aspect-ratio 0.25s, object-position 0.25s;
+}
+
+.partner-card:hover > section h2,
+.partner-card:focus-within > section h2 {
+  translate: 0 0;
+  margin-block-end: 0.5rem;
+  color: var(--title-color-hover);
+}
+
+.partner-card:hover > section p, .partner-card:focus-within > section p,
+.partner-card:hover > section > div, .partner-card:focus-within > section > div {
+  translate: 0 0;
+  opacity: 1;
+}

@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 // Swiper Imports
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Pagination, Navigation, EffectFade } from 'swiper/modules';
+import { Autoplay, Pagination, Navigation, EffectFade, EffectCoverflow } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/effect-fade';
+import 'swiper/css/effect-coverflow';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,132 @@ import {
 } from "lucide-react";
 import heroImg from "@/assets/hero-family.jpg";
 import logoDmi from "@/assets/logo-dmi.png";
+import { PartnerCard } from "@/components/PartnerCard";
+
+// Importações das imagens dos parceiros
+import logoAmigosDePelo from "@/assets/parceiros/amigosdepelo.jpg";
+import logoQuiteria from "@/assets/parceiros/quiteria.jpg";
+import logoClinicaDaCrianca from "@/assets/parceiros/clinicadacrianca.jpg";
+import logoFarmaciaPopular from "@/assets/parceiros/farmaciapopular.jpg";
+import logoOticaVisao from "@/assets/parceiros/oticavisao.jpg";
+import logoHolhos from "@/assets/parceiros/holhos.jpg";
+import logoEmagrecentro from "@/assets/parceiros/emagrecentro.jpg";
+import logoPerola from "@/assets/parceiros/perola.jpg";
+import logoNeurohabilidades from "@/assets/parceiros/neurohabilidades.jpg";
+import logoRoval from "@/assets/parceiros/roval.jpg";
+import logoGpv from "@/assets/parceiros/gpv.jpg";
+import logoNatu from "@/assets/parceiros/natu.jpg";
+import logoLike from "@/assets/parceiros/like.jpg";
+import logoAformula from "@/assets/parceiros/aformula.jpg";
+import logoImagemCor from "@/assets/parceiros/imagemcor.jpg";
+
+const partners = [
+  { 
+    name: "Clinica Amigos de Pelo", 
+    discount: "Sob Consulta", 
+    logo: logoAmigosDePelo,
+    description: "Exames laboratoriais com precisão e rapidez para o seu diagnóstico.",
+    link: "https://www.instagram.com/clinicaamigosdepelo"
+  },
+  { 
+    name: "Centro de Psicologia Quitéria Leandro", 
+    discount: "30% OFF", 
+    logo: logoQuiteria,
+    description: "Atendimento médico humanizado e diversas especialidades.",
+    link: "https://www.instagram.com/centrodepsicologiaquiteria/"
+  },
+  { 
+    name: "Clinica da Criança", 
+    discount: "Até 30% OFF", 
+    logo: logoClinicaDaCrianca,
+    description: "Armações e lentes de qualidade para cuidar da sua saúde ocular.",
+    link: "https://www.instagram.com/clinicadacriancabj/"
+  },
+   { 
+     name: "Farmácia Popular", 
+     discount: "10% OFF", 
+     logo: logoFarmaciaPopular,
+     description: "Medicamentos e perfumaria com os melhores preços da região.",
+     link: "https://www.instagram.com/farmapopularbelojardim/"
+   },
+  { 
+    name: "Ótica Visão", 
+    discount: "10% OFF parcelado", 
+    logo: logoOticaVisao,
+    description: "Centro especializado em saúde do coração e check-ups completos.",
+    link: "https://www.instagram.com/oticavisaobelojardim/"
+  },
+  { 
+    name: "Clinica H-olhos", 
+    discount: "20% OFF", 
+    logo: logoHolhos,
+    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    link: "https://www.instagram.com/holhosbelojardim/"
+  },
+  { 
+    name: "Emagrecentro", 
+    discount: "Até 45% OFF", 
+    logo: logoEmagrecentro,
+    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    link: "https://emagrecentro.com.br/"
+  },
+  { 
+    name: "Pérola - Espaço Terapêutico", 
+    discount: "20% OFF", 
+    logo: logoPerola,
+    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    link: "https://www.instagram.com/perolameuespaco/"
+  },
+  { 
+    name: "Clinica Neuro Habilidades", 
+    discount: "Até 50% OFF", 
+    logo: logoNeurohabilidades,
+    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    link: "https://www.instagram.com/clinicaneurohabilidades/"
+  },
+  { 
+    name: "Roval - Farmácia de Manipulação", 
+    discount: "15% OFF", 
+    logo: logoRoval,
+    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    link: "https://www.farmaciaroval.com.br/"
+  },
+  { 
+    name: "GPV - Associados", 
+    discount: "50% na adesão e 12% na parcela", 
+    logo: logoGpv,
+    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    link: "https://gpvassociados.com.br/"
+  },
+  { 
+    name: "Natu", 
+    discount: "15% em consultas e 8% em medicações", 
+    logo: logoNatu,
+    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    link: "https://www.instagram.com/natu.cosmeticosbr/"
+  },
+  { 
+    name: "Like", 
+    discount: "Até 30% em produtos variados", 
+    logo: logoLike,
+    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    link: "https://www.instagram.com/natucosmeticos_bj/"
+  },
+  { 
+    name: "A fórmula", 
+    discount: "Até 30%", 
+    logo: logoAformula,
+    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    link: "https://aformulabr.com.br/"
+  },
+  { 
+    name: "Imagem Cor", 
+    discount: "Sob Consulta", 
+    logo: logoImagemCor,
+    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    link: "https://imagemcor.com.br/"
+  }
+];
 
 const LandingPage = () => {
   return (
@@ -172,6 +299,50 @@ const LandingPage = () => {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Partners - 3D Carousel */}
+      <section className="py-16 bg-gradient-to-b from-white to-gray-50 overflow-hidden">
+        <div className="container mx-auto px-4 text-center mb-10">
+          <h2 className="text-3xl font-bold text-foreground mb-4">Nossos Parceiros</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Conte com uma rede de parceiros de excelência oferecendo descontos exclusivos para você e sua família.
+          </p>
+        </div>
+
+        <Swiper
+          effect={'coverflow'}
+          grabCursor={true}
+          centeredSlides={true}
+          slidesPerView={'auto'}
+          coverflowEffect={{
+            rotate: 50,
+            stretch: 0,
+            depth: 100,
+            modifier: 1,
+            slideShadows: true,
+          }}
+          autoplay={{
+            delay: 3000,
+            disableOnInteraction: false,
+          }}
+          loop={true}
+          navigation={true}
+          modules={[EffectCoverflow, Autoplay, Navigation]}
+          className="w-full py-10 partners-swiper"
+        >
+          {[...partners, ...partners].map((partner, index) => (
+            <SwiperSlide key={`${index}-${partner.name}`} className="!w-auto !h-auto bg-transparent border-none shadow-none select-none">
+               <PartnerCard 
+                 name={partner.name}
+                 description={partner.description}
+                 discount={partner.discount}
+                 logo={partner.logo}
+                 link={partner.link}
+               />
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </section>
 
       {/* Final CTA */}
