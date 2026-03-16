@@ -30,7 +30,7 @@ import { PartnerCard } from "./PartnerCard";
 import logoAmigosDePelo from "@/assets/parceiros/amigosdepelo.jpg";
 import logoQuiteria from "@/assets/parceiros/quiteria.jpg";
 import logoClinicaDaCrianca from "@/assets/parceiros/clinicadacrianca.jpg";
-import logoFarmaciaPopular from "@/assets/parceiros/farmaciapopular.jpg";
+import logoProntoFarma from "@/assets/parceiros/prontofarma.jpg";
 import logoOticaVisao from "@/assets/parceiros/oticavisao.jpg";
 import logoHolhos from "@/assets/parceiros/holhos.jpg";
 import logoEmagrecentro from "@/assets/parceiros/emagrecentro.jpg";
@@ -48,49 +48,49 @@ const partners = [
     name: "Clinica Amigos de Pelo", 
     discount: "Sob Consulta", 
     logo: logoAmigosDePelo,
-    description: "Exames laboratoriais com precisão e rapidez para o seu diagnóstico.",
+    description: "Cuidado especializado para seu pet",
     link: "https://www.instagram.com/clinicaamigosdepelo"
   },
   { 
     name: "Centro de Psicologia Quitéria Leandro", 
     discount: "30% OFF", 
     logo: logoQuiteria,
-    description: "Atendimento médico humanizado e diversas especialidades.",
+    description: "Centro de psicologia dedicado ao cuidado emocional, oferecendo terapias personalizadas para promover o bem-estar mental e emocional dos pacientes.",
     link: "https://www.instagram.com/centrodepsicologiaquiteria/"
   },
   { 
     name: "Clinica da Criança", 
     discount: "Até 30% OFF", 
     logo: logoClinicaDaCrianca,
-    description: "Armações e lentes de qualidade para cuidar da sua saúde ocular.",
+    description: "Atendimento médico humanizado e diversas especialidades.",
     link: "https://www.instagram.com/clinicadacriancabj/"
   },
    { 
-     name: "Farmácia Popular", 
-     discount: "10% OFF", 
-     logo: logoFarmaciaPopular,
-     description: "Medicamentos e perfumaria com os melhores preços da região.",
-     link: "https://www.instagram.com/farmapopularbelojardim/"
+     name: "Pronto Farma", 
+     discount: "Até 30% OFF", 
+     logo: logoProntoFarma,
+     description: "Farmácia com ampla variedade de medicamentos, oferecendo preços competitivos e atendimento de qualidade para cuidar da saúde da sua família.",
+     link: "https://www.instagram.com/farmaciaprontofarma/"
    },
   { 
     name: "Ótica Visão", 
     discount: "10% OFF parcelado", 
     logo: logoOticaVisao,
-    description: "Centro especializado em saúde do coração e check-ups completos.",
+    description: "Ótica com qualidade e atendimento personalizado para sua visão.",
     link: "https://www.instagram.com/oticavisaobelojardim/"
   },
   { 
-    name: "Clinica H-olhos", 
+    name: "Hospital Holhos", 
     discount: "20% OFF", 
     logo: logoHolhos,
-    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    description: "Hospital especializado em cuidados oculares, oferecendo diagnósticos e tratamentos de alta qualidade para promover a saúde visual dos pacientes.",
     link: "https://www.instagram.com/holhosbelojardim/"
   },
   { 
     name: "Emagrecentro", 
     discount: "Até 45% OFF", 
     logo: logoEmagrecentro,
-    description: "Centro de Excelência em emagrecimento, oferecendo tratamentos personalizados para resultados duradouros.",
+    description: "Clínica de emagrecimento e estética, oferecendo tratamentos personalizados para promover a saúde, o bem-estar e a autoestima dos pacientes.",
     link: "https://emagrecentro.com.br/"
   },
   { 
@@ -139,14 +139,14 @@ const partners = [
     name: "A fórmula", 
     discount: "Até 30%", 
     logo: logoAformula,
-    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    description: "Farmácia de manipulação especializada em fórmulas personalizadas, oferecendo medicamentos de alta qualidade para atender às necessidades individuais dos pacientes.",
     link: "https://aformulabr.com.br/"
   },
   { 
     name: "Imagem Cor", 
     discount: "Sob Consulta", 
     logo: logoImagemCor,
-    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    description: "Clínica de diagnóstico por imagem, oferecendo exames de alta qualidade para promover a saúde e o bem-estar dos pacientes.",
     link: "https://imagemcor.com.br/"
   }
 ];
