@@ -38,7 +38,7 @@ import logoPerola from "@/assets/parceiros/perola.jpg";
 import logoNeurohabilidades from "@/assets/parceiros/neurohabilidades.jpg";
 import logoRoval from "@/assets/parceiros/roval.jpg";
 import logoGpv from "@/assets/parceiros/gpv.jpg";
-import logoNatu from "@/assets/parceiros/natu.jpg";
+import logoNatu from "@/assets/parceiros/natu.JPG";
 import logoLike from "@/assets/parceiros/like.jpg";
 import logoAformula from "@/assets/parceiros/aformula.jpg";
 import logoImagemCor from "@/assets/parceiros/imagemcor.jpg";
