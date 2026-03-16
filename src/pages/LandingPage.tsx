@@ -90,50 +90,50 @@ const partners = [
     name: "Emagrecentro", 
     discount: "Até 45% OFF", 
     logo: logoEmagrecentro,
-    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    description: "Centro de Excelência em emagrecimento, oferecendo tratamentos personalizados para resultados duradouros.",
     link: "https://emagrecentro.com.br/"
   },
   { 
     name: "Pérola - Espaço Terapêutico", 
     discount: "20% OFF", 
     logo: logoPerola,
-    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    description: "Espaço terapêutico dedicado ao cuidado integral, oferecendo tratamentos personalizados para o bem-estar físico e emocional.",
     link: "https://www.instagram.com/perolameuespaco/"
   },
   { 
     name: "Clinica Neuro Habilidades", 
     discount: "Até 50% OFF", 
     logo: logoNeurohabilidades,
-    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    description: "Clinica de reabilitação neurológica, oferecendo tratamentos personalizados para promover a recuperação e a qualidade de vida dos pacientes.",
     link: "https://www.instagram.com/clinicaneurohabilidades/"
   },
   { 
     name: "Roval - Farmácia de Manipulação", 
     discount: "15% OFF", 
     logo: logoRoval,
-    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    description: "Farmacia de manipulação especializada em fórmulas personalizadas, oferecendo medicamentos de alta qualidade para atender às necessidades individuais dos pacientes.",
     link: "https://www.farmaciaroval.com.br/"
   },
   { 
     name: "GPV - Associados", 
     discount: "50% na adesão e 12% na parcela", 
     logo: logoGpv,
-    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    description: "Seguros de veiculos com cobertura completa e atendimento personalizado para proteger o seu patrimônio.",
     link: "https://gpvassociados.com.br/"
   },
   { 
     name: "Natu", 
     discount: "15% em consultas e 8% em medicações", 
     logo: logoNatu,
-    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
+    description: "Produtos naturais e fitoterápicos para promover a saúde e o bem-estar de forma holística.",
     link: "https://www.instagram.com/natu.cosmeticosbr/"
   },
   { 
     name: "Like", 
     discount: "Até 30% em produtos variados", 
     logo: logoLike,
-    description: "Cuidado especial e carinhoso para a saúde dos seus filhos.",
-    link: "https://www.instagram.com/natucosmeticos_bj/"
+    description: "Venda de cosméticos, perfumes, suplementos",
+    link: "https://likebrasil.com.br/"
   },
   { 
     name: "A fórmula", 
