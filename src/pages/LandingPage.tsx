@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import heroImg from "@/assets/hero-family.jpg";
 import logoDmi from "@/assets/logo-dmi.png";
-import { PartnerCard } from "@/components/PartnerCard";
+import { PartnerCard } from "./PartnerCard";
 
 // Importações das imagens dos parceiros
 import logoAmigosDePelo from "@/assets/parceiros/amigosdepelo.jpg";
