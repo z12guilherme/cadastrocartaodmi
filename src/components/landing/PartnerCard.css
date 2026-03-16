@@ -10,8 +10,8 @@
   background: var(--bg);
   border-radius: 2rem;
   padding: 0.5rem;
-  width: 20rem;
-  height: 30rem;
+  width: 22rem;
+  height: 33rem;
   overflow: hidden;
   position: relative;
   font-family: Lato, Montserrat, Helvetica, Arial, sans-serif;
@@ -31,7 +31,7 @@
   content: "";
   position: absolute;
   width: calc(100% - 1rem);
-  height: 30%;
+  height: 38%;
   bottom: 0.5rem;
   left: 0.5rem;
   mask: linear-gradient(#0000, #000f 80%);
@@ -61,7 +61,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: calc(33.3333% - 1rem);
+  height: calc(38% - 1rem);
   display: flex;
   flex-direction: column;
   z-index: 20;
