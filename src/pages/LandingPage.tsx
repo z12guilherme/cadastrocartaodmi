@@ -111,7 +111,7 @@ const partners = [
     name: "Roval - Farmácia de Manipulação", 
     discount: "15% OFF", 
     logo: logoRoval,
-    description: "Farmacia de manipulação especializada em fórmulas personalizadas, oferecendo medicamentos de alta qualidade para atender às necessidades individuais dos pacientes.",
+    description: "Farmacia de manipulação especializada em fórmulas personalizadas",
     link: "https://www.farmaciaroval.com.br/"
   },
   { 
@@ -139,14 +139,14 @@ const partners = [
     name: "A fórmula", 
     discount: "Até 30%", 
     logo: logoAformula,
-    description: "Farmácia de manipulação especializada em fórmulas personalizadas, oferecendo medicamentos de alta qualidade para atender às necessidades individuais dos pacientes.",
+    description: "Farmácia de manipulação especializada em fórmulas personalizadas",
     link: "https://aformulabr.com.br/"
   },
   { 
     name: "Imagem Cor", 
     discount: "Sob Consulta", 
     logo: logoImagemCor,
-    description: "Clínica de diagnóstico por imagem, oferecendo exames de alta qualidade para promover a saúde e o bem-estar dos pacientes.",
+    description: "Clínica de diagnóstico por imagem",
     link: "https://imagemcor.com.br/"
   }
 ];
