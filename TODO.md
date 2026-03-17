@@ -34,7 +34,7 @@ Este documento detalha as tarefas para a criação da área administrativa do si
   - [x] Conectar o widget de contagem à API do Supabase para buscar o número total de registros na tabela.
 - [x] **Visualização de Dados**:
   - [x] Implementar a listagem e exibição dos dados dos cadastrados na tabela principal.
-  - [ ] Adicionar paginação ou scroll infinito para lidar com grandes volumes de dados.
+  - [x] Adicionar paginação ou scroll infinito para lidar com grandes volumes de dados.
 - [x] **Ficha do Cadastrado**:
   - [x] Criar una view de detalhe (página ou modal) para exibir todas as informações de um único usuário.
   - [x] Nesta ficha, exibir os documentos enviados pelo usuário.

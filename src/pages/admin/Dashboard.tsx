@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { X, FileText, Image as ImageIcon, User, Loader2, Check, AlertTriangle, Search, Users, Clock, CheckCircle, LogOut, Eye } from 'lucide-react';
+import { X, FileText, Image as ImageIcon, User, Loader2, Check, AlertTriangle, Search, Users, Clock, CheckCircle, LogOut, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { generateContractPdf } from '@/components/registration/pdf';
 import { RegistrationData } from '@/types/registration';
 
@@ -40,6 +40,9 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'pendentes' | 'aprovados'>('pendentes');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
     // 1. Verifica a sessão logo ao montar o componente
@@ -287,6 +290,20 @@ export default function Dashboard() {
   }, [inscricoes, activeTab, searchTerm]);
 
 
+  // Volta para a página 1 sempre que o usuário pesquisar ou trocar de aba
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, activeTab]);
+
+  // Recorta o array para mostrar apenas os itens da página atual
+  const paginatedInscricoes = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredInscricoes.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredInscricoes, currentPage]);
+
+  // Calcula o total de páginas
+  const totalPages = Math.ceil(filteredInscricoes.length / ITEMS_PER_PAGE);
+
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
       {/* Navbar */}
@@ -398,9 +415,9 @@ export default function Dashboard() {
               <p className="text-gray-500 text-sm">Não encontramos nenhuma inscrição com esses filtros.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto min-h-[400px]">
+            <div className="overflow-auto max-h-[600px] min-h-[400px]">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50/80">
+                <thead className="bg-gray-50/95 sticky top-0 z-10 backdrop-blur-sm shadow-sm">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
@@ -410,7 +427,7 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredInscricoes.map((inscricao) => (
+                  {paginatedInscricoes.map((inscricao) => (
                     <tr key={inscricao.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(inscricao.created_at).toLocaleDateString('pt-BR')}
@@ -442,6 +459,33 @@ export default function Dashboard() {
                   ))}
                 </tbody>
               </table>
+
+              {/* Controles de Paginação */}
+              {totalPages > 1 && (
+                <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200 bg-gray-50/50">
+                  <div className="flex-1 flex justify-between sm:hidden">
+                    <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">Anterior</button>
+                    <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">Próxima</button>
+                  </div>
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-700">
+                        Mostrando <span className="font-medium">{((currentPage - 1) * ITEMS_PER_PAGE) + 1}</span> a <span className="font-medium">{Math.min(currentPage * ITEMS_PER_PAGE, filteredInscricoes.length)}</span> de <span className="font-bold">{filteredInscricoes.length}</span> cadastros
+                      </p>
+                    </div>
+                    <div>
+                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50">
+                          <span className="sr-only">Anterior</span><ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                        </button>
+                        <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50">
+                          <span className="sr-only">Próxima</span><ChevronRight className="h-5 w-5" aria-hidden="true" />
+                        </button>
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
