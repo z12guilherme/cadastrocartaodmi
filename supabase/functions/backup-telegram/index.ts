@@ -37,22 +37,44 @@ serve(async (req) => {
 
     const clienteNome = record.nome_completo;
     const cpf = record.cpf;
+    const cleanCpf = cpf.replace(/\D/g, "");
     const filesToBackup = [];
     const filesToDelete = [];
 
     // Prepara o PDF do contrato para backup
     if (record.anexo_documento_url) {
-        filesToBackup.push({ url: record.anexo_documento_url, type: 'document', filename: `Contrato_${cpf}.pdf` });
+        filesToBackup.push({ url: record.anexo_documento_url, type: 'document', filename: `Contrato_${cleanCpf}.pdf` });
     }
     // Prepara a foto (RG) para backup e exclusão
     if (record.foto_url) {
-        filesToBackup.push({ url: record.foto_url, type: 'photo', filename: `RG_${cpf}` });
+        filesToBackup.push({ url: record.foto_url, type: 'photo', filename: `RG_${cleanCpf}.jpg` });
         filesToDelete.push(record.foto_url);
     }
+
+    // Prepara o comprovante de residência (buscando pelo padrão de caminho salvo pelo Frontend)
+    const residenciaUrl = `${cleanCpf}/residencia.jpg`;
+    filesToBackup.push({ url: residenciaUrl, type: 'photo', filename: `Residencia_${cleanCpf}.jpg` });
+    filesToDelete.push(residenciaUrl);
+
     // Prepara o comprovante para backup e exclusão
     if (record.comprovante_pagamento_url) {
-        filesToBackup.push({ url: record.comprovante_pagamento_url, type: 'photo', filename: `Comprovante_${cpf}` });
+        filesToBackup.push({ url: record.comprovante_pagamento_url, type: 'photo', filename: `ComprovantePgto_${cleanCpf}.jpg` });
         filesToDelete.push(record.comprovante_pagamento_url);
+    }
+
+    // Prepara os documentos dos dependentes (se houver)
+    if (record.observacoes && record.observacoes.startsWith('[')) {
+        try {
+            const deps = JSON.parse(record.observacoes);
+            deps.forEach((dep: any, index: number) => {
+                if (dep.fotoDocumento) {
+                    filesToBackup.push({ url: dep.fotoDocumento, type: 'photo', filename: `Dependente_${index + 1}_${cleanCpf}.jpg` });
+                    filesToDelete.push(dep.fotoDocumento);
+                }
+            });
+        } catch (e) {
+            console.error('Erro ao processar imagens de dependentes:', e);
+        }
     }
 
     // Função auxiliar para baixar do storage do Supabase e mandar pro Telegram
@@ -60,8 +82,8 @@ serve(async (req) => {
         const { data, error } = await supabase.storage.from('documentos').download(fileInfo.url);
         
         if (error || !data) {
-            console.error(`Erro ao baixar ${fileInfo.url} do storage:`, error);
-            return false;
+            console.error(`Aviso: Arquivo ${fileInfo.url} não encontrado no storage.`);
+            return true; // Retorna true para não travar o envio/limpeza dos outros arquivos
         }
 
         const formData = new FormData();
