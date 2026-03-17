@@ -61,7 +61,7 @@ const compressImage = async (input: Blob | string, quality = 0.7, maxWidth = 120
 /**
  * Converte formato DD/MM/YYYY para YYYY-MM-DD (ISO para Banco de Dados)
  */
-const formatDateToISO = (dateStr: string | undefined): string | null => {
+export const formatDateToISO = (dateStr: string | undefined): string | null => {
   if (!dateStr) return null;
   // Se já estiver no formato ISO
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
@@ -77,9 +77,22 @@ const formatDateToISO = (dateStr: string | undefined): string | null => {
 /**
  * Limpa partes do endereço para evitar "undefined" como string
  */
-const cleanAddressPart = (part: string | undefined | null) => {
+export const cleanAddressPart = (part: string | undefined | null) => {
   if (!part || part === 'undefined' || part === 'null' || part.trim() === '') return undefined;
   return part;
+};
+
+/**
+ * Calcula o valor do plano baseado na quantidade de dependentes
+ * Titular apenas: R$ 30. Familiar: R$ 25 por pessoa.
+ */
+export const calcularValorPlano = (numDependentes: number): number => {
+  const numPessoas = 1 + numDependentes;
+  return numPessoas === 1 ? 30.0 : numPessoas * 25.0;
+};
+
+export const formatarMoeda = (valor: number): string => {
+  return `R$ ${valor.toFixed(2).replace('.', ',')}`;
 };
 
 /**
@@ -169,17 +182,8 @@ export const submitCadastro = async ({
     }
 
     // --- Regra de Negócio para o Valor da Mensalidade ---
-    let valorTotal = 0;
-    const numPessoas = 1 + dependentesProcessados.length;
-
-    if (numPessoas === 1) {
-      // Plano Individual: R$ 30,00
-      valorTotal = 30.0;
-    } else {
-      // Plano Familiar: R$ 25,00 por pessoa
-      valorTotal = numPessoas * 25.0;
-    }
-    const valorFormatado = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
+    const valorTotal = calcularValorPlano(dependentesProcessados.length);
+    const valorFormatado = formatarMoeda(valorTotal);
 
     // 4. Inserir dados na tabela
     const { error: insertError } = await supabase

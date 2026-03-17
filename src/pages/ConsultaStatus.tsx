@@ -1,117 +1,190 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, Search, FileText, CheckCircle, Clock, XCircle, ArrowLeft } from "lucide-react";
 import { consultarStatusPorProtocolo } from "@/services/api";
-import { toast } from "sonner";
+import { 
+  Search, 
+  CheckCircle2, 
+  Clock, 
+  XCircle, 
+  ArrowLeft, 
+  Download, 
+  Loader2,
+  AlertCircle
+} from "lucide-react";
 import logoDmi from "@/assets/logo-dmi.png";
+
+interface ConsultaResult {
+  nome_completo: string;
+  status: string;
+  valor: string;
+  downloadUrl?: string | null;
+}
 
 export default function ConsultaStatus() {
   const [protocolo, setProtocolo] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resultado, setResultado] = useState<any>(null);
+  const [result, setResult] = useState<ConsultaResult | null>(null);
+  const [error, setError] = useState("");
 
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleConsultar = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!protocolo.trim()) return;
 
     setLoading(true);
-    setResultado(null);
+    setError("");
+    setResult(null);
+
     try {
-      const data = await consultarStatusPorProtocolo(protocolo.trim());
-      setResultado(data);
-    } catch (error) {
-      toast.error("Protocolo não encontrado ou inválido.");
-      setResultado(null);
+      // Formata para garantir que não tem espaços soltos
+      const cleanProtocolo = protocolo.trim();
+      const data = await consultarStatusPorProtocolo(cleanProtocolo);
+      
+      if (!data) {
+        throw new Error("Protocolo não encontrado.");
+      }
+      
+      setResult(data as ConsultaResult);
+    } catch (err: any) {
+      console.error(err);
+      setError("Protocolo não encontrado. Verifique os números e tente novamente.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-       <header className="bg-card border-b border-border">
-        <div className="container max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <img src={logoDmi} alt="Cartão DMI" className="w-10 h-10 object-contain" />
-            <div>
-              <h1 className="font-bold text-foreground text-lg leading-tight">
-                Cartão DMI
-              </h1>
-              <p className="text-xs text-muted-foreground">Consulta de Status</p>
-            </div>
+    <div className="min-h-screen bg-gray-50/50 flex flex-col font-sans">
+      {/* Header Simples */}
+      <header className="bg-white border-b border-gray-200 py-4 px-6">
+        <div className="max-w-md mx-auto flex items-center justify-between">
+          <Link to="/" className="text-gray-400 hover:text-gray-600 transition-colors">
+            <ArrowLeft className="w-6 h-6" />
           </Link>
+          <img src={logoDmi} alt="Cartão DMI" className="h-8 object-contain" />
+          <div className="w-6" /> {/* Espaçador para centralizar a logo */}
         </div>
       </header>
 
-      <main className="flex-1 container max-w-lg mx-auto px-4 py-12 flex flex-col items-center">
-        <div className="w-full space-y-6">
+      <main className="flex-1 flex flex-col items-center justify-start pt-12 px-4 sm:px-6">
+        <div className="w-full max-w-md space-y-8 animate-fade-in">
+          
+          {/* Título */}
           <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold">Acompanhar Solicitação</h2>
-            <p className="text-muted-foreground">Digite o número do protocolo recebido no cadastro.</p>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+              Acompanhe seu Cadastro
+            </h1>
+            <p className="text-sm text-gray-500">
+              Digite o número do protocolo gerado no final do seu cadastro para ver o status.
+            </p>
           </div>
 
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <Input 
-              placeholder="Ex: 202310251234" 
-              value={protocolo}
-              onChange={(e) => setProtocolo(e.target.value)}
-              className="text-lg font-mono tracking-wide"
-            />
-            <Button type="submit" disabled={loading} size="lg">
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-            </Button>
-          </form>
-
-          {resultado && (
-            <div className="bg-card border border-border rounded-xl p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-semibold text-lg">{resultado.nome_completo}</h3>
-                  <p className="text-sm text-muted-foreground">Protocolo: {protocolo}</p>
+          {/* Card de Busca */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <form onSubmit={handleConsultar} className="space-y-4">
+              <div>
+                <label htmlFor="protocolo" className="block text-sm font-medium text-gray-700 mb-1">
+                  Número do Protocolo
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    id="protocolo"
+                    value={protocolo}
+                    onChange={(e) => setProtocolo(e.target.value)}
+                    placeholder="Ex: 202310251234"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#0EA5FF] focus:border-transparent transition-all outline-none"
+                    required
+                  />
                 </div>
-                {resultado.status === 'aprovado' && <CheckCircle className="text-green-500 w-8 h-8" />}
-                {resultado.status === 'pendente' && <Clock className="text-yellow-500 w-8 h-8" />}
-                {resultado.status === 'rejeitado' && <XCircle className="text-red-500 w-8 h-8" />}
               </div>
 
-              <div className="space-y-4">
-                <div className={`p-3 rounded-lg flex items-center gap-3 ${
-                  resultado.status === 'aprovado' ? 'bg-green-50 text-green-800' :
-                  resultado.status === 'pendente' ? 'bg-yellow-50 text-yellow-800' :
-                  'bg-red-50 text-red-800'
-                }`}>
-                  <div className="font-medium">
-                    Status: <span className="uppercase">{resultado.status}</span>
-                  </div>
-                </div>
+              <button
+                type="submit"
+                disabled={loading || !protocolo.trim()}
+                className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-black bg-[#64E627] hover:bg-[#52C51D] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#64E627] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  "Consultar Status"
+                )}
+              </button>
+            </form>
+          </div>
 
-                {resultado.status === 'pendente' && (
-                  <p className="text-sm text-muted-foreground">
-                    Seu cadastro está em análise. Aguarde a confirmação do pagamento para a liberação do contrato.
-                  </p>
+          {/* Mensagem de Erro */}
+          {error && (
+            <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl flex items-start gap-3 animate-fade-in">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              <p className="text-sm font-medium">{error}</p>
+            </div>
+          )}
+
+          {/* Resultado da Busca */}
+          {result && (
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in zoom-in-95 duration-300">
+              {/* Header do Resultado baseado no status */}
+              <div className={`p-6 text-center border-b ${
+                result.status === 'aprovado' ? 'bg-green-50 border-green-100' :
+                result.status === 'rejeitado' ? 'bg-red-50 border-red-100' :
+                'bg-amber-50 border-amber-100'
+              }`}>
+                <div className="flex justify-center mb-3">
+                  {result.status === 'aprovado' && <CheckCircle2 className="w-12 h-12 text-green-500" />}
+                  {result.status === 'rejeitado' && <XCircle className="w-12 h-12 text-red-500" />}
+                  {result.status === 'pendente' && <Clock className="w-12 h-12 text-amber-500" />}
+                </div>
+                
+                <h3 className={`text-xl font-bold uppercase tracking-wide ${
+                  result.status === 'aprovado' ? 'text-green-700' :
+                  result.status === 'rejeitado' ? 'text-red-700' :
+                  'text-amber-700'
+                }`}>
+                  {result.status}
+                </h3>
+                
+                <p className="text-sm mt-2 text-gray-600 font-medium">
+                  {result.status === 'aprovado' && 'Parabéns! Seu cadastro foi finalizado com sucesso.'}
+                  {result.status === 'rejeitado' && 'Houve um problema com o seu cadastro.'}
+                  {result.status === 'pendente' && 'Seus dados estão em análise. Aguarde a confirmação do pagamento.'}
+                </p>
+              </div>
+
+              {/* Detalhes */}
+              <div className="p-6 space-y-4">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Titular</p>
+                  <p className="text-base font-bold text-gray-900">{result.nome_completo}</p>
+                </div>
+                
+                {result.valor && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Valor do Plano</p>
+                    <p className="text-base font-bold text-green-600">{result.valor}</p>
+                  </div>
                 )}
 
-                {resultado.status === 'aprovado' && resultado.downloadUrl && (
-                  <div className="pt-2">
-                    <Button className="w-full" asChild>
-                      <a href={resultado.downloadUrl} target="_blank" rel="noreferrer">
-                        <FileText className="w-4 h-4 mr-2" />
-                        Baixar Contrato Assinado
-                      </a>
-                    </Button>
+                {/* Botão de Download (Apenas se Aprovado e tiver Link) */}
+                {result.status === 'aprovado' && result.downloadUrl && (
+                  <div className="pt-4 mt-2 border-t border-gray-100">
+                    <a
+                      href={result.downloadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      Baixar Contrato PDF
+                    </a>
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          <div className="pt-8 text-center">
-            <Link to="/" className="text-sm text-muted-foreground hover:text-foreground flex items-center justify-center gap-2">
-                <ArrowLeft className="w-4 h-4"/> Voltar para o início
-            </Link>
-          </div>
         </div>
       </main>
     </div>
