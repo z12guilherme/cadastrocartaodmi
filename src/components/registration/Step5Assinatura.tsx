@@ -1,20 +1,30 @@
 import { useRef, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye } from "lucide-react";
 import { toast } from "sonner";
 
 interface Step5Props {
   onConfirm: (signature: string) => void;
   onBack: () => void;
+  onPreview: (signature: string) => void;
   isSubmitting: boolean;
 }
 
-const Step5Assinatura = ({ onConfirm, onBack, isSubmitting }: Step5Props) => {
+const Step5Assinatura = ({ onConfirm, onBack, onPreview, isSubmitting }: Step5Props) => {
   const sigPadRef = useRef<SignatureCanvas>(null);
 
   const handleClear = () => {
     sigPadRef.current?.clear();
+  };
+
+  const handlePreview = () => {
+    if (sigPadRef.current?.isEmpty()) {
+      toast.error("Por favor, assine no campo abaixo antes de pré-visualizar o contrato.");
+      return;
+    }
+    const signature = sigPadRef.current?.toDataURL("image/png") as string;
+    onPreview(signature);
   };
 
   const handleConfirm = () => {
@@ -41,19 +51,23 @@ const Step5Assinatura = ({ onConfirm, onBack, isSubmitting }: Step5Props) => {
         />
       </div>
 
-      <div className="flex justify-between pt-2">
-        <Button variant="outline" onClick={onBack} size="lg" disabled={isSubmitting}>
+      <div className="flex flex-col-reverse sm:flex-row justify-between pt-4 gap-4">
+        <Button variant="outline" onClick={onBack} size="lg" disabled={isSubmitting} className="w-full sm:w-auto">
           Voltar
         </Button>
-        <div className="flex gap-4">
-          <Button variant="ghost" onClick={handleClear} disabled={isSubmitting}>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <Button variant="secondary" onClick={handlePreview} disabled={isSubmitting} className="w-full sm:w-auto" size="lg">
+            <Eye className="w-4 h-4 mr-2" />
+            Pré-visualizar
+          </Button>
+          <Button variant="ghost" onClick={handleClear} disabled={isSubmitting} className="w-full sm:w-auto" size="lg">
             Limpar
           </Button>
-          <Button onClick={handleConfirm} size="lg" disabled={isSubmitting}>
+          <Button onClick={handleConfirm} size="lg" disabled={isSubmitting} className="w-full sm:w-auto bg-[#64E627] hover:bg-[#64E627]/90 text-black">
             {isSubmitting ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : null}
-            Assinar e Finalizar
+            Finalizar
           </Button>
         </div>
       </div>

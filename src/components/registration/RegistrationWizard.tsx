@@ -15,7 +15,7 @@ import {
 } from "@/types/registration";
 import logoDmi from "@/assets/logo-dmi.png";
 import { submitCadastro } from "@/services/api";
-// import { generateContractPdf, savePdfFile } from "./pdf"; // Não gera mais no client
+import { generateContractPdf } from "./pdf"; 
 import { toast } from "sonner";
 
 const RegistrationWizard = () => {
@@ -32,6 +32,22 @@ const RegistrationWizard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   // const [finalContract, setFinalContract] = useState<Blob | null>(null);
   const [protocolo, setProtocolo] = useState<string | null>(null);
+
+  const handlePreviewContract = async (signatureBase64: string) => {
+    try {
+      toast.info("Gerando pré-visualização...", { id: "preview" });
+      // Passamos a assinatura e os dados do form atual para gerar um PDF na hora
+      const pdfBytes = await generateContractPdf(data, signatureBase64);
+      const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      window.open(pdfUrl, "_blank"); // Abre em nova aba
+      toast.success("Pré-visualização aberta em nova aba!", { id: "preview" });
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000); // Limpa a memória
+    } catch (error) {
+      console.error("Erro ao gerar preview", error);
+      toast.error("Erro ao gerar pré-visualização. Verifique os dados informados.", { id: "preview" });
+    }
+  };
 
   const handleSignAndSubmit = async (signatureImageBase64: string) => {
     setIsSubmitting(true);
@@ -139,6 +155,7 @@ const RegistrationWizard = () => {
             <Step5Assinatura
               onConfirm={handleSignAndSubmit}
               onBack={() => setStep(5)}
+              onPreview={handlePreviewContract}
               isSubmitting={isSubmitting}
             />
           )}
