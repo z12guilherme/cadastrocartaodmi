@@ -1,9 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { X, FileText, Image as ImageIcon, User, Loader2, Check, AlertTriangle, Search, Users, Clock, CheckCircle, LogOut, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, FileText, Image as ImageIcon, User, Loader2, Check, AlertTriangle, Search, Users, Clock, CheckCircle, LogOut, Eye, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 import { generateContractPdf } from '@/components/registration/pdf';
 import { RegistrationData } from '@/types/registration';
+import { toast } from 'sonner';
 
 interface Inscricao {
   id: string;
@@ -741,11 +742,24 @@ export default function Dashboard() {
                     {/* Assinatura (Preview) */}
                     <div className="border border-gray-100 rounded-xl p-4">
                        <p className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2"><FileText className="w-4 h-4 text-gray-400" /> Assinatura Coletada</p>
-                       <div className="bg-gray-50 border border-gray-200 border-dashed rounded-lg p-2 h-24 flex items-center justify-center">
+                       <div className="bg-gray-50 border border-gray-200 border-dashed rounded-lg p-4 flex flex-col items-center justify-center min-h-[6rem] gap-2">
                          {imageUrls.assinatura ? (
-                            <img src={imageUrls.assinatura} alt="Assinatura" className="max-h-full max-w-full object-contain" />
+                            <img src={imageUrls.assinatura} alt="Assinatura" className="max-h-full max-w-full object-contain h-24" />
                          ) : (
-                            <span className="text-xs text-gray-400">Sem assinatura</span>
+                            <>
+                              <span className="text-xs text-gray-500 font-medium">Aguardando assinatura</span>
+                              <button
+                                onClick={() => {
+                                  const link = `${window.location.origin}/assinatura/${encodeURIComponent(selectedInscricao.cpf)}`;
+                                  navigator.clipboard.writeText(link);
+                                  toast.success('Link de assinatura copiado!');
+                                }}
+                                className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-[#0EA5FF] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-md transition-colors border border-blue-100"
+                              >
+                                <Copy className="w-3 h-3" />
+                                Copiar Link
+                              </button>
+                            </>
                          )}
                        </div>
                     </div>
