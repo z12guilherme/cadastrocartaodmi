@@ -36,6 +36,10 @@ const Step5Assinatura = ({ onConfirm, onBack, onPreview, isSubmitting }: Step5Pr
     onConfirm(signature);
   };
 
+  const handleSkip = () => {
+    onConfirm(""); // Passa string vazia para salvar o cadastro sem a assinatura
+  };
+
   return (
     <div className="animate-fade-in space-y-5">
       <h2 className="text-xl font-semibold text-foreground">Assinatura Digital</h2>
@@ -56,6 +60,9 @@ const Step5Assinatura = ({ onConfirm, onBack, onPreview, isSubmitting }: Step5Pr
           Voltar
         </Button>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <Button variant="outline" onClick={handleSkip} disabled={isSubmitting} className="w-full sm:w-auto text-[#0EA5FF] border-[#0EA5FF] hover:bg-[#0EA5FF]/10" size="lg">
+            Gerar Link para Cliente
+          </Button>
           <Button variant="secondary" onClick={handlePreview} disabled={isSubmitting} className="w-full sm:w-auto" size="lg">
             <Eye className="w-4 h-4 mr-2" />
             Pré-visualizar

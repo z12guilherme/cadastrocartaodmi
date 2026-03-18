@@ -1,14 +1,23 @@
-import { CheckCircle2, Clock } from "lucide-react";
+import { CheckCircle2, Clock, Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 interface Step6Props {
   onReset: () => void;
   protocolo: string | null;
+  cpf: string;
   // contractBlob retirado pois não é mais gerado aqui
 }
 
-const Step6Sucesso = ({ onReset, protocolo }: Step6Props) => {
+const Step6Sucesso = ({ onReset, protocolo, cpf }: Step6Props) => {
+  const linkAssinatura = `${window.location.origin}/assinatura/${encodeURIComponent(cpf)}`;
+
+  const copiarLink = () => {
+    navigator.clipboard.writeText(linkAssinatura);
+    toast.success("Link copiado para a área de transferência!");
+  };
+
   return (
     <div className="animate-fade-in flex flex-col items-center justify-center text-center py-12 space-y-6">
       <div className="w-20 h-20 rounded-full bg-[#64E627]/15 flex items-center justify-center">
@@ -31,6 +40,23 @@ const Step6Sucesso = ({ onReset, protocolo }: Step6Props) => {
             <p className="text-xs text-blue-500 mt-2">Guarde este número para consultar seu status</p>
           </div>
         )}
+
+        <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg w-full max-w-sm mx-auto space-y-3">
+          <p className="text-sm font-medium text-gray-700">Link para o cliente assinar:</p>
+          <div className="flex items-center gap-2 bg-white border rounded-md p-2">
+            <input type="text" readOnly value={linkAssinatura} className="text-xs text-gray-500 bg-transparent flex-1 outline-none" />
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={copiarLink} variant="default" size="sm" className="w-full gap-2 bg-[#0EA5FF] hover:bg-[#0EA5FF]/90 text-white">
+              <Copy className="w-4 h-4" /> Copiar Link
+            </Button>
+            <Button asChild variant="outline" size="sm" className="w-full gap-2">
+              <a href={linkAssinatura} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="w-4 h-4" /> Abrir
+              </a>
+            </Button>
+          </div>
+        </div>
 
         <div className="bg-yellow-50 text-yellow-800 p-4 rounded-lg text-sm border border-yellow-200 mt-4 flex items-center gap-3 text-left">
           <Clock className="w-5 h-5 flex-shrink-0" />

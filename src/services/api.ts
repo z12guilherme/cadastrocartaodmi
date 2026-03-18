@@ -121,13 +121,16 @@ export const submitCadastro = async ({
 
   try {
     // 1. Upload da Assinatura (PNG)
-    const signatureBlob = await base64ToBlob(signatureBase64);
-    const signaturePath = `${cleanCpf}/assinatura.png`;
-    const { error: uploadSigError } = await supabase.storage
-      .from('documentos')
-      .upload(signaturePath, signatureBlob, { upsert: true });
-    
-    if (uploadSigError) throw uploadSigError;
+    let signaturePath = null;
+    if (signatureBase64 && signatureBase64.trim() !== "") {
+      const signatureBlob = await base64ToBlob(signatureBase64);
+      signaturePath = `${cleanCpf}/assinatura.png`;
+      const { error: uploadSigError } = await supabase.storage
+        .from('documentos')
+        .upload(signaturePath, signatureBlob, { upsert: true });
+      
+      if (uploadSigError) throw uploadSigError;
+    }
 
     // 2. Upload do RG (frente/verso ou único)
     // Comprime a imagem antes de enviar

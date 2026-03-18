@@ -159,7 +159,7 @@ const RegistrationWizard = () => {
               isSubmitting={isSubmitting}
             />
           )}
-          {step === 7 && <Step6Sucesso onReset={handleReset} protocolo={protocolo} />}
+          {step === 7 && <Step6Sucesso onReset={handleReset} protocolo={protocolo} cpf={data.titular.cpf} />}
         </div>
       </main>
     </div>
