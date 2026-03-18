@@ -10,9 +10,16 @@ interface SubmitProps {
  * Converte Base64 para Blob (necessário se os arquivos vierem como string base64)
  */
 const base64ToBlob = async (base64: string): Promise<Blob> => {
-  const response = await fetch(base64);
-  const blob = await response.blob();
-  return blob;
+  const arr = base64.split(',');
+  const mimeMatch = arr[0].match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
 };
 
 /**
