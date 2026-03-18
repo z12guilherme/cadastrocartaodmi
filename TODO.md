@@ -71,15 +71,5 @@ A estratégia para nunca estourar o limite de 1GB gratuito do Supabase.
 
 --
 
-## 7. Integração com Stone (Pagamento Automático via Webhook)
-O Roteiro do Webhook (Stone + Supabase Edge Functions)
-
-- [ ] **Painel da Stone**: Acessar a área de "Desenvolvedor" ou "Configurações > Webhooks" na conta da empresa.
-- [ ] **Cadastrar a Rota**: Adicionar a URL onde seu sistema vai escutar os eventos (ex: URL da sua Supabase Edge Function). Lembre de marcar para ouvir o evento de "Pagamento Aprovado" (ex: `order.paid`).
-- [ ] **Pegar a Chave**: Copiar o `WEBHOOK_SECRET` (chave de assinatura) que a Stone vai gerar para essa URL específica.
-- [ ] **Variáveis de Ambiente no Supabase**: Adicionar a chave "Secret" no Supabase (`STONE_WEBHOOK_SECRET`) para que a Edge Function possa validar a autenticidade do evento da Stone.
-- [x] **Criar Webhook (Edge Function)**: Criar uma Supabase Edge Function (Deno/Typescript) com a lógica de validação do hash (HMAC) e o update direto no banco usando a `SUPABASE_SERVICE_ROLE_KEY` (mudando status para 'aprovado').
-- [x] **Deploy da Função**: Fazer o deploy da função no projeto Supabase (ex: `supabase functions deploy webhook-stone`).
-- [ ] **Teste de Fogo**: Fazer um pagamento de teste (ou simular no próprio painel da Stone) e assistir a mágica do status mudando para "Aprovado" sozinho na tabela do Supabase.
-
---
+## 7. Integração com Stone (Cancelada)
+A diretoria optou por não contratar o plano e-commerce da Stone. O fluxo continuará sendo manual, com envio do comprovante na hora do cadastro e aprovação pela equipe no painel admin.
