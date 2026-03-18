@@ -71,5 +71,3 @@ A estratégia para nunca estourar o limite de 1GB gratuito do Supabase.
 
 --
 
-## 7. Integração com Stone (Cancelada)
-A diretoria optou por não contratar o plano e-commerce da Stone. O fluxo continuará sendo manual, com envio do comprovante na hora do cadastro e aprovação pela equipe no painel admin.

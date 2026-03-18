@@ -77,6 +77,11 @@ serve(async (req) => {
         }
     }
 
+    // Prepara a assinatura para exclusão (não enviamos pro Telegram pois já está cravada no PDF)
+    if (record.assinatura_url) {
+        filesToDelete.push(record.assinatura_url);
+    }
+
     // Função auxiliar para baixar do storage do Supabase e mandar pro Telegram
     const sendToTelegram = async (fileInfo: any) => {
         const { data, error } = await supabase.storage.from('documentos').download(fileInfo.url);
@@ -114,7 +119,7 @@ serve(async (req) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             chat_id: TELEGRAM_CHAT_ID,
-            text: `✅ *Novo Cadastro Aprovado!*\n\n*Cliente:* ${clienteNome}\n*CPF:* ${cpf}\n\nEnviando arquivos...`,
+            text: `✅ *Novo Cadastro Aprovado!*\n\n*Protocolo:* \`${record.protocolo || '-'}\`\n*Cliente:* ${clienteNome}\n*CPF:* ${cpf}\n*Telefone:* ${record.telefone || '-'}\n*Valor:* ${record.valor || '-'}\n\nEnviando arquivos...`,
             parse_mode: 'Markdown'
         })
     });
@@ -134,7 +139,8 @@ serve(async (req) => {
         // Esvazia os campos no banco para não dar erro de "imagem quebrada" no Dashboard
         await supabase.from('inscricoes').update({
             foto_url: null,
-            comprovante_pagamento_url: null
+            comprovante_pagamento_url: null,
+            assinatura_url: null
         }).eq('id', record.id);
     }
 
