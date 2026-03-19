@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+
+
+
 import { consultarStatusPorProtocolo } from "@/services/api";
+import MaskedInput from "@/components/registration/MaskedInput";
 import { 
   Search, 
   CheckCircle2, 
@@ -35,8 +39,8 @@ export default function ConsultaStatus() {
     setResult(null);
 
     try {
-      // Formata para garantir que não tem espaços soltos
-      const cleanProtocolo = protocolo.trim();
+      // Remove a formatação do CPF para buscar no banco
+      const cleanProtocolo = protocolo.replace(/\D/g, "");
       const data = await consultarStatusPorProtocolo(cleanProtocolo);
       
       if (!data) {
@@ -74,7 +78,7 @@ export default function ConsultaStatus() {
               Acompanhe seu Cadastro
             </h1>
             <p className="text-sm text-gray-500">
-              Digite o número do protocolo gerado no final do seu cadastro para ver o status.
+              Digite o seu CPF para consultar o status do seu plano e baixar o contrato.
             </p>
           </div>
 
@@ -83,18 +87,18 @@ export default function ConsultaStatus() {
             <form onSubmit={handleConsultar} className="space-y-4">
               <div>
                 <label htmlFor="protocolo" className="block text-sm font-medium text-gray-700 mb-1">
-                  Número do Protocolo
+                  CPF do Titular
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
                     <Search className="h-5 w-5 text-gray-400" />
                   </div>
-                  <input
-                    type="text"
+                  <MaskedInput
                     id="protocolo"
+                    mask="000.000.000-00"
                     value={protocolo}
-                    onChange={(e) => setProtocolo(e.target.value)}
-                    placeholder="Ex: 202310251234"
+                    onAccept={(v) => setProtocolo(v)}
+                    placeholder="000.000.000-00"
                     className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#0EA5FF] focus:border-transparent transition-all outline-none"
                     required
                   />

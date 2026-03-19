@@ -121,10 +121,8 @@ export const submitCadastro = async ({
   // Remove caracteres não numéricos do CPF para usar como nome de pasta/arquivo
   const cleanCpf = titular.cpf.replace(/\D/g, "");
 
-  // Gera Protocolo: DATA (YYYYMMDD) + 4 dígitos aleatórios
-  const datePart = new Date().toISOString().slice(0,10).replace(/-/g, '');
-  const randomPart = Math.floor(1000 + Math.random() * 9000);
-  const protocolo = `${datePart}${randomPart}`; // Ex: 202310251234
+  // Usa o CPF limpo do cliente como Protocolo de Consulta
+  const protocolo = cleanCpf;
 
   try {
     // 1. Upload da Assinatura (PNG)
@@ -238,11 +236,19 @@ export const submitCadastro = async ({
   }
 };
 
-export const consultarStatusPorProtocolo = async (protocolo: string) => {
+export const consultarStatusPorProtocolo = async (termoBusca: string) => {
+  // Recria a máscara do CPF para conseguir achar os cadastros antigos no banco
+  let cpfFormatado = termoBusca;
+  if (termoBusca.length === 11 && !termoBusca.includes('.')) {
+    cpfFormatado = termoBusca.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+  }
+
   const { data, error } = await supabase
     .from('inscricoes')
     .select('nome_completo, status, anexo_documento_url, valor')
-    .eq('protocolo', protocolo)
+    .or(`protocolo.eq.${termoBusca},cpf.eq.${cpfFormatado},cpf.eq.${termoBusca}`)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .single();
 
   if (error) throw error;

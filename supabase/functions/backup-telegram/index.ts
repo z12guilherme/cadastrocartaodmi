@@ -172,6 +172,82 @@ serve(async (req) => {
         }).eq('id', record.id);
     }
 
+    // 5. Notificação via WhatsApp (API SURI)
+    const telefoneNumeros = record.telefone ? record.telefone.replace(/\D/g, '') : null;
+    const suriToken = Deno.env.get('SURI_TOKEN');
+    const suriUrl = Deno.env.get('SURI_API_URL'); // Ex: A URL de envio de mensagem da Suri
+    const suriChannelId = Deno.env.get('SURI_CHANNEL_ID') || 'wp830252690173622';
+
+    if (telefoneNumeros && suriToken && suriUrl) {
+        // Adiciona DDI do Brasil (55) se o número não possuir
+        const telefoneSuri = telefoneNumeros.length <= 11 ? `55${telefoneNumeros}` : telefoneNumeros;
+        
+        // Primeiro nome do cliente
+        const primeiroNome = record.nome_completo.split(' ')[0];
+        
+        // URL do seu site (ajuste para o seu domínio real de produção)
+        const urlSite = 'https://cadastro.cartaodmi.com.br'; 
+
+        // Monta apenas os dados estritamente necessários para não travar a API com valores nulos
+        const userObj: any = {
+            name: record.nome_completo,
+            phone: telefoneSuri,
+            gender: 0,
+            channelId: suriChannelId,
+            channelType: 1
+        };
+
+        if (record.email && record.email.trim() !== '') {
+            userObj.email = record.email;
+        }
+
+        // Envio via Template da Meta (Com variável para o nome)
+        const suriBody = {
+            user: userObj,
+            isTemplate: true,
+            message: {
+                type: "template",
+                template: {
+                    name: "cadastro_aprovado_dmi", // Meta exige nomes em minúsculo
+                    language: { code: "pt_BR" },
+                    components: [
+                        {
+                            type: "body",
+                            parameters: [
+                                { type: "text", text: primeiroNome } // Substitui o '1' pelo nome do cliente
+                            ]
+                        }
+                    ]
+                }
+            }
+        };
+
+        try {
+            // Extrai apenas a base da URL para evitar duplicidade de caminhos (ex: api/v1/api/messages)
+            const baseOrigin = new URL(suriUrl).origin;
+            const finalSuriUrl = `${baseOrigin}/api/messages/send`;
+
+            const suriResponse = await fetch(finalSuriUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${suriToken}`,
+                    'Token': suriToken // Adicionado por precaução conforme a doc
+                },
+                body: JSON.stringify(suriBody)
+            });
+            
+            if (!suriResponse.ok) {
+                const errorText = await suriResponse.text();
+                console.error(`Suri API Erro: Status ${suriResponse.status} - Resposta: ${errorText}`);
+            } else {
+                console.log(`Notificação WhatsApp enviada para ${telefoneSuri} via Suri com sucesso!`);
+            }
+        } catch (error) {
+            console.error('Erro de rede ao tentar contatar a Suri:', error);
+        }
+    }
+
     return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } })
   } catch (error: any) {
     console.error('Erro Fatal na Edge Function:', error)
