@@ -125,38 +125,52 @@ export const submitCadastro = async ({
   const protocolo = cleanCpf;
 
   try {
+    // Array para guardar todas as tarefas e executar ao mesmo tempo
+    const uploadTasks: Promise<any>[] = [];
+
     // 1. Upload da Assinatura (PNG)
     let signaturePath = null;
     if (signatureBase64 && signatureBase64.trim() !== "") {
-      const signatureBlob = await base64ToBlob(signatureBase64);
       signaturePath = `${cleanCpf}/assinatura.png`;
-      const { error: uploadSigError } = await supabase.storage
-        .from('documentos')
-        .upload(signaturePath, signatureBlob, { upsert: true });
-      
-      if (uploadSigError) throw uploadSigError;
+      uploadTasks.push(
+        base64ToBlob(signatureBase64).then(blob => 
+          supabase.storage.from('documentos').upload(signaturePath, blob, { upsert: true })
+        )
+      );
     }
 
-    // 2. Upload do RG (frente/verso ou único)
-    // Comprime a imagem antes de enviar
-    const rgBlob = await compressImage(documentos.fotoRg);
+    // 2. Upload do RG
     const rgPath = `${cleanCpf}/rg.jpg`;
-    const { error: uploadError2 } = await supabase.storage
-      .from('documentos')
-      .upload(rgPath, rgBlob, { upsert: true });
-
-    if (uploadError2) throw uploadError2;
+    uploadTasks.push(
+      compressImage(documentos.fotoRg).then(blob => 
+        supabase.storage.from('documentos').upload(rgPath, blob, { upsert: true })
+      )
+    );
 
     // 3. Upload do Comprovante de Residência
-    const resBlob = await compressImage(documentos.fotoComprovanteResidencia);
     const resPath = `${cleanCpf}/residencia.jpg`;
-    const { error: uploadError3 } = await supabase.storage
-      .from('documentos')
-      .upload(resPath, resBlob, { upsert: true });
+    uploadTasks.push(
+      compressImage(documentos.fotoComprovanteResidencia).then(blob => 
+        supabase.storage.from('documentos').upload(resPath, blob, { upsert: true })
+      )
+    );
 
-    if (uploadError3) throw uploadError3;
+    // 3.8 Upload Comprovante Pagamento
+    let comprovantePath = null;
+    if (comprovantePagamento) {
+        comprovantePath = `${cleanCpf}/comprovante_pagamento.jpg`;
+        uploadTasks.push(
+          compressImage(comprovantePagamento).then(blob => 
+            supabase.storage.from('documentos').upload(comprovantePath, blob, { upsert: true })
+          )
+        );
+    }
 
-    // 3.5. Upload Documentos dos Dependentes
+    // 🚀 OTIMIZAÇÃO: Executa todos os uploads ao mesmo tempo! (Muito mais rápido)
+    const results = await Promise.all(uploadTasks);
+    results.forEach(res => { if (res.error) throw res.error; });
+
+    // 3.5. Upload Documentos dos Dependentes (Já estava otimizado usando Promise.all)
     const dependentesProcessados = await Promise.all(dependentes.map(async (dep, index) => {
       let fotoUrl = null;
       if (dep.fotoDocumento) {
@@ -177,17 +191,6 @@ export const submitCadastro = async ({
         fotoDocumento: fotoUrl // Salva o caminho do arquivo em vez do base64
       };
     }));
-
-    // 3.8 Upload Comprovante Pagamento
-    let comprovantePath = null;
-    if (comprovantePagamento) {
-        const cpBlob = await compressImage(comprovantePagamento);
-        comprovantePath = `${cleanCpf}/comprovante_pagamento.jpg`;
-        const { error: cpError } = await supabase.storage
-          .from('documentos')
-          .upload(comprovantePath, cpBlob, { upsert: true });
-        if (cpError) throw cpError;
-    }
 
     // --- Regra de Negócio para o Valor da Mensalidade ---
     const valorTotal = calcularValorPlano(dependentesProcessados.length);

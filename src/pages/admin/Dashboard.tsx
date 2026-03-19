@@ -103,51 +103,46 @@ export default function Dashboard() {
   useEffect(() => {
     if (selectedInscricao) {
       const loadImages = async () => {
-        const urls: { [key: string]: string } = {};
+        const pathsToSign: { key: string; path: string }[] = [];
         
-        if (selectedInscricao.foto_url) {
-          const { data } = await supabase.storage.from('documentos').createSignedUrl(selectedInscricao.foto_url, 3600);
-          if (data) urls.rg = data.signedUrl;
-        }
-        
-        if (selectedInscricao.anexo_documento_url) {
-          const { data } = await supabase.storage.from('documentos').createSignedUrl(selectedInscricao.anexo_documento_url, 3600);
-          if (data) urls.contrato = data.signedUrl;
-        }
+        if (selectedInscricao.foto_url) pathsToSign.push({ key: 'rg', path: selectedInscricao.foto_url });
+        if (selectedInscricao.anexo_documento_url) pathsToSign.push({ key: 'contrato', path: selectedInscricao.anexo_documento_url });
 
         // Tenta buscar a residência baseado no padrão de caminho (cpf/residencia.jpg)
         const cleanCpf = selectedInscricao.cpf.replace(/\D/g, "");
-        const { data: resData } = await supabase.storage.from('documentos').createSignedUrl(`${cleanCpf}/residencia.jpg`, 3600);
-        if (resData) urls.residencia = resData.signedUrl;
+        pathsToSign.push({ key: 'residencia', path: `${cleanCpf}/residencia.jpg` });
 
         // Assinatura
-        if (selectedInscricao.assinatura_url) {
-            const { data: sigData } = await supabase.storage.from('documentos').createSignedUrl(selectedInscricao.assinatura_url, 3600);
-            if (sigData) urls.assinatura = sigData.signedUrl;
-        }
+        if (selectedInscricao.assinatura_url) pathsToSign.push({ key: 'assinatura', path: selectedInscricao.assinatura_url });
 
         // Comprovante Pagamento
-        if (selectedInscricao.comprovante_pagamento_url) {
-            const { data: cpData } = await supabase.storage.from('documentos').createSignedUrl(selectedInscricao.comprovante_pagamento_url, 3600);
-            if (cpData) urls.comprovantePagamento = cpData.signedUrl;
-        }
+        if (selectedInscricao.comprovante_pagamento_url) pathsToSign.push({ key: 'comprovantePagamento', path: selectedInscricao.comprovante_pagamento_url });
 
         // Tenta buscar imagens dos dependentes se houver JSON nas observações
         if (selectedInscricao.observacoes && selectedInscricao.observacoes.startsWith('[')) {
           try {
             const deps = JSON.parse(selectedInscricao.observacoes);
-            for (let i = 0; i < deps.length; i++) {
-              if (deps[i].fotoDocumento) {
-                const { data: depData } = await supabase.storage.from('documentos').createSignedUrl(deps[i].fotoDocumento, 3600);
-                if (depData) urls[`dep_${i}`] = depData.signedUrl;
-              }
-            }
+            deps.forEach((dep: any, index: number) => {
+              if (dep.fotoDocumento) pathsToSign.push({ key: `dep_${index}`, path: dep.fotoDocumento });
+            });
           } catch (e) {
             console.error('Erro ao processar imagens de dependentes:', e);
           }
         }
 
-        setImageUrls(urls);
+        const paths = pathsToSign.map(p => p.path);
+        if (paths.length === 0) return;
+
+        // 🚀 OTIMIZAÇÃO: Batch Request - Pede todos os links de uma só vez (1 requisição ao invés de várias)
+        const { data, error } = await supabase.storage.from('documentos').createSignedUrls(paths, 3600);
+
+        if (data && !error) {
+          const urls: { [key: string]: string } = {};
+          data.forEach((item, index) => {
+            if (item.signedUrl) urls[pathsToSign[index].key] = item.signedUrl;
+          });
+          setImageUrls(urls);
+        }
       };
       loadImages();
     }
