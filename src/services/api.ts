@@ -228,6 +228,9 @@ export const submitCadastro = async ({
 
     if (insertError) throw insertError;
     
+    // Limpa o rascunho do navegador após o sucesso do cadastro
+    localStorage.removeItem("dmi_cadastro_rascunho");
+
     return protocolo;
 
   } catch (error: any) {

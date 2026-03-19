@@ -177,6 +177,7 @@ serve(async (req) => {
     const suriToken = Deno.env.get('SURI_TOKEN');
     const suriUrl = Deno.env.get('SURI_API_URL'); // Ex: A URL de envio de mensagem da Suri
     const suriChannelId = Deno.env.get('SURI_CHANNEL_ID') || 'wp830252690173622';
+    const suriTemplateId = Deno.env.get('SURI_TEMPLATE_ID') || 'cadastro_aprovado_dmi';
 
     if (telefoneNumeros && suriToken && suriUrl) {
         // Adiciona DDI do Brasil (55) se o número não possuir
@@ -188,37 +189,21 @@ serve(async (req) => {
         // URL do seu site (ajuste para o seu domínio real de produção)
         const urlSite = 'https://cadastro.cartaodmi.com.br'; 
 
-        // Monta apenas os dados estritamente necessários para não travar a API com valores nulos
-        const userObj: any = {
-            name: record.nome_completo,
-            phone: telefoneSuri,
-            gender: 0,
-            channelId: suriChannelId,
-            channelType: 1
-        };
-
-        if (record.email && record.email.trim() !== '') {
-            userObj.email = record.email;
-        }
-
-        // Envio via Template da Meta (Com variável para o nome)
+        // Formato exato enviado pelo suporte da SURI
         const suriBody = {
-            user: userObj,
-            isTemplate: true,
+            user: {
+                name: record.nome_completo,
+                phone: telefoneSuri,
+                email: record.email || null,
+                gender: 0,
+                channelId: suriChannelId,
+                channelType: 1,
+                defaultDepartmentId: null
+            },
             message: {
-                type: "template",
-                template: {
-                    name: "cadastro_aprovado_dmi", // Meta exige nomes em minúsculo
-                    language: { code: "pt_BR" },
-                    components: [
-                        {
-                            type: "body",
-                            parameters: [
-                                { type: "text", text: primeiroNome } // Substitui o '1' pelo nome do cliente
-                            ]
-                        }
-                    ]
-                }
+                templateId: suriTemplateId, 
+                BodyParameters: [primeiroNome],
+                ButtonsParameters: []
             }
         };
 
