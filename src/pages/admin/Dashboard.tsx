@@ -257,6 +257,13 @@ export default function Dashboard() {
       alert('Falha ao atualizar o status do cadastro.');
     } else {
       setSelectedInscricao(null);
+      // Atualiza o estado local instantaneamente sem precisar de F5
+      setInscricoes((prev) => 
+        prev.map((inscricao) => 
+          inscricao.id === id ? { ...inscricao, ...updateData } : inscricao
+        )
+      );
+      toast.success(`Cadastro atualizado com sucesso!`);
     }
     setIsSubmitting(false);
   };
@@ -273,6 +280,9 @@ export default function Dashboard() {
       alert('Falha ao reprovar o cadastro.');
     } else {
       setSelectedInscricao(null);
+      // Remove do estado local instantaneamente sem precisar de F5
+      setInscricoes((prev) => prev.filter((inscricao) => inscricao.id !== id));
+      toast.success('Cadastro excluído com sucesso!');
     }
     setIsSubmitting(false);
   };

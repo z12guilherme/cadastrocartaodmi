@@ -5,12 +5,30 @@ import MaskedInput from "./MaskedInput";
 import { Titular } from "@/types/registration";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 interface Step1Props {
   data: Titular;
   onChange: (data: Titular) => void;
   onNext: () => void;
 }
+
+// Algoritmo matemático para validar se o CPF é real
+const validarCPF = (cpf: string) => {
+  cpf = cpf.replace(/[^\d]+/g, '');
+  if (cpf.length !== 11 || !!cpf.match(/(\d)\1{10}/)) return false;
+  let soma = 0, resto;
+  for (let i = 1; i <= 9; i++) soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cpf.substring(9, 10))) return false;
+  soma = 0;
+  for (let i = 1; i <= 10; i++) soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cpf.substring(10, 11))) return false;
+  return true;
+};
 
 const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
   const [errors, setErrors] = useState<Record<string, boolean>>({});
@@ -39,6 +57,24 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
     }
   };
 
+  // Função para validar e buscar os dados do CPF na API
+  const consultarCpf = async () => {
+    const cpfClean = data.cpf.replace(/\D/g, "");
+    if (cpfClean.length !== 11) {
+      toast.error("Digite o CPF completo antes de buscar.");
+      return;
+    }
+    if (!validarCPF(cpfClean)) {
+      toast.error("O CPF informado é inválido!");
+      setErrors((prev) => ({ ...prev, cpf: true }));
+      return;
+    }
+
+    // A consulta automática de nome/data foi desativada.
+    // O botão agora apenas confirma se o número do CPF é matematicamente válido.
+    toast.success("CPF Válido!");
+  };
+
   const validate = () => {
     const required: (keyof Titular)[] = [
       "nomeCompleto",
@@ -55,6 +91,15 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
     required.forEach((f) => {
       if (!data[f].trim()) newErrors[f] = true;
     });
+
+    // Impede o avanço de tela se o CPF for matematicamente falso
+    if (data.cpf && !validarCPF(data.cpf)) {
+      newErrors.cpf = true;
+      toast.error("Por favor, informe um CPF válido para continuar.");
+      setErrors(newErrors);
+      return false;
+    }
+
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
       toast.error("Preencha todos os campos obrigatórios.");
@@ -119,6 +164,13 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
             placeholder="000.000.000-00"
             className={errors.cpf ? "border-destructive" : ""}
           />
+          <button
+            type="button"
+            onClick={consultarCpf}
+            className="text-xs text-[#0EA5FF] hover:underline mt-1"
+          >
+            Validar CPF
+          </button>
         </div>
 
         <div>
