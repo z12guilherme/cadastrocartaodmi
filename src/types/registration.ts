@@ -3,6 +3,7 @@ export interface Titular {
   dataNascimento: string;
   cpf: string;
   telefoneCelular: string;
+  email: string;
   cep: string;
   cidade: string;
   bairro: string;
@@ -50,6 +51,7 @@ export const initialTitular: Titular = {
   dataNascimento: "",
   cpf: "",
   telefoneCelular: "",
+  email: "",
   cep: "",
   cidade: "",
   bairro: "",

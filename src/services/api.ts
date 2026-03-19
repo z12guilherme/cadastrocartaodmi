@@ -205,7 +205,7 @@ export const submitCadastro = async ({
         data_nascimento: formatDateToISO(titular.dataNascimento),
         naturalidade: titular.naturalidade,
         estado_civil: titular.estadoCivil,
-        telefone: titular.telefone || null,
+        telefone: titular.telefoneCelular || null,
         email: titular.email || null,
         endereco: [
           [cleanAddressPart(titular.logradouro), cleanAddressPart(titular.numero)].filter(Boolean).join(', '),

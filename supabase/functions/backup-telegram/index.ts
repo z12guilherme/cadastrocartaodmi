@@ -113,13 +113,41 @@ serve(async (req) => {
         return true;
     }
 
+    // Sanitiza dados vazios e escapa underlines do email para não quebrar a formatação (Markdown) do Telegram
+    const telefoneSeguro = record.telefone && record.telefone.trim() !== '' ? record.telefone : '-';
+    const emailSeguro = record.email ? record.email.replace(/_/g, '\\_') : '-';
+
+    // Montar Ficha Completa
+    const mensagemTelegram = `✅ *Novo Cadastro Aprovado!*
+
+📋 *DADOS DO TITULAR*
+*Protocolo:* \`${record.protocolo || '-'}\`
+*Nome:* ${record.nome_completo || '-'}
+*CPF:* ${record.cpf || '-'}
+*Nascimento:* ${record.data_nascimento ? record.data_nascimento.split('-').reverse().join('/') : '-'}
+*RG:* ${record.rg || '-'}
+*Estado Civil:* ${record.estado_civil || '-'}
+
+📞 *CONTATO E ENDEREÇO*
+*Telefone:* ${telefoneSeguro}
+*E-mail:* ${emailSeguro}
+*Endereço:* ${record.endereco ? record.endereco.replace(/\n/g, ', ') : '-'}
+
+💳 *DADOS DO PLANO*
+*Pgto Adesão:* ${record.metodo_pagamento || '-'}
+*Vencimento:* Dia ${record.dia_vencimento || '-'}
+*Valor:* ${record.valor || '-'}
+*Qtd. Dependentes:* ${record.dependentes_qtd || '0'}
+
+📂 Enviando arquivos em anexo...`;
+
     // 2. Enviar mensagem de texto inicial pro grupo
     await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             chat_id: TELEGRAM_CHAT_ID,
-            text: `✅ *Novo Cadastro Aprovado!*\n\n*Protocolo:* \`${record.protocolo || '-'}\`\n*Cliente:* ${clienteNome}\n*CPF:* ${cpf}\n*Telefone:* ${record.telefone || '-'}\n*Valor:* ${record.valor || '-'}\n\nEnviando arquivos...`,
+            text: mensagemTelegram,
             parse_mode: 'Markdown'
         })
     });

@@ -132,6 +132,17 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
             className={errors.telefoneCelular ? "border-destructive" : ""}
           />
         </div>
+        
+        <div>
+          <Label htmlFor="email">E-mail</Label>
+          <Input
+            id="email"
+            type="email"
+            value={(data as any).email || ""}
+            onChange={(e) => update("email" as any, e.target.value)}
+            placeholder="cliente@email.com"
+          />
+        </div>
 
         <div>
           <Label htmlFor="cep">CEP *</Label>
