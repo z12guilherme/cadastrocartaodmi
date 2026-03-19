@@ -60,14 +60,13 @@ Este documento detalha as tarefas para a criação da área administrativa do si
 
 --
 
-## 6. Integração com Telegram (Backup + Autolimpeza de Storage)
-A estratégia para nunca estourar o limite de 1GB gratuito do Supabase.
-- [x] **Criar Bot**: Falar com o `@BotFather` no Telegram e gerar um Token.
-- [x] **Grupo Administrativo**: Criar um grupo privado no Telegram, adicionar o Bot e pegar o `chat_id`.
-- [x] **Supabase Edge Function (`backup-telegram`)**: Criar função que escuta a aprovação do cadastro.
-- [x] **Upload via API**: A função baixa as imagens/PDF do Supabase e envia para o grupo do Telegram usando a API oficial (`sendDocument` e `sendPhoto`).
-- [x] **Limpeza (Exclusão)**: Após o envio com sucesso para o Telegram, a função deleta as imagens pesadas (RG, Comprovantes) do Supabase Storage, mantendo apenas o PDF do contrato.
-- [x] **Gatilho (Webhook)**: Criar o Webhook no painel do Supabase para disparar a Edge Function ao atualizar a tabela `inscricoes`.
+## 6. Integração com SIGPAF (Sincronização via API)
+Conexão direta com o sistema desktop da clínica para evitar retrabalho manual.
+- [ ] **Reunião de Alinhamento**: Definir Endpoint, Formato do JSON (Payload) e Autenticação com o dev do SIGPAF.
+- [ ] **Supabase Edge Function (`sync-sigpaf`)**: Criar/Atualizar função que escuta a aprovação do cadastro.
+- [ ] **Webhook HTTP**: Função envia um `POST` com os dados mapeados para a rota exposta pelo SIGPAF.
+- [ ] **Limpeza de Storage (Avaliar)**: Deletar imagens pesadas (RG, Comprovantes) do Supabase Storage para não estourar 1GB, mantendo o PDF do contrato, após confirmar se o SIGPAF fará o download prévio.
+- [x] **Gatilho (Webhook)**: Disparar a Edge Function no Supabase ao atualizar a tabela `inscricoes` com status `aprovado`.
 
 --
 
