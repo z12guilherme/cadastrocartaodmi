@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { X, FileText, Image as ImageIcon, User, Loader2, Check, AlertTriangle, Search, Users, Clock, CheckCircle, LogOut, Eye, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
+import { X, FileText, Image as ImageIcon, User, Loader2, Check, AlertTriangle, Search, Users, Clock, CheckCircle, LogOut, Eye, ChevronLeft, ChevronRight, Copy, TrendingUp } from 'lucide-react';
 import { generateContractPdf } from '@/components/registration/pdf';
 import { RegistrationData } from '@/types/registration';
 import { toast } from 'sonner';
@@ -285,6 +285,18 @@ export default function Dashboard() {
   const pendentesCount = useMemo(() => inscricoes.filter(i => i.status === 'pendente').length, [inscricoes]);
   const aprovadosCount = useMemo(() => inscricoes.filter(i => i.status === 'aprovado').length, [inscricoes]);
 
+  // Calcula a Receita Mensal Recorrente (Soma dos valores dos aprovados)
+  const mrr = useMemo(() => {
+    return inscricoes
+      .filter(i => i.status === 'aprovado' && i.valor)
+      .reduce((acc, curr) => {
+        // Pega "R$ 30,00" e converte para número (30.00)
+        const numericString = curr.valor!.replace(/[^\d,.-]/g, '').replace(',', '.');
+        const value = parseFloat(numericString);
+        return acc + (isNaN(value) ? 0 : value);
+      }, 0);
+  }, [inscricoes]);
+
   const filteredInscricoes = useMemo(() => {
     return inscricoes.filter(i => {
       const matchesTab = i.status === (activeTab === 'pendentes' ? 'pendente' : 'aprovado');
@@ -342,7 +354,7 @@ export default function Dashboard() {
       <main className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
         
         {/* Cards de Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center gap-4 hover:shadow-md transition-shadow">
             <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><Users className="w-6 h-6" /></div>
             <div>
@@ -362,6 +374,15 @@ export default function Dashboard() {
             <div>
               <p className="text-sm font-medium text-gray-500">Aprovados</p>
               <h3 className="text-2xl font-bold text-gray-900">{aprovadosCount}</h3>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center gap-4 hover:shadow-md transition-shadow">
+            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><TrendingUp className="w-6 h-6" /></div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Receita Mensal (MRR)</p>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(mrr)}
+              </h3>
             </div>
           </div>
         </div>
