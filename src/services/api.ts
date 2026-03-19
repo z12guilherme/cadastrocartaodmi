@@ -125,6 +125,13 @@ export const submitCadastro = async ({
   const protocolo = cleanCpf;
 
   try {
+    // SEGURANÇA: Verificação final de duplicidade antes de iniciar os uploads
+    const { data: cpfExiste, error: rpcError } = await supabase.rpc('checar_cpf_existente', { p_cpf: titular.cpf });
+    if (rpcError) throw rpcError;
+    if (cpfExiste) {
+      throw new Error("Este CPF já possui um cadastro ativo ou em análise. Verifique a tela de Consulta.");
+    }
+
     // Array para guardar todas as tarefas e executar ao mesmo tempo
     const uploadTasks: Promise<any>[] = [];
 

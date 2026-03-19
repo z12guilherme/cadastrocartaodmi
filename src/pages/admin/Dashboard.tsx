@@ -99,6 +99,27 @@ export default function Dashboard() {
     };
   }, [navigate]);
 
+  // 3. Logout Automático por inatividade (15 minutos)
+  useEffect(() => {
+    let inactivityTimer: NodeJS.Timeout;
+    const performLogout = async () => {
+      await supabase.auth.signOut();
+      navigate('/admin/login', { replace: true });
+      toast.info('Sessão encerrada por inatividade para sua segurança.', { duration: 6000 });
+    };
+    const resetTimer = () => {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(performLogout, 15 * 60 * 1000); // 15 minutos
+    };
+    const events = ['mousemove', 'keydown', 'mousedown', 'scroll', 'touchstart'];
+    events.forEach((event) => window.addEventListener(event, resetTimer));
+    resetTimer(); // Inicia na montagem
+    return () => {
+      clearTimeout(inactivityTimer);
+      events.forEach((event) => window.removeEventListener(event, resetTimer));
+    };
+  }, [navigate]);
+
   // Busca URLs assinadas quando um usuário é selecionado
   useEffect(() => {
     if (selectedInscricao) {

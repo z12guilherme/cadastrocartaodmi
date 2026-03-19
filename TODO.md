@@ -71,3 +71,20 @@ A estratégia para nunca estourar o limite de 1GB gratuito do Supabase.
 
 --
 
+## 7. Experiência do Cliente (UX) e Retenção
+- [x] **Auto-save do Formulário (Rascunho Offline)**: Uso do `localStorage` para salvar os dados em tempo real, evitando perda de progresso se a página for fechada.
+- [x] **Notificação via WhatsApp (API Suri)**: Disparo automático de dois templates (Aprovação e Carteirinha) assim que o administrador confirma o pagamento.
+- [x] **Protocolo Simplificado**: Uso do próprio CPF do cliente como chave de busca, substituindo protocolos aleatórios complexos.
+- [x] **Carteirinha Digital PWA**: Tela dinâmica (`/carteirinha/:cpf`) simulando um cartão físico, com status em tempo real e lista de dependentes.
+
+## 8. Dashboard e Gestão Financeira
+- [x] **MRR (Receita Mensal Recorrente)**: Card no Dashboard que calcula e formata dinamicamente a soma do valor de todas as adesões aprovadas.
+- [x] **Acesso Rápido à Carteirinha**: Aba no modal do administrador para copiar ou visualizar o link da carteirinha digital do beneficiário.
+- [ ] **Gráficos Visuais**: Adicionar gráfico de barras/linhas mostrando o crescimento das aprovações.
+- [ ] **Exportação de Dados**: Botão para exportar a lista de clientes para Excel/CSV para a contabilidade.
+
+## 9. Segurança e Performance
+- [x] **Anti-Fraude de CPF**: RPC no banco de dados e validação no frontend/backend para impedir cadastros duplicados simultâneos com o mesmo CPF.
+- [x] **Otimização de Banco de Dados**: Dashboard refatorado para carregar os links de arquivos assinados em lote (Batch Request) e uploads paralelos (`Promise.all`).
+- [x] **Logout Automático**: Administrador do painel é desconectado automaticamente após 15 minutos de inatividade para evitar acesso indevido.
+- [x] **Sanitização Rigorosa do Storage**: Políticas do Supabase (RLS) atualizadas para bloquear uploads e updates de qualquer arquivo que não seja `.jpg`, `.jpeg`, `.png` ou `.pdf`.

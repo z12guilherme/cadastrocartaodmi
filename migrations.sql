@@ -119,12 +119,26 @@ using (auth.jwt() ->> 'email' = 'clinicadmi.cartaodmi@gmail.com')
 with check (auth.jwt() ->> 'email' = 'clinicadmi.cartaodmi@gmail.com');
 
 -- 3.2. Público: Pode Fazer Upload (Insert)
+drop policy if exists "Publico Faz Upload" on storage.objects;
 create policy "Publico Faz Upload" on storage.objects for insert to public 
-with check (bucket_id = 'documentos');
+with check (
+  bucket_id = 'documentos' 
+  and (
+    lower(right(name, 4)) in ('.jpg', '.png', '.pdf') or 
+    lower(right(name, 5)) = '.jpeg'
+  )
+);
 
 -- 3.3. Público: Pode Atualizar (necessário para o upsert do client-side caso o cliente reenvie a foto no formulário)
+drop policy if exists "Publico Atualiza Uploads" on storage.objects;
 create policy "Publico Atualiza Uploads" on storage.objects for update to public 
-using (bucket_id = 'documentos');
+using (
+  bucket_id = 'documentos'
+  and (
+    lower(right(name, 4)) in ('.jpg', '.png', '.pdf') or 
+    lower(right(name, 5)) = '.jpeg'
+  )
+);
 
 -- 3.4. Público: SÓ pode LER se for o contrato final (Bloqueia leitura de RG, Comprovantes, etc)
 drop policy if exists "Publico Le Apenas Contrato" on storage.objects;

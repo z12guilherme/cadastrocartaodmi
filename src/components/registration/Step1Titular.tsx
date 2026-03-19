@@ -70,9 +70,21 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
       return;
     }
 
-    // A consulta automática de nome/data foi desativada.
-    // O botão agora apenas confirma se o número do CPF é matematicamente válido.
-    toast.success("CPF Válido!");
+    try {
+      // Vai no Supabase de forma segura e pergunta: "Esse CPF já está no banco?"
+      const { data: cpfExiste, error } = await supabase.rpc('checar_cpf_existente', { p_cpf: data.cpf });
+      
+      if (error) throw error;
+
+      if (cpfExiste) {
+        toast.error("Este CPF já possui um cadastro pendente ou aprovado no sistema.");
+        setErrors((prev) => ({ ...prev, cpf: true }));
+      } else {
+        toast.success("CPF Válido e disponível para cadastro!");
+      }
+    } catch (err) {
+      toast.error("Erro ao verificar CPF no sistema.");
+    }
   };
 
   const validate = () => {
