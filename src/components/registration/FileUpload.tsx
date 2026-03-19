@@ -1,4 +1,4 @@
-import { Upload, Check, X, Loader2 } from "lucide-react";
+import { Camera, Upload, Check, X, Loader2 } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import imageCompression from "browser-image-compression";
@@ -85,11 +85,14 @@ const FileUpload = ({ label, value, onChange }: FileUploadProps) => {
           {isCompressing ? (
             <Loader2 className="w-8 h-8 mx-auto text-[#0EA5FF] mb-2 animate-spin" />
           ) : (
-            <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+            <div className="flex items-center justify-center gap-3 mb-2 text-muted-foreground">
+              <Camera className="w-8 h-8" />
+              <Upload className="w-5 h-5 opacity-40" />
+            </div>
           )}
           
           <p className="text-sm text-muted-foreground">
-            {isCompressing ? "Otimizando imagem..." : "Arraste ou toque para enviar"}
+            {isCompressing ? "Otimizando imagem..." : "Toque para abrir a câmera ou enviar arquivo"}
           </p>
           <input
             ref={inputRef}
