@@ -80,8 +80,8 @@ A estratégia para nunca estourar o limite de 1GB gratuito do Supabase.
 ## 8. Dashboard e Gestão Financeira
 - [x] **MRR (Receita Mensal Recorrente)**: Card no Dashboard que calcula e formata dinamicamente a soma do valor de todas as adesões aprovadas.
 - [x] **Acesso Rápido à Carteirinha**: Aba no modal do administrador para copiar ou visualizar o link da carteirinha digital do beneficiário.
-- [ ] **Gráficos Visuais**: Adicionar gráfico de barras/linhas mostrando o crescimento das aprovações.
-- [ ] **Exportação de Dados**: Botão para exportar a lista de clientes para Excel/CSV para a contabilidade.
+- [x] **Gráficos Visuais**: Adicionar gráfico de barras dinâmico (Tailwind) mostrando o crescimento das aprovações nos últimos 7 dias.
+- [x] **Exportação de Dados**: Botão para exportar a lista de clientes para Excel/CSV formatada para a contabilidade.
 
 ## 9. Segurança e Performance
 - [x] **Anti-Fraude de CPF**: RPC no banco de dados e validação no frontend/backend para impedir cadastros duplicados simultâneos com o mesmo CPF.

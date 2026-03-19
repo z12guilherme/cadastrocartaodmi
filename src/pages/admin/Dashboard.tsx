@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { X, FileText, Image as ImageIcon, User, Loader2, Check, AlertTriangle, Search, Users, Clock, CheckCircle, LogOut, Eye, ChevronLeft, ChevronRight, Copy, TrendingUp, CreditCard, ExternalLink } from 'lucide-react';
+import { X, FileText, Image as ImageIcon, User, Loader2, Check, AlertTriangle, Search, Users, Clock, CheckCircle, LogOut, Eye, ChevronLeft, ChevronRight, Copy, TrendingUp, CreditCard, ExternalLink, Download } from 'lucide-react';
 import { generateContractPdf } from '@/components/registration/pdf';
 import { RegistrationData } from '@/types/registration';
 import { toast } from 'sonner';
@@ -318,6 +318,34 @@ export default function Dashboard() {
       }, 0);
   }, [inscricoes]);
 
+  // Calcula os dados para o gráfico de barras (Aprovações dos últimos 7 dias)
+  const chartData = useMemo(() => {
+    const days: { date: string; label: string; count: number; heightPercentage: number }[] = [];
+    const now = new Date();
+    
+    // Gera os últimos 7 dias vazios
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      days.push({
+        date: d.toISOString().split('T')[0],
+        label: d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''),
+        count: 0,
+        heightPercentage: 0
+      });
+    }
+
+    // Preenche com a quantidade de aprovações reais
+    inscricoes.filter(i => i.status === 'aprovado').forEach(i => {
+      const dateStr = new Date(i.created_at).toISOString().split('T')[0];
+      const day = days.find(d => d.date === dateStr);
+      if (day) day.count++;
+    });
+
+    const maxCount = Math.max(...days.map(d => d.count), 1); // Evita divisão por zero
+    return days.map(d => ({ ...d, heightPercentage: (d.count / maxCount) * 100 }));
+  }, [inscricoes]);
+
   const filteredInscricoes = useMemo(() => {
     return inscricoes.filter(i => {
       const matchesTab = i.status === (activeTab === 'pendentes' ? 'pendente' : 'aprovado');
@@ -328,6 +356,42 @@ export default function Dashboard() {
     });
   }, [inscricoes, activeTab, searchTerm]);
 
+
+  // Função para exportar os dados exibidos na tabela para CSV
+  const handleExportCSV = () => {
+    if (filteredInscricoes.length === 0) {
+      toast.error('Não há dados para exportar com os filtros atuais.');
+      return;
+    }
+
+    // Cabeçalhos das colunas
+    const headers = ['Data Cadastro', 'Protocolo', 'Nome Completo', 'CPF', 'Telefone', 'E-mail', 'Status', 'Valor'];
+    
+    // Formata os dados
+    const csvRows = filteredInscricoes.map(i => [
+      new Date(i.created_at).toLocaleDateString('pt-BR'),
+      `"${i.protocolo || ''}"`,
+      `"${i.nome_completo}"`,
+      `"${i.cpf}"`,
+      `"${i.telefone || ''}"`,
+      `"${i.email || ''}"`,
+      i.status.toUpperCase(),
+      `"${i.valor || ''}"`
+    ].join(';')); // Ponto e vírgula é melhor para Excel em português
+
+    // Adiciona o BOM (\uFEFF) para forçar o Excel a ler os acentos (UTF-8) corretamente
+    const csvContent = '\uFEFF' + [headers.join(';'), ...csvRows].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `relatorio_dmi_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Relatório exportado com sucesso!');
+  };
 
   // Volta para a página 1 sempre que o usuário pesquisar ou trocar de aba
   useEffect(() => {
@@ -408,6 +472,32 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Gráfico de Desempenho */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h3 className="text-base font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-[#0EA5FF]" /> Aprovações (Últimos 7 Dias)
+          </h3>
+          <div className="h-48 flex items-end justify-between gap-2 sm:gap-4 pt-6">
+            {chartData.map((day, idx) => (
+              <div key={idx} className="flex flex-col items-center w-full group h-full justify-end">
+                <div className="relative w-full flex justify-center flex-1 items-end">
+                  <div 
+                    className="w-full max-w-[3rem] bg-[#0EA5FF]/20 group-hover:bg-[#0EA5FF]/40 rounded-t-md transition-all duration-500 relative"
+                    style={{ height: `${day.heightPercentage}%`, minHeight: day.count > 0 ? '4px' : '0' }}
+                  >
+                    {day.count > 0 && (
+                      <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-gray-600 animate-fade-in">
+                        {day.count}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <span className="text-xs text-gray-400 mt-3 font-medium capitalize">{day.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Controles: Abas e Busca */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-2 rounded-xl border border-gray-200 shadow-sm">
           <nav className="flex space-x-2" aria-label="Tabs">
@@ -435,15 +525,24 @@ export default function Dashboard() {
             </button>
           </nav>
           
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar cliente ou CPF..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0EA5FF] focus:border-transparent transition-all"
-            />
+          <div className="flex w-full sm:w-auto items-center gap-2">
+            <div className="relative flex-1 sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar cliente ou CPF..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0EA5FF] focus:border-transparent transition-all"
+              />
+            </div>
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm whitespace-nowrap"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Exportar</span>
+            </button>
           </div>
         </div>
 
