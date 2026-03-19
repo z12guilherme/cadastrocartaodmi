@@ -265,3 +265,22 @@ export const consultarStatusPorProtocolo = async (termoBusca: string) => {
 
   return { ...data, downloadUrl };
 };
+
+export const buscarDadosCarteirinha = async (cpfBusca: string) => {
+  let cpfFormatado = cpfBusca;
+  if (cpfBusca.length === 11 && !cpfBusca.includes('.')) {
+    cpfFormatado = cpfBusca.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+  }
+
+  const { data, error } = await supabase
+    .from('inscricoes')
+    .select('nome_completo, cpf, status, observacoes, created_at')
+    .or(`cpf.eq.${cpfFormatado},cpf.eq.${cpfBusca}`)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error) throw error;
+
+  return data;
+};

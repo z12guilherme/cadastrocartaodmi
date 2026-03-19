@@ -12,6 +12,7 @@ import Dashboard from './pages/admin/Dashboard';
 import ConsultaStatus from './pages/ConsultaStatus';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ReloadPrompt } from "./components/ReloadPrompt";
+import Carteirinha from './pages/Carteirinha';
 
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/cadastro" element={<Cadastro />} />
           <Route path="/consulta" element={<ConsultaStatus />} />
           <Route path="/assinatura/:cpf" element={<AssinaturaExterna />} />
+          <Route path="/carteirinha/:cpf" element={<Carteirinha />} />
           <Route path="/admin/login" element={<Login />} />
           
           {/* Rotas Protegidas */}

@@ -139,6 +139,9 @@ serve(async (req) => {
 *Valor:* ${record.valor || '-'}
 *Qtd. Dependentes:* ${record.dependentes_qtd || '0'}
 
+🪪 *CARTEIRINHA DIGITAL*
+👉 [Clique aqui para abrir a carteirinha](https://cadastro.cartaodmi.com.br/carteirinha/${cleanCpf})
+
 📂 Enviando arquivos em anexo...`;
 
     // 2. Enviar mensagem de texto inicial pro grupo
@@ -177,7 +180,8 @@ serve(async (req) => {
     const suriToken = Deno.env.get('SURI_TOKEN');
     const suriUrl = Deno.env.get('SURI_API_URL'); // Ex: A URL de envio de mensagem da Suri
     const suriChannelId = Deno.env.get('SURI_CHANNEL_ID') || 'wp830252690173622';
-    const suriTemplateId = Deno.env.get('SURI_TEMPLATE_ID') || 'cadastro_aprovado_dmi';
+    const suriTemplateId = Deno.env.get('SURI_TEMPLATE_ID') || '1220216410265812';
+    const suriTemplateCarteirinhaId = Deno.env.get('SURI_TEMPLATE_ID_CARTEIRINHA') || '';
 
     if (telefoneNumeros && suriToken && suriUrl) {
         // Adiciona DDI do Brasil (55) se o número não possuir
@@ -202,7 +206,17 @@ serve(async (req) => {
             },
             message: {
                 templateId: suriTemplateId, 
-                BodyParameters: [primeiroNome],
+                BodyParameters: [primeiroNome], // Apenas o nome no primeiro template
+                ButtonsParameters: []
+            }
+        };
+
+        // Formato para o segundo disparo (Carteirinha Digital)
+        const suriBodyCarteirinha = {
+            user: suriBody.user,
+            message: {
+                templateId: suriTemplateCarteirinhaId, 
+                BodyParameters: [primeiroNome, cleanCpf], // Passa o Nome e o CPF (para o link)
                 ButtonsParameters: []
             }
         };
@@ -224,9 +238,20 @@ serve(async (req) => {
             
             if (!suriResponse.ok) {
                 const errorText = await suriResponse.text();
-                console.error(`Suri API Erro: Status ${suriResponse.status} - Resposta: ${errorText}`);
+                console.error(`Suri API Erro (Template 1): Status ${suriResponse.status} - Resposta: ${errorText}`);
             } else {
-                console.log(`Notificação WhatsApp enviada para ${telefoneSuri} via Suri com sucesso!`);
+                console.log(`Template 1 (Aprovação) enviado com sucesso!`);
+            }
+
+            // Disparo 2 (Carteirinha) só acontece se o ID do template estiver configurado
+            if (suriTemplateCarteirinhaId) {
+                const suriResponse2 = await fetch(finalSuriUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${suriToken}`, 'Token': suriToken },
+                    body: JSON.stringify(suriBodyCarteirinha)
+                });
+                if (!suriResponse2.ok) console.error(`Suri API Erro (Template 2): Status ${suriResponse2.status} - Resposta: ${await suriResponse2.text()}`);
+                else console.log(`Template 2 (Carteirinha) enviado com sucesso!`);
             }
         } catch (error) {
             console.error('Erro de rede ao tentar contatar a Suri:', error);

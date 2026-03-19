@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import ProgressBar from "./ProgressBar";
 import Step1Titular from "./Step1Titular";
@@ -32,6 +32,29 @@ const RegistrationWizard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   // const [finalContract, setFinalContract] = useState<Blob | null>(null);
   const [protocolo, setProtocolo] = useState<string | null>(null);
+
+  // 1. Recupera o rascunho salvo ao abrir a tela
+  useEffect(() => {
+    const rascunho = localStorage.getItem("dmi_cadastro_rascunho");
+    if (rascunho) {
+      if (window.confirm("Notamos que você tem um cadastro em andamento. Deseja continuar de onde parou?")) {
+        try {
+          setData(JSON.parse(rascunho)); 
+        } catch (e) {
+          console.error("Erro ao ler rascunho");
+        }
+      } else {
+        localStorage.removeItem("dmi_cadastro_rascunho");
+      }
+    }
+  }, []);
+
+  // 2. Salva automaticamente no LocalStorage a cada alteração
+  useEffect(() => {
+    if (data.titular.nomeCompleto || data.titular.cpf) {
+      localStorage.setItem("dmi_cadastro_rascunho", JSON.stringify(data));
+    }
+  }, [data]);
 
   const handlePreviewContract = async (signatureBase64: string) => {
     try {
