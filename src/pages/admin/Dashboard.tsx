@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { X, FileText, Image as ImageIcon, User, Loader2, Check, AlertTriangle, Search, Users, Clock, CheckCircle, LogOut, Eye, ChevronLeft, ChevronRight, Copy, TrendingUp } from 'lucide-react';
+import { X, FileText, Image as ImageIcon, User, Loader2, Check, AlertTriangle, Search, Users, Clock, CheckCircle, LogOut, Eye, ChevronLeft, ChevronRight, Copy, TrendingUp, CreditCard, ExternalLink } from 'lucide-react';
 import { generateContractPdf } from '@/components/registration/pdf';
 import { RegistrationData } from '@/types/registration';
 import { toast } from 'sonner';
@@ -624,6 +624,29 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Card da Carteirinha Digital */}
+                  {selectedInscricao.status === 'aprovado' && (
+                    <div className="bg-white p-5 rounded-xl shadow-sm border border-indigo-100 bg-indigo-50/30">
+                      <h4 className="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <CreditCard className="w-4 h-4" /> Carteirinha Digital
+                      </h4>
+                      <div className="space-y-3">
+                        <p className="text-xs text-gray-600 font-medium">Link de acesso dinâmico do cliente:</p>
+                        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-2">
+                          <input type="text" readOnly value={`${window.location.origin}/carteirinha/${selectedInscricao.cpf.replace(/\D/g, "")}`} className="text-xs text-gray-500 bg-transparent flex-1 outline-none" />
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/carteirinha/${selectedInscricao.cpf.replace(/\D/g, "")}`); toast.success('Link da carteirinha copiado!'); }} className="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 flex items-center justify-center gap-2 transition-colors">
+                            <Copy className="w-4 h-4" /> Copiar Link
+                          </button>
+                          <a href={`${window.location.origin}/carteirinha/${selectedInscricao.cpf.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex-1 bg-white border border-indigo-200 text-indigo-700 py-2 rounded-lg text-xs font-bold hover:bg-indigo-50 flex items-center justify-center gap-2 transition-colors">
+                            <ExternalLink className="w-4 h-4" /> Visualizar
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {selectedInscricao.observacoes && (
                     <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
