@@ -73,6 +73,7 @@ Conexão direta com o sistema desktop da clínica para evitar retrabalho manual.
 ## 7. Experiência do Cliente (UX) e Retenção
 - [x] **Auto-save do Formulário (Rascunho Offline)**: Uso do `localStorage` para salvar os dados em tempo real, evitando perda de progresso se a página for fechada.
 - [x] **Notificação via WhatsApp (API Suri)**: Disparo automático de dois templates (Aprovação e Carteirinha) assim que o administrador confirma o pagamento.
+- [x] **Aviso de Contato via WhatsApp**: Adicionar alerta na tela final do Wizard informando ao cliente que as confirmações e a carteirinha chegarão via WhatsApp.
 - [x] **Protocolo Simplificado**: Uso do próprio CPF do cliente como chave de busca, substituindo protocolos aleatórios complexos.
 - [x] **Carteirinha Digital PWA**: Tela dinâmica (`/carteirinha/:cpf`) simulando um cartão físico, com status em tempo real e lista de dependentes.
 

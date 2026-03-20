@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, Copy, ExternalLink } from "lucide-react";
+import { CheckCircle2, Copy, ExternalLink, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -58,9 +58,14 @@ const Step6Sucesso = ({ onReset, protocolo, cpf }: Step6Props) => {
           </div>
         </div>
 
-        <div className="bg-yellow-50 text-yellow-800 p-4 rounded-lg text-sm border border-yellow-200 mt-4 flex items-center gap-3 text-left">
-          <Clock className="w-5 h-5 flex-shrink-0" />
-          <p>Você receberá um contato da nossa equipe para finalizar a adesão.</p>
+        <div className="bg-green-50 text-green-800 p-4 rounded-lg text-sm border border-green-200 mt-4 flex items-start gap-3 text-left">
+          <MessageCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold">Fique de olho no seu WhatsApp!</p>
+            <p className="text-green-700 mt-1">
+              Assim que o pagamento for confirmado, você receberá sua <strong>Carteirinha Digital</strong> e as instruções de acesso automaticamente por lá.
+            </p>
+          </div>
         </div>
       </div>
 
