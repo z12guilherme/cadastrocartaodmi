@@ -16,11 +16,17 @@ create table if not exists public.inscricoes (
   data_nascimento date,
   naturalidade text,
   estado_civil text,
+  sexo text,
   
   -- Dados de Contato
   telefone text,
   email text,
   endereco text,
+  numero text,
+  complemento text,
+  bairro text,
+  cidade text,
+  cep text,
   
   -- Dados do Cartão / Eclesiásticos
   cargo text,      -- Profissão

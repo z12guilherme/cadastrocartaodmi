@@ -62,9 +62,9 @@ Este documento detalha as tarefas para a criação da área administrativa do si
 
 ## 6. Integração com SIGPAF (Sincronização via API)
 Conexão direta com o sistema desktop da clínica para evitar retrabalho manual.
-- [ ] **Reunião de Alinhamento**: Definir Endpoint, Formato do JSON (Payload) e Autenticação com o dev do SIGPAF.
-- [ ] **Supabase Edge Function (`sync-sigpaf`)**: Criar/Atualizar função que escuta a aprovação do cadastro.
-- [ ] **Webhook HTTP**: Função envia um `POST` com os dados mapeados para a rota exposta pelo SIGPAF.
+- [x] **Reunião de Alinhamento**: Definir Endpoint, Formato do JSON (Payload) e Autenticação com o dev do SIGPAF.
+- [x] **Supabase Edge Function (`sync-sigpaf`)**: Criar/Atualizar função que escuta a aprovação do cadastro.
+- [x] **Webhook HTTP**: Função envia um `POST` com os dados mapeados para a rota exposta pelo SIGPAF.
 - [ ] **Limpeza de Storage (Avaliar)**: Deletar imagens pesadas (RG, Comprovantes) do Supabase Storage para não estourar 1GB, mantendo o PDF do contrato, após confirmar se o SIGPAF fará o download prévio.
 - [x] **Gatilho (Webhook)**: Disparar a Edge Function no Supabase ao atualizar a tabela `inscricoes` com status `aprovado`.
 

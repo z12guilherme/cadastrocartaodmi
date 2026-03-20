@@ -27,6 +27,7 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || Deno.env.get('SUPABASE_DB_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const SURI_API_TOKEN = Deno.env.get('SURI_API_TOKEN')
     
     if (!supabaseUrl || !supabaseServiceKey) {
         throw new Error('Supabase credenciais não configuradas na Edge Function.')
@@ -106,6 +107,127 @@ serve(async (req) => {
         return true;
     }
 
+    // Função auxiliar para enviar notificação no WhatsApp via Suri
+    const sendSuriNotification = async (telefone: string, nome: string, protocolo: string) => {
+        if (!SURI_API_TOKEN || !telefone) return;
+        
+        // Limpar telefone (apenas números) e adicionar 55 se for padrão BR e não tiver
+        let telLimpo = telefone.replace(/\D/g, '');
+        if (telLimpo.length === 10 || telLimpo.length === 11) telLimpo = `55${telLimpo}`;
+
+        try {
+            // ATENÇÃO: Ajuste a URL e o payload conforme a documentação da Suri que você utiliza
+            const response = await fetch('https://api.suri.chat/v2/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${SURI_API_TOKEN}`
+                },
+                body: JSON.stringify({
+                    to: telLimpo,
+                    type: "template",
+                    template: {
+                        name: "aprovacao_carteirinha_dmi", // Substitua pelo nome exato do template aprovado na Suri
+                        language: { code: "pt_BR" },
+                        components: [
+                            {
+                                type: "body",
+                                parameters: [
+                                    { type: "text", text: nome }, // {{1}} no template (ex: Nome)
+                                    { type: "text", text: protocolo } // {{2}} no template (ex: Link/CPF)
+                                ]
+                            }
+                        ]
+                    }
+                })
+            });
+            
+            if (!response.ok) {
+                console.error('Erro na API da Suri:', await response.text());
+            } else {
+                console.log(`WhatsApp enviado via Suri para ${telLimpo}`);
+            }
+        } catch (error) {
+            console.error('Erro ao conectar com a Suri:', error);
+        }
+    };
+
+    // Função auxiliar para sincronizar com o SIGPAF (Cadastro + Captura de Contrato)
+    const syncWithSigpaf = async (record: any) => {
+        const SIGPAF_API_KEY = Deno.env.get('SIGPAF_API_KEY') || 'a816aeb6-c724-44a7-882c-bc1d1ebf5f43';
+        
+        let beneficiarios = [];
+        if (record.observacoes && record.observacoes.startsWith('[')) {
+            try {
+                const deps = JSON.parse(record.observacoes);
+                beneficiarios = deps.map((dep: any) => ({
+                    dep_nome: dep.nome || "Nome não informado",
+                    dep_cpf: dep.cpf || "",
+                    dep_dtnascimento: dep.dataNascimento || "",
+                    prt_codigo: 1, 
+                    etc_codigo: 1, 
+                    bai_codigo: 13, // 13 = EDSON MORORÓ MOURA
+                    cid_codigo: 1,  // 1 = BELO JARDIM
+                    rlg_codigo: 1
+                }));
+            } catch (e) {
+                console.error('Erro ao mapear dependentes para SIGPAF:', e);
+            }
+        }
+
+        // 1. Montar payload com os exatos parâmetros solicitados
+        const payload = {
+            pes_nome: record.nome_completo,
+            pes_razao: record.nome_completo,
+            pes_cpfcnpj: record.cpf || "",
+            pes_rgie: record.rg || "", // Adicionado RG
+            pes_dtnascimento: record.data_nascimento || record.dataNascimento || "", // Data Nascimento
+            pes_email: record.email || "",
+            pes_fone: record.telefone || "",
+            pes_celular: record.telefone || "", // Repetindo telefone p/ evitar erros
+            pes_whatsapp: record.telefone || "",
+            pes_endereco: record.endereco || "Não informado",
+            pes_numero: record.numero || "S/N",
+            pes_cep: record.cep || "55.150-000",
+            pes_referencia: record.complemento || record.referencia || "",
+            cid_codigo: 1, // 1 = BELO JARDIM
+            bai_codigo: 13, // 13 = EDSON MORORÓ MOURA
+            pla_codigo: 178, // 178 = DMI 6 PESSOAS
+            col_codcobrador: 74, // 74 = JOAM VINICIUS
+            col_codvendedor: 77, // 77 = Vendedor fixo
+            rlg_codigo: 1,
+            sxo_codigo: record.sexo === 'Feminino' ? 2 : 1, // Assumindo 2 p/ Fem e 1 p/ Masc
+            etc_codigo: 1, // 1 = SOLTEIRO
+            beneficiarios: beneficiarios
+        };
+
+        try {
+            console.log('Enviando Cadastro para SIGPAF:', payload);
+            const response = await fetch('https://api.sigpaf.com.br/public/Pessoa', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'authorization': SIGPAF_API_KEY
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            const postResult = await response.json();
+            console.log('Resposta Cadastro SIGPAF:', postResult);
+
+            // 2. O POST do SIGPAF já retorna o número do contrato! Vamos salvar no Supabase:
+            if (postResult.contract_number || postResult.id) {
+                console.log(`Sucesso no SIGPAF! ID: ${postResult.id} | Contrato: ${postResult.contract_number}`);
+                
+                // Atualiza a coluna protocolo na tabela inscricoes com o contrato oficial gerado
+                await supabase.from('inscricoes').update({ protocolo: postResult.contract_number.toString() }).eq('id', record.id);
+            }
+
+        } catch (error) {
+            console.error('Erro na integração com SIGPAF:', error);
+        }
+    };
+
     // 2. Enviar mensagem de texto inicial pro grupo
     await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: 'POST',
@@ -116,6 +238,12 @@ serve(async (req) => {
             parse_mode: 'Markdown'
         })
     });
+
+    // 2.5. Enviar notificação de aprovação e carteirinha via Suri (WhatsApp)
+    await sendSuriNotification(record.telefone, clienteNome, cpf);
+
+    // 2.8. Sincronizar com o SIGPAF
+    await syncWithSigpaf(record);
 
     // 3. Fazer o Upload de cada arquivo pro Telegram sequencialmente
     let allSuccess = true;

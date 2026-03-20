@@ -10,6 +10,7 @@ interface CarteirinhaData {
   status: string;
   created_at: string;
   observacoes: string;
+  protocolo?: string;
 }
 
 export default function Carteirinha() {
@@ -105,9 +106,17 @@ export default function Carteirinha() {
             </div>
 
             <div className="space-y-4">
-              <div>
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Titular do Plano</p>
-                <p className="text-lg font-bold tracking-wide truncate">{data.nome_completo.toUpperCase()}</p>
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 overflow-hidden">
+                  <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Titular do Plano</p>
+                  <p className="text-lg font-bold tracking-wide truncate">{data.nome_completo.toUpperCase()}</p>
+                </div>
+                {data.protocolo && data.status === 'aprovado' && data.protocolo !== data.cpf.replace(/\D/g, "") && (
+                  <div className="text-right shrink-0">
+                    <p className="text-[10px] text-[#0EA5FF] font-bold uppercase tracking-widest mb-1">Nº Contrato</p>
+                    <p className="text-lg font-mono tracking-wider font-bold text-white bg-white/10 px-2 py-0.5 rounded-lg border border-white/10 shadow-sm">{data.protocolo}</p>
+                  </div>
+                )}
               </div>
               
               <div className="flex justify-between items-end">

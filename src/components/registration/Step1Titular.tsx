@@ -1,6 +1,13 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import MaskedInput from "./MaskedInput";
 import { Titular } from "@/types/registration";
 import { useState } from "react";
@@ -38,8 +45,8 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
     if (value.trim()) setErrors((prev) => ({ ...prev, [field]: false }));
   };
 
-  const buscarCep = async () => {
-    const cepClean = data.cep.replace(/\D/g, "");
+  const buscarCep = async (cepFormatado: string) => {
+    const cepClean = cepFormatado.replace(/\D/g, "");
     if (cepClean.length !== 8) return;
     try {
       const res = await fetch(`https://viacep.com.br/ws/${cepClean}/json/`);
@@ -47,10 +54,12 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
       if (!json.erro) {
         onChange({
           ...data,
+          cep: cepFormatado,
           cidade: json.localidade || data.cidade,
           bairro: json.bairro || data.bairro,
           rua: json.logradouro || data.rua,
         });
+        setErrors((prev) => ({ ...prev, cidade: false, bairro: false, rua: false }));
       }
     } catch {
       // silently fail
@@ -98,6 +107,8 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
       "bairro",
       "rua",
       "numero",
+      "rg" as any,
+      "sexo" as any,
     ];
     const newErrors: Record<string, boolean> = {};
     required.forEach((f) => {
@@ -167,6 +178,33 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
         </div>
 
         <div>
+          <Label htmlFor="sexo">Sexo *</Label>
+          <Select 
+            value={(data as any).sexo || ""} 
+            onValueChange={(v) => update("sexo" as any, v)}
+          >
+            <SelectTrigger className={errors.sexo ? "border-destructive" : ""}>
+              <SelectValue placeholder="Selecione..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Masculino">Masculino</SelectItem>
+              <SelectItem value="Feminino">Feminino</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="rg">RG *</Label>
+          <Input
+            id="rg"
+            value={(data as any).rg || ""}
+            onChange={(e) => update("rg" as any, e.target.value)}
+            placeholder="0000000"
+            className={errors.rg ? "border-destructive" : ""}
+          />
+        </div>
+
+        <div>
           <Label htmlFor="cpf">CPF *</Label>
           <MaskedInput
             id="cpf"
@@ -216,17 +254,11 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
             value={data.cep}
             onAccept={(v) => {
               update("cep", v);
+              if (v.replace(/\D/g, "").length === 8) buscarCep(v);
             }}
             placeholder="00000-000"
             className={errors.cep ? "border-destructive" : ""}
           />
-          <button
-            type="button"
-            onClick={buscarCep}
-            className="text-xs text-[#0EA5FF] hover:underline mt-1"
-          >
-            Buscar CEP
-          </button>
         </div>
 
         {field("cidade", "Cidade", "São Paulo")}

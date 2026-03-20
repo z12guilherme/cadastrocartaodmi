@@ -204,65 +204,6 @@ export default function Dashboard() {
 
     let updateData: any = { status };
 
-    // SE FOR APROVAR: Gerar Contrato
-    if (status === 'aprovado' && selectedInscricao) {
-        try {
-            if (!selectedInscricao.assinatura_url) {
-                throw new Error("Assinatura do cliente não encontrada.");
-            }
-
-            // 1. Baixar a imagem da assinatura
-            const { data: sigBlob, error: sigError } = await supabase.storage
-                .from('documentos')
-                .download(selectedInscricao.assinatura_url);
-            
-            if (sigError || !sigBlob) throw new Error("Erro ao baixar assinatura para gerar contrato.");
-            
-            const sigBase64 = await blobToBase64(sigBlob);
-
-            // 2. Montar objeto RegistrationData para o gerador de PDF
-            // Precisamos reconstruir a estrutura que o PDF espera
-            const regData: RegistrationData = {
-                titular: {
-                    nomeCompleto: selectedInscricao.nome_completo,
-                    cpf: selectedInscricao.cpf,
-                    rg: selectedInscricao.rg,
-                    dataNascimento: selectedInscricao.data_nascimento, // formato YYYY-MM-DD funciona no PDF? O pdf.ts usa JSON.stringify, mas vamos checar.
-                    // O pdf.ts usa apenas nome e CPF visíveis, o resto é hash.
-                    // Mas para garantir integridade, passamos o que temos.
-                    naturalidade: selectedInscricao.naturalidade || '',
-                    estadoCivil: selectedInscricao.estado_civil || '',
-                    profissao: selectedInscricao.cargo || '',
-                    telefone: selectedInscricao.telefone,
-                    email: selectedInscricao.email,
-                    // Endereço no banco é string única, no PDF não é usado explicitamente nos campos de texto desenhados (apenas Hash), 
-                    // mas vamos passar campos vazios obrigatórios para satisfazer o TS
-                    cep: '', logradouro: selectedInscricao.endereco, numero: '', bairro: '', cidade: '', uf: ''
-                },
-                documentos: { fotoRg: '', fotoComprovanteResidencia: '' }, // Não usado no PDF
-                dependentes: [] // Não usado no PDF atual (só titular assina)
-            };
-
-            // 3. Gerar PDF
-            const pdfBytes = await generateContractPdf(regData, sigBase64);
-            const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
-
-            // 4. Upload do Contrato Gerado
-            const cleanCpf = selectedInscricao.cpf.replace(/\D/g, "");
-            const contractPath = `${cleanCpf}/contrato_final.pdf`;
-            
-            await supabase.storage.from('documentos').upload(contractPath, pdfBlob, { upsert: true });
-
-            updateData.anexo_documento_url = contractPath;
-
-        } catch (error: any) {
-            console.error("Erro ao gerar contrato:", error);
-            alert(`Erro ao gerar contrato: ${error.message}`);
-            setIsSubmitting(false);
-            return;
-        }
-    }
-
     const { error } = await supabase
       .from('inscricoes')
       .update(updateData)
@@ -365,7 +306,7 @@ export default function Dashboard() {
     }
 
     // Cabeçalhos das colunas
-    const headers = ['Data Cadastro', 'Protocolo', 'Nome Completo', 'CPF', 'Telefone', 'E-mail', 'Status', 'Valor'];
+    const headers = ['Data Cadastro', 'Contrato SIGPAF', 'Nome Completo', 'CPF', 'Telefone', 'E-mail', 'Status', 'Valor'];
     
     // Formata os dados
     const csvRows = filteredInscricoes.map(i => [
@@ -672,7 +613,7 @@ export default function Dashboard() {
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="text-xs text-gray-500 block">Protocolo</label>
+                          <label className="text-xs text-gray-500 block">Nº do Contrato (SIGPAF)</label>
                           <span className="text-sm font-bold text-blue-600 select-all">{selectedInscricao.protocolo || '-'}</span>
                         </div>
                         <div>

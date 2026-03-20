@@ -1,0 +1,33 @@
+{
+    "pes_nome": "TESTE API SIGPAF",
+    "pes_razao": "TESTE API SIGPAF",
+    "pes_cpfcnpj": "123.123.123-12",
+    "pes_rgie": "1234567",
+    "pes_dtnascimento": "1990-05-15",
+    "pes_fone": "(44) 99999-9999",
+    "pes_celular": "(44) 99999-9999",
+    "pes_endereco": "Rua do Teste de API",
+    "pes_numero": "100",
+    "pes_cep": "55.150-000",
+    "pes_referencia": "Perto do centro",
+    "cid_codigo": 2,
+    "bai_codigo": 13,
+    "pla_codigo": 178,
+    "col_codcobrador": 74,
+    "col_codvendedor": 77,
+    "rlg_codigo": 1,
+    "sxo_codigo": 1,
+    "etc_codigo": 1,
+    "beneficiarios": [
+        {
+            "dep_nome": "DEPENDENTE TESTE API",
+            "dep_cpf": "888.888.888-88",
+            "dep_dtnascimento": "2010-01-01",
+            "prt_codigo": 1,
+            "etc_codigo": 1,
+            "bai_codigo": 13,
+            "cid_codigo": 1,
+            "rlg_codigo": 1
+        }
+    ]
+}

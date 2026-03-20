@@ -213,15 +213,21 @@ export const submitCadastro = async ({
         data_nascimento: formatDateToISO(titular.dataNascimento),
         naturalidade: titular.naturalidade,
         estado_civil: titular.estadoCivil,
+        sexo: titular.sexo,
         telefone: titular.telefoneCelular || null,
         email: titular.email || null,
         endereco: [
-          [cleanAddressPart(titular.logradouro), cleanAddressPart(titular.numero)].filter(Boolean).join(', '),
+          [cleanAddressPart(titular.rua || titular.logradouro), cleanAddressPart(titular.numero)].filter(Boolean).join(', '),
           cleanAddressPart(titular.bairro),
           [cleanAddressPart(titular.cidade), cleanAddressPart(titular.uf)].filter(Boolean).join('/'),
         ]
           .filter(Boolean)
           .join(' - '),
+        numero: titular.numero,
+        complemento: titular.pontoReferencia,
+        bairro: titular.bairro,
+        cidade: titular.cidade,
+        cep: titular.cep,
         foto_url: rgPath,
         assinatura_url: signaturePath, // Salva o caminho da assinatura
         cargo: titular.profissao,
@@ -284,7 +290,7 @@ export const buscarDadosCarteirinha = async (cpfBusca: string) => {
 
   const { data, error } = await supabase
     .from('inscricoes')
-    .select('nome_completo, cpf, status, observacoes, created_at')
+    .select('nome_completo, cpf, status, observacoes, created_at, protocolo')
     .or(`cpf.eq.${cpfFormatado},cpf.eq.${cpfBusca}`)
     .order('created_at', { ascending: false })
     .limit(1)
