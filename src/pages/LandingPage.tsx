@@ -209,7 +209,7 @@ const LandingPage = () => {
                 Saúde Acessível
               </h1>
               <p className="font-[Poppins] text-white text-lg md:text-2xl font-normal tracking-[1px] opacity-90 mb-8 drop-shadow-md animate__animated animate__fadeInBottomLeft">
-                Sua família merece o melhor cuidado, sem pesar no bolso!
+                Saúde de Qualidade ao Alcance de Todos.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link to="/cadastro">
