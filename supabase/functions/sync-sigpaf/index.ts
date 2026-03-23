@@ -263,9 +263,9 @@ serve(async (req) => {
             try {
                 const deps = JSON.parse(record.observacoes);
                 beneficiarios = deps.map((dep: any) => ({
-                    dep_nome: dep.nome || "Nome não informado",
+                    dep_nome: dep.nomeCompleto || dep.nome || "Nome não informado",
                     dep_cpf: dep.cpf || "",
-                    dep_dtnascimento: dep.dataNascimento || "",
+                    dep_dtnascimento: dep.dataNascimento ? dep.dataNascimento : null,
                     prt_codigo: 1, 
                     etc_codigo: 1, 
                     bai_codigo: bairroId, 

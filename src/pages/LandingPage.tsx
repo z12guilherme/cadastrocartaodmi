@@ -21,6 +21,7 @@ import {
   Instagram,
   Lock,
   Search,
+  CreditCard,
 } from "lucide-react";
 import heroImg from "@/assets/hero-family.jpg";
 import logoDmi from "@/assets/logo-dmi.png";
@@ -163,15 +164,21 @@ const LandingPage = () => {
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/admin/login">
-              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground hidden lg:flex">
                 <Lock className="w-4 h-4" />
-                <span className="hidden sm:inline">Área Admin</span>
+                <span>Área Admin</span>
               </Button>
             </Link>
             <Link to="/consulta">
-              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground hidden md:flex">
                 <Search className="w-4 h-4" />
-                <span className="hidden sm:inline">Consultar Status</span>
+                <span>Consultar Status</span>
+              </Button>
+            </Link>
+            <Link to="/consulta">
+              <Button variant="outline" size="sm" className="gap-2 border-[#0EA5FF] text-[#0EA5FF] hover:bg-[#0EA5FF]/10">
+                <CreditCard className="w-4 h-4" />
+                <span className="hidden sm:inline">Carteirinha Digital</span>
               </Button>
             </Link>
             <Link to="/cadastro">
@@ -218,8 +225,9 @@ const LandingPage = () => {
                   </button>
                 </Link>
                 <Link to="/consulta">
-                  <button className="border-2 border-white text-white hover:bg-white hover:text-[#3532EA] px-8 py-3 rounded-full font-medium transition-all animate__animated animate__fadeInBottomRight">
-                    Consultar Status
+                  <button className="border-2 border-white bg-white/10 backdrop-blur-sm text-white hover:bg-white hover:text-[#0EA5FF] px-8 py-3 rounded-full font-medium transition-all animate__animated animate__fadeInBottomRight flex items-center justify-center gap-2">
+                    <CreditCard className="w-5 h-5" />
+                    Carteirinha Digital
                   </button>
                 </Link>
                 <a href="https://play.google.com/store/apps/details?id=com.sigpaf.dmicliente&pcampaignid=web_share" target="_blank" rel="noopener noreferrer">
