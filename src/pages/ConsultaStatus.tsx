@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 
@@ -13,7 +13,8 @@ import {
   ArrowLeft, 
   Download, 
   Loader2,
-  AlertCircle
+  AlertCircle,
+  CreditCard
 } from "lucide-react";
 import logoDmi from "@/assets/logo-dmi.png";
 
@@ -29,6 +30,7 @@ export default function ConsultaStatus() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ConsultaResult | null>(null);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleConsultar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,63 +131,107 @@ export default function ConsultaStatus() {
 
           {/* Resultado da Busca */}
           {result && (
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in zoom-in-95 duration-300">
-              {/* Header do Resultado baseado no status */}
-              <div className={`p-6 text-center border-b ${
-                result.status === 'aprovado' ? 'bg-green-50 border-green-100' :
-                result.status === 'rejeitado' ? 'bg-red-50 border-red-100' :
-                'bg-amber-50 border-amber-100'
-              }`}>
-                <div className="flex justify-center mb-3">
-                  {result.status === 'aprovado' && <CheckCircle2 className="w-12 h-12 text-green-500" />}
-                  {result.status === 'rejeitado' && <XCircle className="w-12 h-12 text-red-500" />}
-                  {result.status === 'pendente' && <Clock className="w-12 h-12 text-amber-500" />}
-                </div>
-                
-                <h3 className={`text-xl font-bold uppercase tracking-wide ${
-                  result.status === 'aprovado' ? 'text-green-700' :
-                  result.status === 'rejeitado' ? 'text-red-700' :
-                  'text-amber-700'
-                }`}>
-                  {result.status}
-                </h3>
-                
-                <p className="text-sm mt-2 text-gray-600 font-medium">
-                  {result.status === 'aprovado' && 'Parabéns! Seu cadastro foi finalizado com sucesso.'}
-                  {result.status === 'rejeitado' && 'Houve um problema com o seu cadastro.'}
-                  {result.status === 'pendente' && 'Seus dados estão em análise. Aguarde a confirmação do pagamento.'}
-                </p>
-              </div>
-
-              {/* Detalhes */}
-              <div className="p-6 space-y-4">
-                <div>
-                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Titular</p>
-                  <p className="text-base font-bold text-gray-900">{result.nome_completo}</p>
-                </div>
-                
-                {result.valor && (
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Valor do Plano</p>
-                    <p className="text-base font-bold text-green-600">{result.valor}</p>
+            <div className="animate-fade-in zoom-in-95 duration-300">
+              {result.status === 'aprovado' ? (
+                <div className="space-y-6">
+                  {/* Card de Sucesso */}
+                  <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center shadow-sm">
+                    <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                    <h3 className="text-2xl font-bold text-green-800 mb-2">
+                      Parabéns!
+                    </h3>
+                    <p className="text-green-700 font-medium">
+                      Seu cadastro foi finalizado com sucesso.
+                    </p>
                   </div>
-                )}
 
-                {/* Botão de Download (Apenas se Aprovado e tiver Link) */}
-                {result.status === 'aprovado' && result.downloadUrl && (
-                  <div className="pt-4 mt-2 border-t border-gray-100">
-                    <a
-                      href={result.downloadUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full flex items-center justify-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-                    >
-                      <Download className="w-4 h-4" />
-                      Baixar Contrato PDF
-                    </a>
+                  {/* Card de Resumo e Ações */}
+                  <div className="bg-white border shadow-sm rounded-2xl p-6 space-y-6">
+                    
+                    <div className="grid grid-cols-1 gap-4 text-sm">
+                      <div className="bg-gray-50 p-3 rounded-xl border">
+                        <p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Titular</p>
+                        <p className="font-semibold text-gray-900 text-base">{result.nome_completo}</p>
+                      </div>
+                      
+                      <div className="bg-gray-50 p-3 rounded-xl border flex justify-between items-center">
+                        <div>
+                          <p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Valor do Plano</p>
+                          <p className="font-semibold text-gray-900 text-base">{result.valor}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Status</p>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Ativo
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
+                      {/* Botão 1: Acessar Carteirinha (Ação Principal) */}
+                      <button 
+                        onClick={() => navigate(`/carteirinha/${protocolo.replace(/\D/g, '')}`)}
+                        className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-[#0EA5FF] hover:bg-[#0EA5FF]/90 transition-colors gap-2"
+                      >
+                        <CreditCard className="w-5 h-5" />
+                        Acessar Carteirinha Digital
+                      </button>
+
+                      {/* Botão 2: Baixar Contrato (Ação Secundária) */}
+                      {result.downloadUrl && (
+                        <a
+                          href={result.downloadUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full flex items-center justify-center gap-2 py-3 px-4 border border-gray-300 rounded-xl shadow-sm text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                        >
+                          <Download className="w-5 h-5" />
+                          Baixar Contrato Assinado
+                        </a>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                  <div className={`p-6 text-center border-b ${
+                    result.status === 'rejeitado' ? 'bg-red-50 border-red-100' :
+                    'bg-amber-50 border-amber-100'
+                  }`}>
+                    <div className="flex justify-center mb-3">
+                      {result.status === 'rejeitado' && <XCircle className="w-12 h-12 text-red-500" />}
+                      {result.status === 'pendente' && <Clock className="w-12 h-12 text-amber-500" />}
+                    </div>
+                    
+                    <h3 className={`text-xl font-bold uppercase tracking-wide ${
+                      result.status === 'rejeitado' ? 'text-red-700' :
+                      'text-amber-700'
+                    }`}>
+                      {result.status}
+                    </h3>
+                    
+                    <p className="text-sm mt-2 text-gray-600 font-medium">
+                      {result.status === 'rejeitado' && 'Houve um problema com o seu cadastro.'}
+                      {result.status === 'pendente' && 'Seus dados estão em análise. Aguarde a confirmação do pagamento.'}
+                    </p>
+                  </div>
+
+                  <div className="p-6 space-y-4">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Titular</p>
+                      <p className="text-base font-bold text-gray-900">{result.nome_completo}</p>
+                    </div>
+                    
+                    {result.valor && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Valor do Plano</p>
+                        <p className="text-base font-bold text-amber-600">{result.valor}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
