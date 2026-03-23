@@ -1,4 +1,4 @@
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
 import { RegistrationData } from "@/types/registration";
 import contractPdfUrl from "@/assets/contrato.pdf"; // Importa o PDF da pasta de assets
 
@@ -86,6 +86,33 @@ export const generateContractPdf = async (
   const pages = pdfDoc.getPages();
   // Pega a última página do PDF
   const lastPage = pages[pages.length - 1];
+
+  const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const { width, height } = lastPage.getSize();
+
+  // 1. Desenha um retângulo branco GIGANTE sobre toda a parte inferior da página
+  // Isso apaga visualmente a assinatura da diretoria, independente de onde ela esteja
+  lastPage.drawRectangle({
+    x: 0,
+    y: 0,
+    width: width,
+    height: 220, // Altura reduzida para 220 para não cortar o texto do contrato acima
+    color: rgb(1, 1, 1),
+  });
+
+  // 2. Carimba a marca d'água de rascunho em todas as páginas (cor preta translúcida)
+  for (const page of pages) {
+    const { width: pWidth, height: pHeight } = page.getSize();
+    page.drawText('RASCUNHO - SEM VALIDADE', {
+      x: pWidth / 2 - 250,
+      y: pHeight / 2 - 50,
+      size: 40,
+      font: helveticaBoldFont,
+      color: rgb(0, 0, 0),
+      opacity: 0.2,
+      rotate: degrees(45),
+    });
+  }
   // Embeda a imagem da assinatura
   // FIX: Converte a string Base64 para ArrayBuffer para garantir compatibilidade
   const signatureImageBytes = await fetch(signatureImageBase64).then((res) => res.arrayBuffer());

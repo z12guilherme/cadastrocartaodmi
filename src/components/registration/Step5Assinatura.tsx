@@ -54,27 +54,32 @@ const Step5Assinatura = ({ onConfirm, onBack, onPreview, isSubmitting }: Step5Pr
           canvasProps={{ className: "w-full h-full" }}
         />
       </div>
+      
+      <div className="flex justify-end mt-1">
+        <button type="button" onClick={handleClear} disabled={isSubmitting} className="text-sm text-red-500 hover:text-red-700 font-medium">
+          Limpar Assinatura
+        </button>
+      </div>
 
-      <div className="flex flex-col-reverse sm:flex-row justify-between pt-4 gap-4">
-        <Button variant="outline" onClick={onBack} size="lg" disabled={isSubmitting} className="w-full sm:w-auto">
-          Voltar
-        </Button>
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <Button variant="outline" onClick={handleSkip} disabled={isSubmitting} className="w-full sm:w-auto text-[#0EA5FF] border-[#0EA5FF] hover:bg-[#0EA5FF]/10" size="lg">
+      <div className="pt-6 space-y-6">
+        {/* Botões de Ação Alternativa */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Button variant="outline" onClick={handleSkip} disabled={isSubmitting} className="w-full text-[#0EA5FF] border-[#0EA5FF] hover:bg-[#0EA5FF]/10 bg-transparent" size="lg">
             Gerar Link para Cliente
           </Button>
-          <Button variant="secondary" onClick={handlePreview} disabled={isSubmitting} className="w-full sm:w-auto" size="lg">
+          <Button variant="secondary" onClick={handlePreview} disabled={isSubmitting} className="w-full" size="lg">
             <Eye className="w-4 h-4 mr-2" />
-            Pré-visualizar
+            Pré-visualizar Contrato
           </Button>
-          <Button variant="ghost" onClick={handleClear} disabled={isSubmitting} className="w-full sm:w-auto" size="lg">
-            Limpar
+        </div>
+
+        {/* Botões de Navegação Principal */}
+        <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-4 border-t border-border">
+          <Button variant="outline" onClick={onBack} size="lg" disabled={isSubmitting} className="w-full sm:w-32">
+            Voltar
           </Button>
-          <Button onClick={handleConfirm} size="lg" disabled={isSubmitting} className="w-full sm:w-auto bg-[#64E627] hover:bg-[#64E627]/90 text-black">
-            {isSubmitting ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : null}
-            Finalizar
+          <Button onClick={handleConfirm} size="lg" disabled={isSubmitting} className="w-full sm:w-48 bg-[#64E627] hover:bg-[#52c51d] text-black font-bold shadow-sm">
+            {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null} Finalizar
           </Button>
         </div>
       </div>
