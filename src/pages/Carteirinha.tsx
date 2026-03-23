@@ -22,11 +22,23 @@ export default function Carteirinha() {
   useEffect(() => {
     const fetchData = async () => {
       if (!cpf) return;
+      
+      // 1. Tenta carregar do cache primeiro (Offline-First)
+      const cachedData = localStorage.getItem(`carteirinha_${cpf}`);
+      if (cachedData) {
+        try {
+          setData(JSON.parse(cachedData));
+          setLoading(false); // Já exibe a tela imediatamente!
+        } catch (e) {}
+      }
+
       try {
         const result = await buscarDadosCarteirinha(cpf);
         setData(result);
+        // 2. Atualiza o cache com os dados mais recentes para o futuro
+        localStorage.setItem(`carteirinha_${cpf}`, JSON.stringify(result));
       } catch (err) {
-        setError("Carteirinha não encontrada. Verifique o link.");
+        if (!cachedData) setError("Carteirinha não encontrada ou você está sem internet.");
       } finally {
         setLoading(false);
       }

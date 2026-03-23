@@ -123,9 +123,19 @@ export default function ConsultaStatus() {
 
           {/* Mensagem de Erro */}
           {error && (
-            <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl flex items-start gap-3 animate-fade-in">
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <p className="text-sm font-medium">{error}</p>
+            <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex flex-col gap-3 animate-fade-in">
+              <div className="flex items-start gap-3 text-red-600">
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <p className="text-sm font-medium">{error}</p>
+              </div>
+              <div className="flex flex-col gap-2 mt-2 pt-3 border-t border-red-200/50">
+                <Link to="/cadastro" className="text-sm text-[#0EA5FF] hover:underline font-medium">
+                  Ainda não tem cadastro? Faça o seu agora
+                </Link>
+                <a href="https://wa.me/5581997488090?text=Olá,%20estou%20com%20problemas%20para%20consultar%20meu%20cadastro%20do%20Cartão%20DMI." target="_blank" rel="noopener noreferrer" className="text-sm text-green-600 hover:underline font-medium">
+                  Problemas com seu CPF? Fale com o suporte no WhatsApp
+                </a>
+              </div>
             </div>
           )}
 
