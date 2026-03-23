@@ -62,6 +62,24 @@ serve(async (req) => {
         filesToDelete.push(record.comprovante_pagamento_url);
     }
 
+    // Prepara o comprovante de residência para backup e exclusão
+    const cleanCpfForSearch = cpf ? cpf.replace(/\D/g, "") : "";
+    if (record.comprovante_residencia_url) {
+        filesToBackup.push({ url: record.comprovante_residencia_url, type: 'photo', filename: `Residencia_${cpf}` });
+        filesToDelete.push(record.comprovante_residencia_url);
+    } else if (cleanCpfForSearch) {
+        // Caso a coluna não exista no banco, busca o arquivo direto na pasta do cliente no Storage
+        const { data: folderFiles } = await supabase.storage.from('documentos').list(cleanCpfForSearch);
+        if (folderFiles) {
+            const file = folderFiles.find(f => f.name.toLowerCase().startsWith('residencia'));
+            if (file) {
+                const path = `${cleanCpfForSearch}/${file.name}`;
+                filesToBackup.push({ url: path, type: 'photo', filename: `Residencia_${cpf}` });
+                filesToDelete.push(path);
+            }
+        }
+    }
+
         // Prepara as fotos dos dependentes para backup e exclusão
         if (record.observacoes && record.observacoes.startsWith('[')) {
             try {
@@ -418,6 +436,7 @@ serve(async (req) => {
 
     if (contractPathToBackup) {
         filesToBackup.push({ url: contractPathToBackup, type: 'document', filename: `Contrato_${cpf.replace(/\D/g, "")}.pdf` });
+        filesToDelete.push(contractPathToBackup);
     }
 
     // 3. TERCEIRO: Avisar no Telegram com o número do Contrato do SIGPAF!
@@ -442,7 +461,7 @@ serve(async (req) => {
         if (!success) allSuccess = false;
     }
 
-    // 4. Mágica da Limpeza (Deletar as fotos pesadas do Supabase se o backup deu certo)
+    // 6. SEXTO: Mágica da Limpeza Total (Deletar TODOS os arquivos do Supabase se o backup deu certo)
     if (allSuccess && filesToDelete.length > 0) {
         console.log('Arquivos enviados pro Telegram com sucesso. Fazendo autolimpeza de:', filesToDelete);
         await supabase.storage.from('documentos').remove(filesToDelete);
@@ -450,8 +469,10 @@ serve(async (req) => {
         // Esvazia os campos no banco para não dar erro de "imagem quebrada" no Dashboard
         await supabase.from('inscricoes').update({
             foto_url: null,
-                comprovante_pagamento_url: null,
-                assinatura_url: null
+            comprovante_pagamento_url: null,
+            comprovante_residencia_url: null,
+            assinatura_url: null,
+            anexo_documento_url: null
         }).eq('id', record.id);
     }
 
