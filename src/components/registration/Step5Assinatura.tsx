@@ -9,9 +9,10 @@ interface Step5Props {
   onBack: () => void;
   onPreview: (signature: string) => void;
   isSubmitting: boolean;
+  data?: any; // Adicionado para receber os dados do resumo do cadastro
 }
 
-const Step5Assinatura = ({ onConfirm, onBack, onPreview, isSubmitting }: Step5Props) => {
+const Step5Assinatura = ({ onConfirm, onBack, onPreview, isSubmitting, data }: Step5Props) => {
   const sigPadRef = useRef<SignatureCanvas>(null);
 
   const handleClear = () => {
@@ -44,15 +45,41 @@ const Step5Assinatura = ({ onConfirm, onBack, onPreview, isSubmitting }: Step5Pr
     <div className="animate-fade-in space-y-5">
       <h2 className="text-xl font-semibold text-foreground">Assinatura Digital</h2>
       <p className="text-sm text-muted-foreground">
-        Desenhe sua assinatura no campo abaixo para confirmar o contrato.
+        Confira seus dados e assine abaixo
       </p>
 
-      <div className="w-full aspect-video bg-secondary rounded-lg border-2 border-dashed">
-        <SignatureCanvas
-          ref={sigPadRef}
-          penColor="black"
-          canvasProps={{ className: "w-full h-full" }}
-        />
+      {/* Resumo do Contrato */}
+      {data && (
+        <div className="bg-secondary/50 border border-border p-4 rounded-xl space-y-3">
+          <div>
+            <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Titular</span>
+            <p className="font-bold text-foreground">{data.titular?.nomeCompleto || data.nomeCompleto}</p>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:justify-between gap-3">
+            <div>
+              <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">CPF</span>
+              <p className="font-medium text-foreground">{data.titular?.cpf || data.cpf}</p>
+            </div>
+            {/* Mostra o valor do plano dinamicamente */}
+            {(data.plano?.valor || data.valor) && (
+              <div className="sm:text-right">
+                <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Valor do Plano</span>
+                <p className="font-bold text-green-600">{data.plano?.valor || data.valor}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground">Sua Assinatura</label>
+        <div className="w-full aspect-video bg-secondary rounded-lg border-2 border-dashed">
+          <SignatureCanvas
+            ref={sigPadRef}
+            penColor="black"
+            canvasProps={{ className: "w-full h-full" }}
+          />
+        </div>
       </div>
       
       <div className="flex justify-end mt-1">
@@ -79,7 +106,7 @@ const Step5Assinatura = ({ onConfirm, onBack, onPreview, isSubmitting }: Step5Pr
             Voltar
           </Button>
           <Button onClick={handleConfirm} size="lg" disabled={isSubmitting} className="w-full sm:w-48 bg-[#64E627] hover:bg-[#52c51d] text-black font-bold shadow-sm">
-            {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null} Finalizar
+            {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null} Confirmar Assinatura
           </Button>
         </div>
       </div>

@@ -12,6 +12,7 @@ import {
   RegistrationData,
   initialTitular,
   initialDocumentos,
+  calcularMensalidade,
 } from "@/types/registration";
 import logoDmi from "@/assets/logo-dmi.png";
 import { submitCadastro } from "@/services/api";
@@ -180,6 +181,10 @@ const RegistrationWizard = () => {
               onBack={() => setStep(5)}
               onPreview={handlePreviewContract}
               isSubmitting={isSubmitting}
+              data={{
+                titular: data.titular,
+                valor: calcularMensalidade(data.dependentes.length).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+              }}
             />
           )}
           {step === 7 && <Step6Sucesso onReset={handleReset} protocolo={protocolo} cpf={data.titular.cpf} />}
