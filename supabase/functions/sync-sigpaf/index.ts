@@ -305,7 +305,7 @@ serve(async (req) => {
             bai_codigo: bairroId, // Dinâmico com base no cadastro
             pla_codigo: planCodigoId, // Dinâmico com base nos dependentes
             col_codcobrador: 74, // 74 = JOAM VINICIUS
-            col_codvendedor: 190, // 77 = Vendedor fixo
+            col_codvendedor: 190, // 190 = PIERRI DI FIDELIS
             rlg_codigo: 1,
             sxo_codigo: record.sexo === 'Feminino' ? 2 : 1, // Assumindo 2 p/ Fem e 1 p/ Masc
             etc_codigo: 1, // 1 = SOLTEIRO
