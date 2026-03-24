@@ -23,18 +23,38 @@ serve(async (req) => {
       });
     }
 
+    // Garante que pegamos apenas os números, não importa o que o frontend enviou
+    const cpfNumerico = String(cpf).replace(/\D/g, "");
+    
+    if (cpfNumerico.length !== 11) {
+      return new Response(JSON.stringify({ error: 'CPF inválido (tamanho incorreto)' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    // Remonta o CPF no padrão que o banco do SIGPAF exige (XXX.XXX.XXX-XX)
+    const cpfFormatado = cpfNumerico.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+
     const SIGPAF_API_KEY = Deno.env.get('SIGPAF_API_KEY');
     if (!SIGPAF_API_KEY) {
       throw new Error('Chave de API do SIGPAF não configurada.');
     }
 
-    // 1. Faz a requisição para a API do SIGPAF com o CPF informado
-    const response = await fetch(`https://api.sigpaf.com.br/public/Pessoa?cpf=${cpf}`, {
+    // 1. Faz a requisição para a API do SIGPAF com o CPF FORMATADO
+    const url = `https://api.sigpaf.com.br/public/Pessoa?cpf=${encodeURIComponent(cpfFormatado)}`;
+    const response = await fetch(url, {
         method: 'GET',
         headers: { 'authorization': SIGPAF_API_KEY }
     });
 
-    const data = await response.json();
+    const responseText = await response.text();
+    let data;
+    try {
+        data = JSON.parse(responseText);
+    } catch (e) {
+        throw new Error(`SIGPAF não retornou um JSON válido. Resposta: ${responseText.substring(0, 100)}`);
+    }
 
     // 2. Trata o caso do cliente não existir ou erro no SIGPAF
     if (data.erro || !data.dados) {
@@ -50,7 +70,8 @@ serve(async (req) => {
         status: data.dados.pessoaSituacao?.psi_descricao || "DESCONHECIDO",
         corHex: data.dados.pessoaSituacao?.psi_corhex || "#808080",
         contrato: data.dados.pes_contrato || data.dados.pes_codigo,
-        nome: data.dados.pes_nome
+        nome: data.dados.pes_nome,
+        dataCadastro: data.dados.pes_dtcadastro
     };
 
     return new Response(JSON.stringify(statusData), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });

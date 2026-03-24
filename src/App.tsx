@@ -13,6 +13,7 @@ import ConsultaStatus from './pages/ConsultaStatus';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ReloadPrompt } from "./components/ReloadPrompt";
 import Carteirinha from './pages/Carteirinha';
+import ConsultaCarteirinha from './pages/ConsultaCarteirinha';
 
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/consulta" element={<ConsultaStatus />} />
           <Route path="/assinatura/:cpf" element={<AssinaturaExterna />} />
           <Route path="/carteirinha/:cpf" element={<Carteirinha />} />
+          <Route path="/acessar-carteirinha" element={<ConsultaCarteirinha />} />
           <Route path="/admin/login" element={<Login />} />
           
           {/* Rotas Protegidas */}

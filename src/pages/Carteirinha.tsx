@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { buscarDadosCarteirinha } from "@/services/api";
-import { ShieldCheck, QrCode, Loader2, AlertCircle, ArrowLeft, Users } from "lucide-react";
+import { ShieldCheck, Loader2, AlertCircle, ArrowLeft, Users, CheckCircle2 } from "lucide-react";
 import logoDmi from "@/assets/logo-dmi.png";
+import QRCode from "react-qr-code";
+import { supabase } from "@/lib/supabase";
 
 interface CarteirinhaData {
   nome_completo: string;
@@ -13,32 +15,77 @@ interface CarteirinhaData {
   protocolo?: string;
 }
 
+interface SigpafStatus {
+  existe: boolean;
+  status?: string;
+  corHex?: string;
+  contrato?: string | number;
+  nome?: string;
+  msg?: string;
+  dataCadastro?: string;
+}
+
 export default function Carteirinha() {
   const { cpf } = useParams();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<CarteirinhaData | null>(null);
+  const [sigpafStatus, setSigpafStatus] = useState<SigpafStatus | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
       if (!cpf) return;
       
+      const cpfLimpo = cpf.replace(/\D/g, "");
+      let localData = null;
+
       // 1. Tenta carregar do cache primeiro (Offline-First)
-      const cachedData = localStorage.getItem(`carteirinha_${cpf}`);
+      const cachedData = localStorage.getItem(`carteirinha_${cpfLimpo}`);
       if (cachedData) {
         try {
-          setData(JSON.parse(cachedData));
-          setLoading(false); // Já exibe a tela imediatamente!
+          localData = JSON.parse(cachedData);
+          setData(localData);
         } catch (e) {}
       }
 
       try {
-        const result = await buscarDadosCarteirinha(cpf);
-        setData(result);
-        // 2. Atualiza o cache com os dados mais recentes para o futuro
-        localStorage.setItem(`carteirinha_${cpf}`, JSON.stringify(result));
+        // 2. Busca o status em tempo real no SIGPAF via Edge Function SEMPRE
+        const { data: sigpafData, error: sigpafError } = await supabase.functions.invoke("check-status", {
+          body: { cpf: cpfLimpo }
+        });
+
+        if (!sigpafError && sigpafData) {
+          setSigpafStatus(sigpafData);
+        } else if (sigpafError) {
+          console.error("Erro na Edge Function check-status:", sigpafError);
+        } else if (sigpafData && sigpafData.error) {
+          console.error("Erro retornado pelo SIGPAF:", sigpafData.error);
+        }
+
+        // 3. Tenta buscar no banco local para pegar dependentes e outros detalhes (se houver)
+        try {
+          const result = await buscarDadosCarteirinha(cpf);
+          localData = result;
+          setData(result);
+          localStorage.setItem(`carteirinha_${cpfLimpo}`, JSON.stringify(result));
+        } catch (localErr) {
+          console.log("Cliente não localizado no banco novo. Usando os dados legado do SIGPAF.");
+        }
+
+        // 4. Validação: Se não tem no Supabase E não existe no SIGPAF = Erro!
+        if (!localData && (!sigpafData || !sigpafData.existe)) {
+           if (sigpafError) {
+             setError(`Erro Supabase: ${sigpafError.message || "Falha na Edge Function"}`);
+           } else if (sigpafData && sigpafData.error) {
+             setError(`Erro Interno: ${sigpafData.error}`);
+           } else {
+             setError(sigpafData?.msg || "Carteirinha não encontrada. Verifique o CPF informado no sistema.");
+           }
+        }
+
       } catch (err) {
-        if (!cachedData) setError("Carteirinha não encontrada ou você está sem internet.");
+        console.error("Erro ao buscar carteirinha:", err);
+        if (!localData) setError("Erro de conexão ao buscar dados. Verifique sua internet.");
       } finally {
         setLoading(false);
       }
@@ -54,7 +101,7 @@ export default function Carteirinha() {
     );
   }
 
-  if (error || !data) {
+  if (error || (!data && !sigpafStatus?.existe)) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
         <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
@@ -67,21 +114,36 @@ export default function Carteirinha() {
     );
   }
 
-  // Calcula validade (1 ano após a criação)
-  const dataCriacao = new Date(data.created_at);
-  const validade = new Date(dataCriacao.setFullYear(dataCriacao.getFullYear() + 1));
-  const dataFormatada = validade.toLocaleDateString("pt-BR", { month: "2-digit", year: "2-digit" });
+  // Calcula validade ou exibe "Membro Desde" para legados do SIGPAF
+  let dataFormatada = "Conforme Contrato";
+  let labelData = "Validade";
+
+  if (data?.created_at) {
+    const dataCriacao = new Date(data.created_at);
+    const validade = new Date(dataCriacao.setFullYear(dataCriacao.getFullYear() + 1));
+    dataFormatada = validade.toLocaleDateString("pt-BR", { month: "2-digit", year: "2-digit" });
+  } else if (sigpafStatus?.dataCadastro) {
+    const dtCad = new Date(sigpafStatus.dataCadastro);
+    dataFormatada = dtCad.toLocaleDateString("pt-BR", { month: "2-digit", year: "2-digit" });
+    labelData = "Membro Desde";
+  }
 
   let dependentes = [];
   try {
-    if (data.observacoes && data.observacoes.startsWith("[")) {
+    if (data?.observacoes && data.observacoes.startsWith("[")) {
       dependentes = JSON.parse(data.observacoes);
     }
   } catch (e) {
     // Silently ignore
   }
 
-  const isAtivo = data.status === "aprovado";
+  const isLocalAtivo = data?.status === "aprovado";
+  const isSigpafAtivo = sigpafStatus?.status === "ATIVO";
+  const contratoFinal = sigpafStatus?.contrato || data?.protocolo || cpf;
+  
+  const nomeExibicao = sigpafStatus?.nome || data?.nome_completo || "BENEFICIÁRIO";
+  const cpfFormatado = cpf?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+  const cpfExibicao = data?.cpf || cpfFormatado;
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col items-center py-8 px-4 font-sans">
@@ -97,11 +159,25 @@ export default function Carteirinha() {
 
         {/* Status Badge */}
         <div className="flex justify-center mb-6">
-          <span className={`px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm
-            ${isAtivo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-            <ShieldCheck className="w-4 h-4" />
-            {isAtivo ? 'PLANO ATIVO' : 'PLANO INATIVO'}
-          </span>
+          {sigpafStatus ? (
+            <span 
+              className="px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm border transition-colors"
+              style={{ 
+                backgroundColor: `${sigpafStatus.corHex || '#808080'}15`, 
+                color: sigpafStatus.corHex || '#808080',
+                borderColor: `${sigpafStatus.corHex || '#808080'}40`
+              }}
+            >
+              {isSigpafAtivo ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+              {sigpafStatus.status}
+            </span>
+          ) : (
+            <span className={`px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm
+              ${isLocalAtivo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              <ShieldCheck className="w-4 h-4" />
+              {isLocalAtivo ? 'PLANO ATIVO (LOCAL)' : 'PLANO INATIVO'}
+            </span>
+          )}
         </div>
 
         {/* Cartão Físico (UI) */}
@@ -114,19 +190,36 @@ export default function Carteirinha() {
           <div className="relative h-full p-6 flex flex-col justify-between">
             <div className="flex justify-between items-start">
               <img src={logoDmi} alt="DMI" className="h-10 brightness-0 invert" />
-              <QrCode className="w-8 h-8 opacity-80" />
+              
+              {/* QR Code com Blur condicional se inativo */}
+              <div className="relative bg-white p-2 rounded-xl shadow-sm">
+                <div className={`transition-all duration-300 ${sigpafStatus && !isSigpafAtivo ? 'opacity-30 blur-[2px]' : ''}`}>
+                  <QRCode 
+                    value={String(contratoFinal)} 
+                    size={72}
+                    level="H" 
+                  />
+                </div>
+                {sigpafStatus && !isSigpafAtivo && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                    <span className="bg-red-600 text-white text-[9px] font-black px-2 py-1 rounded uppercase tracking-widest transform -rotate-12 shadow-md">
+                      BLOQUEADO
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-4">
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 overflow-hidden">
                   <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Titular do Plano</p>
-                  <p className="text-lg font-bold tracking-wide truncate">{data.nome_completo.toUpperCase()}</p>
+                  <p className="text-lg font-bold tracking-wide truncate">{nomeExibicao.toUpperCase()}</p>
                 </div>
-                {data.protocolo && data.status === 'aprovado' && data.protocolo !== data.cpf.replace(/\D/g, "") && (
+                {contratoFinal && contratoFinal !== cpfExibicao?.replace(/\D/g, "") && (
                   <div className="text-right shrink-0">
                     <p className="text-[10px] text-[#0EA5FF] font-bold uppercase tracking-widest mb-1">Nº Contrato</p>
-                    <p className="text-lg font-mono tracking-wider font-bold text-white bg-white/10 px-2 py-0.5 rounded-lg border border-white/10 shadow-sm">{data.protocolo}</p>
+                    <p className="text-lg font-mono tracking-wider font-bold text-white bg-white/10 px-2 py-0.5 rounded-lg border border-white/10 shadow-sm">{contratoFinal}</p>
                   </div>
                 )}
               </div>
@@ -134,10 +227,10 @@ export default function Carteirinha() {
               <div className="flex justify-between items-end">
                 <div>
                   <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">CPF</p>
-                  <p className="font-mono text-sm tracking-wider opacity-90">{data.cpf}</p>
+                  <p className="font-mono text-sm tracking-wider opacity-90">{cpfExibicao}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Validade</p>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">{labelData}</p>
                   <p className="font-mono text-sm tracking-wider opacity-90">{dataFormatada}</p>
                 </div>
               </div>

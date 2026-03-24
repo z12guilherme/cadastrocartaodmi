@@ -75,7 +75,7 @@ Conexão direta com o sistema desktop da clínica para evitar retrabalho manual.
 - [x] **Reunião de Alinhamento**: Definir Endpoint, Formato do JSON (Payload) e Autenticação com o dev do SIGPAF.
 - [x] **Supabase Edge Function (`sync-sigpaf`)**: Criar/Atualizar função que escuta a aprovação do cadastro.
 - [x] **Webhook HTTP**: Função envia um `POST` com os dados mapeados para a rota exposta pelo SIGPAF.
-- [ ] **Limpeza de Storage (Avaliar)**: Deletar imagens pesadas (RG, Comprovantes) do Supabase Storage para não estourar 1GB, mantendo o PDF do contrato, após confirmar se o SIGPAF fará o download prévio.
+- [x] **Limpeza de Storage (Concluído)**: Imagens pesadas são deletadas do Supabase Storage automaticamente após backup no Telegram, evitando estourar o limite de 1GB.
 - [x] **Gatilho (Webhook)**: Disparar a Edge Function no Supabase ao atualizar a tabela `inscricoes` com status `aprovado`.
 
 --
@@ -102,3 +102,10 @@ Conexão direta com o sistema desktop da clínica para evitar retrabalho manual.
 - [x] **Otimização de Banco de Dados**: Dashboard refatorado para carregar os links de arquivos assinados em lote (Batch Request) e uploads paralelos (`Promise.all`).
 - [x] **Logout Automático**: Administrador do painel é desconectado automaticamente após 15 minutos de inatividade para evitar acesso indevido.
 - [x] **Sanitização Rigorosa do Storage**: Políticas do Supabase (RLS) atualizadas para bloquear uploads e updates de qualquer arquivo que não seja `.jpg`, `.jpeg`, `.png` ou `.pdf`.
+
+--
+
+## 10. Evolução da Carteirinha Digital e Validação
+- [x] **QR Code Dinâmico**: Adicionar um QR Code na tela da Carteirinha Digital com o CPF ou código do cliente para agilizar o atendimento presencial (bip na recepção).
+- [x] **Status em Tempo Real (SIGPAF)**: Criar função para consultar a API do SIGPAF (`GET /public/Pessoa?cpf=...`) sempre que a carteirinha for aberta.
+- [x] **Selo de Autenticidade**: Usar o retorno da API (`pessoaSituacao.psi_descricao`) para exibir um selo de **"ATIVO"** ou **"INATIVO"**, inviabilizando o uso de prints antigos por clientes inadimplentes.

@@ -5,6 +5,30 @@ import { PDFDocument, rgb, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1"
 const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN');
 const TELEGRAM_CHAT_ID = Deno.env.get('TELEGRAM_CHAT_ID');
 
+const sendErrorToTelegram = async (errorMessage: string, clienteInfo: string) => {
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+        console.error("Telegram credentials for error reporting are not set.");
+        return;
+    }
+
+    const text = `🚨 *ERRO CRÍTICO no Webhook DMI!*\n\n*Inscrição:* ${clienteInfo}\n*Motivo:* ${errorMessage}`;
+
+    try {
+        // Fire-and-forget, não bloqueia a resposta de erro da função
+        fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: text,
+                parse_mode: 'Markdown'
+            })
+        });
+    } catch (e) {
+        console.error("Failed to send critical error notification to Telegram:", e);
+    }
+};
+
 async function createSha256Hash(data: string): Promise<string> {
     const encoder = new TextEncoder();
     const dataBuffer = encoder.encode(data);
@@ -14,17 +38,19 @@ async function createSha256Hash(data: string): Promise<string> {
 }
 
 serve(async (req) => {
+  let record: any = null; // Declarado aqui para ser acessível no bloco catch
+
   try {
     // 1. Validar se a requisição é um POST
     if (req.method !== 'POST') {
       return new Response('Method Not Allowed', { status: 405 })
     }
 
-    const payload = await req.json()
-    console.log('Webhook payload:', payload)
+    const payload = await req.json();
+    console.log('Webhook payload:', payload);
+    record = payload.record; // Atribui à variável de escopo mais amplo
 
     // Apenas rodar quando o status mudar para "aprovado"
-    const record = payload.record
     const oldRecord = payload.old_record
 
     if (record.status !== 'aprovado' || (oldRecord && oldRecord.status === 'aprovado')) {
@@ -488,7 +514,16 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ success: true }), { headers: { "Content-Type": "application/json" } })
   } catch (error: any) {
-    console.error('Erro Fatal na Edge Function:', error)
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } })
+    console.error('Erro Fatal na Edge Function:', error);
+
+    let clienteInfo = "Informação do cliente não disponível";
+    if (record && record.nome_completo) {
+        clienteInfo = `${record.nome_completo} (CPF: ${record.cpf || 'N/A'})`;
+    }
+
+    // Envia a notificação de erro para o Telegram sem esperar pela resposta
+    await sendErrorToTelegram(error.message, clienteInfo);
+
+    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 })

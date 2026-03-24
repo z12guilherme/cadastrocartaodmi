@@ -175,7 +175,7 @@ const LandingPage = () => {
                 <span>Consultar Status</span>
               </Button>
             </Link>
-            <Link to="/consulta">
+            <Link to="/acessar-carteirinha">
               <Button variant="outline" size="sm" className="gap-2 border-[#0EA5FF] text-[#0EA5FF] hover:bg-[#0EA5FF]/10">
                 <CreditCard className="w-4 h-4" />
                 <span className="hidden sm:inline">Carteirinha Digital</span>
@@ -224,7 +224,7 @@ const LandingPage = () => {
                     Solicitar Cartão
                   </button>
                 </Link>
-                <Link to="/consulta">
+                <Link to="/acessar-carteirinha">
                   <button className="border-2 border-white bg-white/10 backdrop-blur-sm text-white hover:bg-white hover:text-[#0EA5FF] px-8 py-3 rounded-full font-medium transition-all animate__animated animate__fadeInBottomRight flex items-center justify-center gap-2">
                     <CreditCard className="w-5 h-5" />
                     Carteirinha Digital
