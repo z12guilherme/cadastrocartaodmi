@@ -190,7 +190,11 @@ serve(async (req) => {
 
     // Função auxiliar para sincronizar com o SIGPAF (Cadastro + Captura de Contrato)
     const syncWithSigpaf = async (record: any) => {
-        const SIGPAF_API_KEY = Deno.env.get('SIGPAF_API_KEY') || 'a816aeb6-c724-44a7-882c-bc1d1ebf5f43';
+        const SIGPAF_API_KEY = Deno.env.get('SIGPAF_API_KEY');
+        
+        if (!SIGPAF_API_KEY) {
+            throw new Error('Chave de API do SIGPAF não configurada no Supabase Secrets.');
+        }
 
         // Função para mapear o nome da cidade para o ID do SIGPAF
         const getCidadeId = (cidadeName?: string) => {
@@ -452,14 +456,20 @@ serve(async (req) => {
 
     // 4. QUARTO: Enviar os 2 templates do WhatsApp via Suri
     const cpfLimpo = cpf.replace(/\D/g, "");
-    await sendSuriNotification(record.telefone, clienteNome, cpfLimpo);
+    const suriPromise = sendSuriNotification(record.telefone, clienteNome, cpfLimpo);
 
-    // 5. QUINTO: Fazer o Upload de cada arquivo pro Telegram sequencialmente
-    let allSuccess = true;
-    for (const file of filesToBackup) {
-        const success = await sendToTelegram(file);
-        if (!success) allSuccess = false;
-    }
+    // 5. QUINTO: Fazer o Upload de cada arquivo pro Telegram
+    const telegramPromise = (async () => {
+        let successCheck = true;
+        for (const file of filesToBackup) {
+            const success = await sendToTelegram(file);
+            if (!success) successCheck = false;
+        }
+        return successCheck;
+    })();
+
+    // Aguarda o disparo da Suri e do Telegram terminarem concorrentemente
+    const [_, allSuccess] = await Promise.all([suriPromise, telegramPromise]);
 
     // 6. SEXTO: Mágica da Limpeza Total (Deletar TODOS os arquivos do Supabase se o backup deu certo)
     if (allSuccess && filesToDelete.length > 0) {
