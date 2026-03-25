@@ -50,7 +50,8 @@ serve(async (req) => {
         status: data.dados.pessoaSituacao?.psi_descricao || "DESCONHECIDO",
         corHex: data.dados.pessoaSituacao?.psi_corhex || "#808080",
         contrato: data.dados.pes_contrato || data.dados.pes_codigo,
-        nome: data.dados.pes_nome
+        nome: data.dados.pes_nome,
+        dataCadastro: data.dados.pes_datacadastro // Adicionando o campo de data de cadastro
     };
 
     return new Response(JSON.stringify(statusData), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });

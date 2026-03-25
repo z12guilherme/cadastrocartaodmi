@@ -123,14 +123,13 @@ export default function Carteirinha() {
   let dataFormatada = "Conforme Contrato";
   let labelData = "Validade";
 
-  if (data?.created_at) {
-    const dataCriacao = new Date(data.created_at);
+  // Prioriza a data do nosso banco, mas usa a do SIGPAF se for um cliente legado
+  const dataDeOrigem = data?.created_at || sigpafStatus?.dataCadastro;
+
+  if (dataDeOrigem) {
+    const dataCriacao = new Date(dataDeOrigem);
     const validade = new Date(dataCriacao.setFullYear(dataCriacao.getFullYear() + 1));
     dataFormatada = validade.toLocaleDateString("pt-BR", { month: "2-digit", year: "2-digit" });
-  } else if (sigpafStatus?.dataCadastro) {
-    const dtCad = new Date(sigpafStatus.dataCadastro);
-    dataFormatada = dtCad.toLocaleDateString("pt-BR", { month: "2-digit", year: "2-digit" });
-    labelData = "Membro Desde";
   }
 
   // Prioriza o campo `dependentes` (JSONB), com fallback para o campo legado `observacoes` (TEXT).
