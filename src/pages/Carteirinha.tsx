@@ -11,7 +11,12 @@ interface CarteirinhaData {
   cpf: string;
   status: string;
   created_at: string;
-  observacoes: string;
+  observacoes?: string; // Campo legado para dependentes
+  dependentes?: {      // Novo campo estruturado (JSONB)
+    nomeCompleto: string;
+    parentesco: string;
+    cpf: string;
+  }[];
   protocolo?: string;
 }
 
@@ -128,13 +133,19 @@ export default function Carteirinha() {
     labelData = "Membro Desde";
   }
 
-  let dependentes = [];
-  try {
-    if (data?.observacoes && data.observacoes.startsWith("[")) {
-      dependentes = JSON.parse(data.observacoes);
+  // Prioriza o campo `dependentes` (JSONB), com fallback para o campo legado `observacoes` (TEXT).
+  let dependentes: any[] = [];
+  if (data?.dependentes && Array.isArray(data.dependentes) && data.dependentes.length > 0) {
+    dependentes = data.dependentes;
+  } else {
+    try {
+      if (data?.observacoes && data.observacoes.startsWith("[")) {
+        dependentes = JSON.parse(data.observacoes);
+      }
+    } catch (e) {
+      console.warn("Não foi possível parsear os dependentes do campo legado 'observacoes'.");
+      // Silently ignore
     }
-  } catch (e) {
-    // Silently ignore
   }
 
   const isLocalAtivo = data?.status === "aprovado";
