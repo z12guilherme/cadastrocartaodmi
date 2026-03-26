@@ -262,6 +262,59 @@ serve(async (req) => {
             return map[cleanName] || 1;
         };
 
+        // Função para mapear o parentesco para o ID do SIGPAF
+        const getParentescoId = (parentesco?: string) => {
+            if (!parentesco) return 37; // Padrão: DEPENDENTE
+
+            const cleanName = parentesco.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+
+            const map: Record<string, number> = {
+                "ESPOSA": 1, "CONJUGE": 1,
+                "ESPOSO": 2,
+                "MAE": 3,
+                "PAI": 4,
+                "FILHO": 5,
+                "FILHA": 6,
+                "IRMAO": 7,
+                "IRMA": 8,
+                "SOGRO": 11,
+                "SOGRA": 12,
+                "CUNHADO": 13,
+                "CUNHADA": 14,
+                "DEPENDENTE": 37,
+                "OUTROS": 31,
+            };
+            return map[cleanName] || 37; // Fallback para DEPENDENTE
+        };
+
+        // Função para mapear o estado civil para o ID do SIGPAF, considerando o sexo
+        const getEstadoCivilId = (estadoCivil?: string, sexo?: string) => {
+            // Padrões baseados no sexo se o estado civil não for informado
+            const isFeminino = sexo ? sexo.toUpperCase().startsWith('F') : false;
+            if (!estadoCivil) return isFeminino ? 2 : 1; // SOLTEIRA ou SOLTEIRO
+
+            const cleanStatus = estadoCivil.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase().trim().replace(/\(A\)/, '');
+
+            if (cleanStatus.startsWith("CASAD")) {
+                return isFeminino ? 4 : 3;
+            }
+            if (cleanStatus.startsWith("DIVORCIAD")) {
+                return isFeminino ? 10 : 9;
+            }
+            if (cleanStatus.startsWith("SEPARAD")) {
+                return isFeminino ? 6 : 5;
+            }
+            if (cleanStatus.startsWith("VIUV")) {
+                return isFeminino ? 8 : 7;
+            }
+            if (cleanStatus.startsWith("CONVIVENTE")) {
+                return 11;
+            }
+            // Padrão para SOLTEIRO(A)
+            return isFeminino ? 2 : 1;
+        };
+
+
         // Função para buscar e mapear o ID do Bairro dinamicamente na hora do cadastro
         const getBairroId = async (bairroName?: string) => {
             if (!bairroName) return 13; // Padrão: EDSON MORORÓ MOURA
@@ -292,12 +345,19 @@ serve(async (req) => {
         if (record.observacoes && record.observacoes.startsWith('[')) {
             try {
                 const deps = JSON.parse(record.observacoes);
+                // NOTA: Para o mapeamento de 'parentesco', 'estadoCivil' e 'sexo' funcionar,
+                // esses campos precisam existir nos objetos de dependentes no JSON.
                 beneficiarios = deps.map((dep: any) => ({
                     dep_nome: dep.nomeCompleto || dep.nome || "Nome não informado",
                     dep_cpf: dep.cpf || "",
                     dep_dtnascimento: dep.dataNascimento ? dep.dataNascimento : null,
-                    prt_codigo: 1, 
-                    etc_codigo: 1, 
+                    dep_rg: dep.rg || "",
+                    dep_celular: dep.telefone || record.telefone || "", // Usa o do titular se vazio
+                    dep_endereco: record.endereco || "Não informado", // Usa o do titular
+                    dep_numero: record.numero || "S/N",
+                    dep_cep: record.cep || "55.150-000",
+                    prt_codigo: getParentescoId(dep.parentesco), 
+                    etc_codigo: getEstadoCivilId(dep.estadoCivil, dep.sexo), 
                     bai_codigo: bairroId, 
                     cid_codigo: cidadeId,  // Usa a cidade do Titular
                     rlg_codigo: 2
@@ -335,10 +395,10 @@ serve(async (req) => {
             bai_codigo: bairroId, // Dinâmico com base no cadastro
             pla_codigo: planCodigoId, // Dinâmico com base nos dependentes
             col_codcobrador: 74, // 74 = JOAM VINICIUS
-            col_codvendedor: 190, // 190 = PIERRI DI FIDELIS
+            col_codvendedor: record.col_codvendedor || 190, // Busca da tabela ou usa 190 por padrão
             rlg_codigo: 2,
             sxo_codigo: record.sexo === 'Feminino' ? 2 : 1, // Assumindo 2 p/ Fem e 1 p/ Masc
-            etc_codigo: 1, // 1 = SOLTEIRO
+            etc_codigo: getEstadoCivilId(record.estado_civil, record.sexo),
             beneficiarios: beneficiarios
         };
 
