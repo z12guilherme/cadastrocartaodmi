@@ -40,63 +40,51 @@ export default function Carteirinha() {
   useEffect(() => {
     const fetchData = async () => {
       if (!cpf) return;
-      
-      const cpfLimpo = cpf.replace(/\D/g, "");
-      let localData = null;
 
-      // 1. Tenta carregar do cache primeiro (Offline-First)
+      const cpfLimpo = cpf.replace(/\D/g, "");
+
+      // Mostra o cache para uma experiência offline-first, mas ele será validado em seguida.
       const cachedData = localStorage.getItem(`carteirinha_${cpfLimpo}`);
       if (cachedData) {
         try {
-          localData = JSON.parse(cachedData);
-          setData(localData);
+          setData(JSON.parse(cachedData));
         } catch (e) {}
       }
 
       try {
-        // 2. Busca o status em tempo real no SIGPAF via Edge Function SEMPRE
-        const { data: sigpafData, error: sigpafError } = await supabase.functions.invoke("check-status", {
-          body: { cpf: cpfLimpo }
-        });
+        // 1. A FONTE DA VERDADE: Sempre buscar o status real no SIGPAF.
+        const { data: sigpafData, error: sigpafError } = await supabase.functions.invoke(
+          "check-status",
+          { body: { cpf: cpfLimpo } }
+        );
 
-        if (!sigpafError && sigpafData) {
-          setSigpafStatus(sigpafData);
-        } else if (sigpafError) {
-          console.error("Erro na Edge Function check-status:", sigpafError);
-        } else if (sigpafData && sigpafData.error) {
-          console.error("Erro retornado pelo SIGPAF:", sigpafData.error);
+        // 2. VALIDAÇÃO RÍGIDA: Se o SIGPAF disser que não é ativo, a sessão é inválida.
+        if (sigpafError) {
+          throw new Error(`Falha na comunicação com o sistema principal: ${sigpafError.message}`);
         }
 
-        // 3. Tenta buscar no banco local para pegar dependentes e outros detalhes (se houver)
-        try {
-          const result = await buscarDadosCarteirinha(cpf);
-          localData = result;
-          setData(result);
-          localStorage.setItem(`carteirinha_${cpfLimpo}`, JSON.stringify(result));
-        } catch (localErr) {
-          console.log("Cliente não localizado no banco novo. Usando os dados legado do SIGPAF.");
+        if (!sigpafData || !sigpafData.existe || (sigpafData.status && sigpafData.status.toUpperCase() !== 'ATIVO')) {
+          localStorage.removeItem(`carteirinha_${cpfLimpo}`); // Limpa o cache inválido
+          setData(null); // Limpa os dados da tela
+          const statusMsg = sigpafData?.status ? `'${sigpafData.status.toUpperCase()}'` : "INATIVO";
+          throw new Error(`Acesso Bloqueado: O status do seu plano é ${statusMsg}.`);
         }
 
-        // 4. Validação: A fonte da verdade é o SIGPAF. Se não existe lá, não tem carteirinha válida.
-        if (!sigpafData || !sigpafData.existe) {
-          // Se o SIGPAF não encontrou, o cliente não está ativo. Limpamos o cache para não mostrar dados antigos.
-          localStorage.removeItem(`carteirinha_${cpfLimpo}`);
+        // 3. SUCESSO: Se chegou aqui, o cliente está ATIVO. Atualiza os dados.
+        setSigpafStatus(sigpafData);
 
-          if (sigpafError) {
-            setError(`Falha na comunicação com o sistema principal: ${sigpafError.message}`);
-          } else {
-            // A mensagem orienta o usuário a usar a tela de consulta, caso seja um cadastro novo/pendente.
-            setError(sigpafData?.msg || "Este CPF não corresponde a um cliente ativo. Verifique os dados ou consulte o status do seu cadastro.");
-          }
-        } else if (sigpafData.status && sigpafData.status.toUpperCase() !== 'ATIVO') {
-          // Se existe no SIGPAF mas o status NÃO é ATIVO (ex: CANCELADO, EXCLUIDO, INATIVO)
-          localStorage.removeItem(`carteirinha_${cpfLimpo}`);
-          setError(`Acesso Bloqueado: O status do seu plano é ${sigpafData.status.toUpperCase()}. Procure a central de atendimento.`);
+        // 4. Busca dados complementares (dependentes) do nosso banco.
+        const localData = await buscarDadosCarteirinha(cpf).catch(() => null);
+        if (localData) {
+          setData(localData);
+          localStorage.setItem(`carteirinha_${cpfLimpo}`, JSON.stringify(localData));
+        } else {
+          // Se não tem no nosso banco, usa os dados mínimos do SIGPAF
+          setData(prevData => ({ ...prevData, nome_completo: sigpafData.nome || "Beneficiário" } as CarteirinhaData));
         }
-
       } catch (err) {
-        console.error("Erro ao buscar carteirinha:", err);
-        if (!localData) setError("Erro de conexão ao buscar dados. Verifique sua internet.");
+        // O erro lançado pela validação será pego aqui
+        setError((err as Error).message);
       } finally {
         setLoading(false);
       }
