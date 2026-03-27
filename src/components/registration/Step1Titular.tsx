@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/select";
 import MaskedInput from "./MaskedInput";
 import { Titular } from "@/types/registration";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { Loader2 } from "lucide-react";
 
 interface Step1Props {
   data: Titular;
@@ -39,6 +40,7 @@ const validarCPF = (cpf: string) => {
 
 const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
   const [errors, setErrors] = useState<Record<string, boolean>>({});
+  const [isFetchingData, setIsFetchingData] = useState(false);
 
   const update = (field: keyof Titular, value: string) => {
     onChange({ ...data, [field]: value });
@@ -66,37 +68,63 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
     }
   };
 
-  // Função para validar e buscar os dados do CPF na API
-  const consultarCpf = async () => {
+  // Função para buscar os dados do CPF na API e preencher o formulário
+  const fetchCpfData = async () => {
     const cpfClean = data.cpf.replace(/\D/g, "");
-    if (cpfClean.length !== 11) {
-      toast.error("Digite o CPF completo antes de buscar.");
+    if (cpfClean.length !== 11 || !validarCPF(cpfClean)) {
       return;
     }
-    if (!validarCPF(cpfClean)) {
-      toast.error("O CPF informado é inválido!");
-      setErrors((prev) => ({ ...prev, cpf: true }));
-      return;
-    }
+
+    setIsFetchingData(true);
+    setErrors((prev) => ({ ...prev, cpf: false }));
 
     try {
-      // Vai no Supabase de forma segura e pergunta: "Esse CPF já está no banco?"
-      const { data: cpfExiste, error } = await supabase.rpc('checar_cpf_existente', { p_cpf: data.cpf });
-      
-      if (error) throw error;
+      // 1. Chama a Edge Function segura para consultar a API externa
+      const { data: apiData, error: apiError } = await supabase.functions.invoke("get-cpf-data", {
+        body: { cpf: cpfClean },
+      });
 
-      if (cpfExiste) {
-        toast.error("Este CPF já possui um cadastro pendente ou aprovado no sistema.");
-        setErrors((prev) => ({ ...prev, cpf: true }));
+      if (apiError) throw apiError;
+
+      if (apiData.success) {
+        // Formata a data de YYYY-MM-DD para DD/MM/YYYY
+        const [year, month, day] = apiData.data_nascimento.split('-');
+        const formattedDate = `${day}/${month}/${year}`;
+
+        // Mapeia o gênero
+        const sexo = apiData.genero === 'M' ? 'Masculino' : apiData.genero === 'F' ? 'Feminino' : '';
+
+        // Atualiza o estado do formulário com os dados recebidos
+        onChange({
+          ...data,
+          nomeCompleto: apiData.nome,
+          dataNascimento: formattedDate,
+          sexo: sexo,
+        });
+        toast.success("Dados do titular preenchidos automaticamente!");
       } else {
-        toast.success("CPF Válido e disponível para cadastro!");
+        // Se a API não encontrar o CPF, permite o preenchimento manual
+        toast.info("CPF não encontrado na base de dados.", {
+          description: "Por favor, preencha os dados manualmente.",
+        });
       }
-    } catch (err) {
-      toast.error("Erro ao verificar CPF no sistema.");
+    } catch (err: any) {
+      // Se houver erro na chamada da função, permite o preenchimento manual
+      toast.warning("Não foi possível buscar os dados automaticamente.", {
+        description: err.message || "Continue preenchendo manualmente.",
+      });
+    } finally {
+      setIsFetchingData(false);
     }
   };
 
-  const validate = () => {
+  // Efeito para buscar dados do CPF automaticamente após digitação
+  useEffect(() => {
+    const timeoutId = setTimeout(() => { fetchCpfData(); }, 500); // Debounce
+    return () => clearTimeout(timeoutId);
+  }, [data.cpf]);
+
+  const validate = async () => {
     const required: (keyof Titular)[] = [
       "nomeCompleto",
       "dataNascimento",
@@ -123,11 +151,27 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
       return false;
     }
 
-    setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       toast.error("Preencha todos os campos obrigatórios.");
       return false;
     }
+
+    // Validação final: Verifica se o CPF já existe no nosso sistema
+    try {
+      const { data: cpfExiste, error } = await supabase.rpc('checar_cpf_existente', { p_cpf: data.cpf });
+      if (error) throw error;
+      if (cpfExiste) {
+        setErrors({ ...newErrors, cpf: true });
+        toast.error("Este CPF já possui um cadastro ativo ou pendente.");
+        return false;
+      }
+    } catch (err) {
+      toast.error("Erro ao validar CPF no sistema. Tente novamente.");
+      return false;
+    }
+
+    setErrors({});
     return true;
   };
 
@@ -154,6 +198,28 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
       <h2 className="text-xl font-semibold text-foreground">Dados do Titular</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="md:col-span-2">
+          <Label htmlFor="cpf">CPF *</Label>
+          <div className="relative flex items-center">
+            <MaskedInput
+              id="cpf"
+              mask="000.000.000-00"
+              value={data.cpf}
+              onAccept={(v) => update("cpf", v)}
+              placeholder="000.000.000-00"
+              className={`${errors.cpf ? "border-destructive" : ""} ${isFetchingData ? "pr-10" : ""}`}
+            />
+            {isFetchingData && (
+              <div className="absolute right-3">
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Digite seu CPF para buscar seus dados automaticamente.
+          </p>
+        </div>
+
         <div className="md:col-span-2">
           <Label htmlFor="nomeCompleto">Nome Completo *</Label>
           <Input
@@ -202,25 +268,6 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
             placeholder="0000000"
             className={errors.rg ? "border-destructive" : ""}
           />
-        </div>
-
-        <div>
-          <Label htmlFor="cpf">CPF *</Label>
-          <MaskedInput
-            id="cpf"
-            mask="000.000.000-00"
-            value={data.cpf}
-            onAccept={(v) => update("cpf", v)}
-            placeholder="000.000.000-00"
-            className={errors.cpf ? "border-destructive" : ""}
-          />
-          <button
-            type="button"
-            onClick={consultarCpf}
-            className="text-xs text-[#0EA5FF] hover:underline mt-1"
-          >
-            Validar CPF
-          </button>
         </div>
 
         <div>
@@ -278,7 +325,7 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
       </div>
 
       <div className="flex justify-end pt-2">
-        <Button onClick={() => validate() && onNext()} size="lg">
+        <Button onClick={async () => { if (await validate()) onNext() }} size="lg">
           Próximo
         </Button>
       </div>
