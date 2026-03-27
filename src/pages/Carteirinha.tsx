@@ -77,15 +77,21 @@ export default function Carteirinha() {
           console.log("Cliente não localizado no banco novo. Usando os dados legado do SIGPAF.");
         }
 
-        // 4. Validação: Se não tem no Supabase E não existe no SIGPAF = Erro!
-        if (!localData && (!sigpafData || !sigpafData.existe)) {
-           if (sigpafError) {
-             setError(`Erro Supabase: ${sigpafError.message || "Falha na Edge Function"}`);
-           } else if (sigpafData && sigpafData.error) {
-             setError(`Erro Interno: ${sigpafData.error}`);
-           } else {
-             setError(sigpafData?.msg || "Carteirinha não encontrada. Verifique o CPF informado no sistema.");
-           }
+        // 4. Validação: A fonte da verdade é o SIGPAF. Se não existe lá, não tem carteirinha válida.
+        if (!sigpafData || !sigpafData.existe) {
+          // Se o SIGPAF não encontrou, o cliente não está ativo. Limpamos o cache para não mostrar dados antigos.
+          localStorage.removeItem(`carteirinha_${cpfLimpo}`);
+
+          if (sigpafError) {
+            setError(`Falha na comunicação com o sistema principal: ${sigpafError.message}`);
+          } else {
+            // A mensagem orienta o usuário a usar a tela de consulta, caso seja um cadastro novo/pendente.
+            setError(sigpafData?.msg || "Este CPF não corresponde a um cliente ativo. Verifique os dados ou consulte o status do seu cadastro.");
+          }
+        } else if (sigpafData.status && sigpafData.status.toUpperCase() !== 'ATIVO') {
+          // Se existe no SIGPAF mas o status NÃO é ATIVO (ex: CANCELADO, EXCLUIDO, INATIVO)
+          localStorage.removeItem(`carteirinha_${cpfLimpo}`);
+          setError(`Acesso Bloqueado: O status do seu plano é ${sigpafData.status.toUpperCase()}. Procure a central de atendimento.`);
         }
 
       } catch (err) {

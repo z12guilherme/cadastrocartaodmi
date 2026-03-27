@@ -79,7 +79,35 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
     setErrors((prev) => ({ ...prev, cpf: false }));
 
     try {
-      // 1. Chama a Edge Function segura para consultar a API externa
+      // 1. VERIFICAR SE O CPF JÁ ESTÁ EM UM CADASTRO PENDENTE/ATIVO NO NOSSO SISTEMA
+      const { data: cpfExiste, error: rpcError } = await supabase.rpc('checar_cpf_existente', { p_cpf: cpfClean });
+      if (rpcError) throw rpcError;
+      if (cpfExiste) {
+        toast.error("Este CPF já possui um cadastro em andamento ou finalizado.");
+        setErrors((prev) => ({ ...prev, cpf: true }));
+        setIsFetchingData(false);
+        return;
+      }
+
+      // 2. SE NÃO, VERIFICAR SE O CLIENTE JÁ EXISTE NO SISTEMA LEGADO (SIGPAF)
+      const { data: sigpafStatus, error: sigpafError } = await supabase.functions.invoke("check-status", {
+        body: { cpf: cpfClean }
+      });
+
+      if (sigpafError) {
+        // Se a verificação do SIGPAF falhar, não bloqueamos, mas avisamos no console e seguimos para a próxima API.
+        console.warn("Falha ao verificar existência no SIGPAF, prosseguindo para a API de dados.", sigpafError);
+      } else if (sigpafStatus && sigpafStatus.existe) {
+        // SE EXISTE NO SIGPAF, BLOQUEIA O CADASTRO
+        toast.error("Este CPF já pertence a um cliente DMI.", {
+          description: "Se deseja acessar sua carteirinha, use a tela de consulta.",
+        });
+        setErrors((prev) => ({ ...prev, cpf: true })); // Marca o campo com erro
+        setIsFetchingData(false);
+        return; // Interrompe o fluxo
+      }
+
+      // 3. SE NÃO EXISTE EM LUGAR NENHUM, BUSCA DADOS PARA AUTOCOMPLETE
       const { data: apiData, error: apiError } = await supabase.functions.invoke("get-cpf-data", {
         body: { cpf: cpfClean },
       });
@@ -154,20 +182,6 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       toast.error("Preencha todos os campos obrigatórios.");
-      return false;
-    }
-
-    // Validação final: Verifica se o CPF já existe no nosso sistema
-    try {
-      const { data: cpfExiste, error } = await supabase.rpc('checar_cpf_existente', { p_cpf: data.cpf });
-      if (error) throw error;
-      if (cpfExiste) {
-        setErrors({ ...newErrors, cpf: true });
-        toast.error("Este CPF já possui um cadastro ativo ou pendente.");
-        return false;
-      }
-    } catch (err) {
-      toast.error("Erro ao validar CPF no sistema. Tente novamente.");
       return false;
     }
 

@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { consultarStatusPorProtocolo } from "@/services/api";
 import MaskedInput from "@/components/registration/MaskedInput";
+import { supabase } from "@/lib/supabase";
 import { 
   Search, 
   CheckCircle2, 
@@ -43,16 +44,54 @@ export default function ConsultaStatus() {
     try {
       // Remove a formatação do CPF para buscar no banco
       const cleanProtocolo = protocolo.replace(/\D/g, "");
-      const data = await consultarStatusPorProtocolo(cleanProtocolo);
       
-      if (!data) {
-        throw new Error("Protocolo não encontrado.");
+      // 1. Busca status real no SIGPAF (Fonte da Verdade)
+      const { data: sigpafData } = await supabase.functions.invoke("check-status", {
+        body: { cpf: cleanProtocolo }
+      });
+
+      // 2. Busca no banco local
+      let localData: any = null;
+      try {
+        localData = await consultarStatusPorProtocolo(cleanProtocolo);
+      } catch (err) {
+        // Se não encontrar local, silencia o erro e segue para avaliar o SIGPAF
+      }
+
+      // 3. Validação de consistência (Se foi excluído no SIGPAF, cancela visualmente)
+      if (sigpafData && sigpafData.existe === false && localData && localData.status === 'aprovado') {
+        throw new Error("Este contrato foi cancelado ou excluído do sistema principal.");
+      }
+
+      // 4. Se o SIGPAF diz que o status é diferente de ATIVO (ex: CANCELADO, BLOQUEADO)
+      if (sigpafData && sigpafData.existe && sigpafData.status && sigpafData.status.toUpperCase() !== 'ATIVO') {
+         setResult({
+           nome_completo: sigpafData.nome || localData?.nome_completo || "Cliente",
+           status: 'rejeitado', // Força exibir a UI de erro/rejeitado
+           valor: localData?.valor || "-",
+         });
+         setError(`Atenção: O status do seu plano no sistema é ${sigpafData.status.toUpperCase()}.`);
+         return;
+      }
+
+      // Se não encontrou em nenhum lugar
+      if (!localData && (!sigpafData || !sigpafData.existe)) {
+        throw new Error("Protocolo ou CPF não encontrado.");
       }
       
-      setResult(data as ConsultaResult);
+      // Se chegou aqui, ou tá tudo certo no SIGPAF ou é pendente no local
+      if (localData) {
+        setResult(localData as ConsultaResult);
+      } else if (sigpafData && sigpafData.existe) {
+        setResult({
+          nome_completo: sigpafData.nome || "Cliente",
+          status: "aprovado",
+          valor: "-",
+        });
+      }
     } catch (err: any) {
       console.error(err);
-      setError("Protocolo não encontrado. Verifique os números e tente novamente.");
+      setError(err.message || "Protocolo não encontrado. Verifique os números e tente novamente.");
     } finally {
       setLoading(false);
     }
