@@ -1,20 +1,46 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import MaskedInput from "@/components/registration/MaskedInput";
-import { ArrowLeft, CreditCard, Search } from "lucide-react";
+import { ArrowLeft, CreditCard, Search, AlertCircle } from "lucide-react";
 import logoDmi from "@/assets/logo-dmi.png";
+
+// Função utilitária para validar matematicamente um CPF
+const validarCPF = (cpf: string) => {
+  const cleanCpf = cpf.replace(/\D/g, '');
+  if (cleanCpf.length !== 11 || !!cleanCpf.match(/(\d)\1{10}/)) return false;
+  
+  let soma = 0, resto;
+  for (let i = 1; i <= 9; i++) soma = soma + parseInt(cleanCpf.substring(i - 1, i)) * (11 - i);
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cleanCpf.substring(9, 10))) return false;
+  
+  soma = 0;
+  for (let i = 1; i <= 10; i++) soma = soma + parseInt(cleanCpf.substring(i - 1, i)) * (12 - i);
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cleanCpf.substring(10, 11))) return false;
+  
+  return true;
+};
 
 export default function ConsultaCarteirinha() {
   const [cpf, setCpf] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleAcessar = (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     const cleanCpf = cpf.replace(/\D/g, "");
-    if (cleanCpf.length === 11) {
-      // Redireciona direto para a rota da carteirinha que já valida os dados
-      navigate(`/carteirinha/${cleanCpf}`);
+    
+    if (!validarCPF(cleanCpf)) {
+      setError("CPF inválido. Verifique os números informados.");
+      return;
     }
+
+    // Redireciona direto para a rota da carteirinha
+    navigate(`/carteirinha/${cleanCpf}`);
   };
 
   return (
@@ -63,7 +89,10 @@ export default function ConsultaCarteirinha() {
                     id="cpf"
                     mask="000.000.000-00"
                     value={cpf}
-                    onAccept={(v) => setCpf(v)}
+                    onAccept={(v) => {
+                      setCpf(v);
+                      if (error) setError(""); // Limpa o erro ao voltar a digitar
+                    }}
                     placeholder="000.000.000-00"
                     className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#0EA5FF] focus:border-transparent transition-all outline-none"
                     required
@@ -79,6 +108,14 @@ export default function ConsultaCarteirinha() {
                 Acessar Carteirinha
               </button>
             </form>
+
+            {/* Mensagem de Erro */}
+            {error && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-start gap-2 text-red-600 animate-fade-in">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <p className="text-sm font-medium">{error}</p>
+              </div>
+            )}
           </div>
         </div>
       </main>
