@@ -20,6 +20,7 @@ import {
 import logoDmi from "@/assets/logo-dmi.png";
 
 const WHATSAPP_SUPORTE = "5581997488090";
+const SIGPAF_TOKEN = "a816aeb6-c724-44a7-882c-bc1d1ebf5f43";
 
 interface ConsultaResult {
   nome_completo: string;
@@ -47,10 +48,35 @@ export default function ConsultaStatus() {
       // Remove a formatação do CPF para buscar no banco
       const cleanProtocolo = protocolo.replace(/\D/g, "");
       
-      // 1. Busca status real no SIGPAF (Fonte da Verdade)
-      const { data: sigpafData } = await supabase.functions.invoke("check-status", {
-        body: { cpf: cleanProtocolo }
-      });
+      // 1. Busca status real direto na API do SIGPAF (Bypass Edge Function)
+      const cpfFormatado = cleanProtocolo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+      let sigpafData: any = null;
+      
+      try {
+        const response = await fetch(`https://api.sigpaf.com.br/public/Pessoa?cpf=${encodeURIComponent(cpfFormatado)}&_t=${Date.now()}`, {
+          method: 'GET',
+          headers: { 
+            'authorization': SIGPAF_TOKEN,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        });
+        
+        const sigpafRaw = await response.json();
+        
+        if (!sigpafRaw.erro && sigpafRaw.existe !== false && sigpafRaw.dados && Object.keys(sigpafRaw.dados).length > 0) {
+          const situacao = sigpafRaw.dados.pessoaSituacao;
+          sigpafData = {
+            existe: true,
+            status: (situacao && situacao.psi_codigo === 1) ? "ATIVO" : (situacao?.psi_descricao || "INATIVO"),
+            nome: sigpafRaw.dados.pes_nome,
+          };
+        } else {
+          sigpafData = { existe: false };
+        }
+      } catch (err) {
+        console.warn("Erro ao buscar no SIGPAF direto:", err);
+      }
 
       // 2. Busca no banco local
       let localData: any = null;
