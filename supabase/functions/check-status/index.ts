@@ -65,10 +65,18 @@ serve(async (req) => {
     }
 
     // 3. Filtro de LGPD: Retorna apenas dados de status (nada de endereço, telefone, nome da mãe, etc)
+    // BLINDAGEM: A fonte da verdade para "ativo" é o código `psi_codigo === 1`.
+    // A descrição em texto (`psi_descricao`) é usada para todos os outros casos (Cancelado, Bloqueado, etc).
+    const situacao = data.dados.pessoaSituacao;
+    const isAtivo = situacao ? situacao.psi_codigo === 1 : false;
+
     const statusData = {
         existe: true,
-        status: data.dados.pessoaSituacao?.psi_descricao || "DESCONHECIDO",
-        corHex: data.dados.pessoaSituacao?.psi_corhex || "#808080",
+        // Se o código for 1, FORÇAMOS o status para "ATIVO". 
+        // Se não, usamos a descrição que vier, ou um padrão seguro "INATIVO".
+        // Isso previne que um status "CANCELADO" com código 1 passe, ou que um código != 1 seja "ATIVO".
+        status: isAtivo ? "ATIVO" : (situacao?.psi_descricao || "INATIVO"),
+        corHex: situacao?.psi_corhex || "#808080",
         contrato: data.dados.pes_contrato || data.dados.pes_codigo,
         nome: data.dados.pes_nome,
         dataCadastro: data.dados.pes_dtcadastro
