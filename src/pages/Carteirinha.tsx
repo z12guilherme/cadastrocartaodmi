@@ -84,8 +84,17 @@ export default function Carteirinha() {
           setData(localData);
           localStorage.setItem(`carteirinha_${cpfLimpo}`, JSON.stringify(localData));
         } else {
-          // Se não tem no nosso banco, usa os dados mínimos do SIGPAF
-          setData(prevData => ({ ...prevData, nome_completo: sigpafData.nome || "Beneficiário" } as CarteirinhaData));
+          // Se o cadastro foi apagado do nosso banco local (ou é um cliente legado),
+          // NÃO podemos reaproveitar o 'prevData' pois ele pode conter um cache sujo (fantasmas).
+          const fallbackData: CarteirinhaData = {
+            nome_completo: sigpafData.nome || "BENEFICIÁRIO",
+            cpf: cpfLimpo,
+            status: "aprovado",
+            created_at: sigpafData.dataCadastro || new Date().toISOString(),
+            protocolo: sigpafData.contrato?.toString()
+          };
+          setData(fallbackData);
+          localStorage.setItem(`carteirinha_${cpfLimpo}`, JSON.stringify(fallbackData));
         }
       } catch (err) {
         // O erro lançado pela validação será pego aqui
