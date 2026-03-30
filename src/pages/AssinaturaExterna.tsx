@@ -51,6 +51,26 @@ export default function AssinaturaExterna() {
     fetchDados();
   }, [id]);
 
+  // Resolve o problema da assinatura cortada ou com toques fora de sincronia no celular
+  useEffect(() => {
+    if (!loading && !error && !sucesso) {
+      const resizeCanvas = () => {
+        if (signatureRef.current) {
+          const canvas = signatureRef.current.getCanvas();
+          const ratio = Math.max(window.devicePixelRatio || 1, 1);
+          canvas.width = canvas.offsetWidth * ratio;
+          canvas.height = canvas.offsetHeight * ratio;
+          canvas.getContext("2d")?.scale(ratio, ratio);
+          signatureRef.current.clear();
+        }
+      };
+      window.addEventListener("resize", resizeCanvas);
+      setTimeout(resizeCanvas, 50); // Garante que a div renderizou na tela
+
+      return () => window.removeEventListener("resize", resizeCanvas);
+    }
+  }, [loading, error, sucesso]);
+
   const limparAssinatura = () => {
     signatureRef.current?.clear();
   };
@@ -124,10 +144,10 @@ export default function AssinaturaExterna() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2"><span>Sua Assinatura</span></label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 overflow-hidden">
+              <div className="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 overflow-hidden">
                 <SignatureCanvas
                   ref={signatureRef}
-                  canvasProps={{ className: "w-full h-48", width: 500, height: 200 }}
+                  canvasProps={{ className: "w-full h-full" }}
                   penColor="black"
                 />
               </div>

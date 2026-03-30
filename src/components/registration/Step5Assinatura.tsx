@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useEffect } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import { Button } from "@/components/ui/button";
 import { Loader2, Eye } from "lucide-react";
@@ -14,6 +14,24 @@ interface Step5Props {
 
 const Step5Assinatura = ({ onConfirm, onBack, onPreview, isSubmitting, data }: Step5Props) => {
   const sigPadRef = useRef<SignatureCanvas>(null);
+
+  // Resolve o problema da proporção do canvas ao assinar pelo celular
+  useEffect(() => {
+    const resizeCanvas = () => {
+      if (sigPadRef.current) {
+        const canvas = sigPadRef.current.getCanvas();
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext("2d")?.scale(ratio, ratio);
+        sigPadRef.current.clear();
+      }
+    };
+    window.addEventListener("resize", resizeCanvas);
+    setTimeout(resizeCanvas, 50); // Garante que a div renderizou na tela
+
+    return () => window.removeEventListener("resize", resizeCanvas);
+  }, []);
 
   const handleClear = () => {
     sigPadRef.current?.clear();
