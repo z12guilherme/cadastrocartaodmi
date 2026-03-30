@@ -324,6 +324,11 @@ serve(async (req) => {
                 const res = await fetch('https://api.sigpaf.com.br/public/Bairros', {
                     headers: { 'authorization': SIGPAF_API_KEY }
                 });
+
+                if (!res.ok) {
+                    console.warn(`[Aviso] Falha ao buscar bairros: HTTP ${res.status}. Usando Bairro Padrão.`);
+                    return 13;
+                }
                 const bairros = await res.json();
                 
                 // Procura o bairro na lista ignorando acentos e diferenças de maiúsculas/minúsculas
