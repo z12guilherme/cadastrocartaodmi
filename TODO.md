@@ -110,4 +110,5 @@ Conexão direta com o sistema desktop da clínica para evitar retrabalho manual.
 - [x] **Status em Tempo Real (SIGPAF)**: Criar função para consultar a API do SIGPAF (`GET /public/Pessoa?cpf=...`) sempre que a carteirinha for aberta.
 - [x] **Selo de Autenticidade**: Usar o retorno da API (`pessoaSituacao.psi_descricao`) para exibir um selo de **"ATIVO"** ou **"INATIVO"**, inviabilizando o uso de prints antigos por clientes inadimplentes.
 
-Corrigir BUG: na consulta está retornando um cliente com o CPF já cancelado
+## 11. Correção de Bugs
+- [] Corrigir BUG: na consulta está retornando um cliente com o CPF já cancelado
