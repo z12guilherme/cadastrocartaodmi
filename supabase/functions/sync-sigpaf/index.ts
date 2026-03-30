@@ -262,56 +262,83 @@ serve(async (req) => {
             return map[cleanName] || 1;
         };
 
-        // Função para mapear o parentesco para o ID do SIGPAF
-        const getParentescoId = (parentesco?: string) => {
-            if (!parentesco) return 37; // Padrão: DEPENDENTE
+        // Função para buscar e mapear o ID do Parentesco dinamicamente na API do SIGPAF
+        const getDynamicParentescoId = async (parentescoName?: string) => {
+            if (!parentescoName) return 37; // Padrão: DEPENDENTE
 
-            const cleanName = parentesco.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+            const cleanName = parentescoName.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
 
+            try {
+                const res = await fetch('https://api.sigpaf.com.br/public/Parentescos', {
+                    headers: { 'authorization': SIGPAF_API_KEY }
+                });
+
+                if (res.ok) {
+                    const parentescos = await res.json();
+                    const found = parentescos.find((p: any) => 
+                        (p.prt_descricao || p.descricao || "").normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase().trim() === cleanName
+                    );
+                    if (found) return found.prt_codigo || found.codigo || 37;
+                }
+            } catch (e) {
+                console.error('Erro ao buscar parentescos dinamicamente:', e);
+            }
+
+            // Fallback manual se a API falhar ou não encontrar correspondência exata
             const map: Record<string, number> = {
-                "ESPOSA": 1, "CONJUGE": 1,
-                "ESPOSO": 2,
-                "MAE": 3,
-                "PAI": 4,
-                "FILHO": 5,
-                "FILHA": 6,
-                "IRMAO": 7,
-                "IRMA": 8,
-                "SOGRO": 11,
-                "SOGRA": 12,
-                "CUNHADO": 13,
-                "CUNHADA": 14,
-                "DEPENDENTE": 37,
-                "OUTROS": 31,
+                "AMIGA": 25, "AMIGO": 26, "AVO": 18, "BISNETA": 34, "BISNETO": 33,
+                "CUNHADA": 14, "CUNHADO": 13, "DEPENDENTE": 37, "ENTEADA": 30, "ENTEADO": 29,
+                "ESPOSA": 1, "CONJUGE": 1, "ESPOSO": 2, "FILHA": 6, "FILHO": 5, "GENRO": 23,
+                "IRMA": 8, "IRMAO": 7, "MADRINHA": 35, "MAE": 3, "NAO INFORMADO": 32,
+                "NETA": 21, "NETO": 22, "NOIVA": 27, "NOIVO": 28, "NORA": 24, "OUTROS": 31,
+                "PADRASTO": 38, "PAI": 4, "PRIMA": 16, "PRIMO": 15, "SOBRINHA": 20,
+                "SOBRINHO": 19, "SOGRA": 12, "SOGRO": 11, "TIA": 10, "TIO": 9, "TITULAR": 36
             };
-            return map[cleanName] || 37; // Fallback para DEPENDENTE
+            return map[cleanName] || 37;
         };
 
-        // Função para mapear o estado civil para o ID do SIGPAF, considerando o sexo
-        const getEstadoCivilId = (estadoCivil?: string, sexo?: string) => {
-            // Padrões baseados no sexo se o estado civil não for informado
+        // Função para buscar e mapear o ID do Estado Civil dinamicamente
+        const getDynamicEstadoCivilId = async (estadoCivil?: string, sexo?: string) => {
             const isFeminino = sexo ? sexo.toUpperCase().startsWith('F') : false;
             if (!estadoCivil) return isFeminino ? 2 : 1; // SOLTEIRA ou SOLTEIRO
 
             const cleanStatus = estadoCivil.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase().trim().replace(/\(A\)/, '');
 
-            if (cleanStatus.startsWith("CASAD")) {
-                return isFeminino ? 4 : 3;
+            let expectedName = cleanStatus;
+            if (cleanStatus.startsWith("CASAD")) expectedName = isFeminino ? "CASADA" : "CASADO";
+            else if (cleanStatus.startsWith("DIVORCIAD")) expectedName = isFeminino ? "DIVORCIADA" : "DIVORCIADO";
+            else if (cleanStatus.startsWith("SEPARAD")) expectedName = isFeminino ? "SEPARADA" : "SEPARADO";
+            else if (cleanStatus.startsWith("VIUV")) expectedName = isFeminino ? "VIUVA" : "VIUVO";
+            else if (cleanStatus.startsWith("SOLTEIR")) expectedName = isFeminino ? "SOLTEIRA" : "SOLTEIRO";
+            else if (cleanStatus.startsWith("CONVIVENTE")) expectedName = "CONVIVENTE";
+
+            try {
+                const res = await fetch('https://api.sigpaf.com.br/public/EstadoCivis', {
+                    headers: { 'authorization': SIGPAF_API_KEY }
+                });
+
+                if (res.ok) {
+                    const estados = await res.json();
+                    const found = estados.find((e: any) => 
+                        (e.etc_descricao || "").toUpperCase() === expectedName
+                    );
+                    if (found) return found.etc_codigo;
+                }
+            } catch (e) {
+                console.error('Erro ao buscar estados civis dinamicamente:', e);
             }
-            if (cleanStatus.startsWith("DIVORCIAD")) {
-                return isFeminino ? 10 : 9;
-            }
-            if (cleanStatus.startsWith("SEPARAD")) {
-                return isFeminino ? 6 : 5;
-            }
-            if (cleanStatus.startsWith("VIUV")) {
-                return isFeminino ? 8 : 7;
-            }
-            if (cleanStatus.startsWith("CONVIVENTE")) {
-                return 11;
-            }
-            // Padrão para SOLTEIRO(A)
-            return isFeminino ? 2 : 1;
+
+            // Fallback manual exato da API
+            if (expectedName === "CASADA") return 4;
+            if (expectedName === "CASADO") return 3;
+            if (expectedName === "CONVIVENTE") return 11;
+            if (expectedName === "DIVORCIADA") return 10;
+            if (expectedName === "DIVORCIADO") return 9;
+            if (expectedName === "SEPARADA") return 6;
+            if (expectedName === "SEPARADO") return 5;
+            if (expectedName === "VIUVA") return 8;
+            if (expectedName === "VIUVO") return 7;
+            return isFeminino ? 2 : 1; // SOLTEIRA / SOLTEIRO
         };
 
 
@@ -346,13 +373,12 @@ serve(async (req) => {
         const cidadeId = getCidadeId(record.cidade);
         const bairroId = await getBairroId(record.bairro);
         
-        let beneficiarios = [];
+        let beneficiarios: any[] = [];
         if (record.observacoes && record.observacoes.startsWith('[')) {
             try {
                 const deps = JSON.parse(record.observacoes);
-                // NOTA: Para o mapeamento de 'parentesco', 'estadoCivil' e 'sexo' funcionar,
-                // esses campos precisam existir nos objetos de dependentes no JSON.
-                beneficiarios = deps.map((dep: any) => ({
+                // Usando Promise.all para permitir a busca assíncrona do ID do parentesco
+                beneficiarios = await Promise.all(deps.map(async (dep: any) => ({
                     dep_nome: dep.nomeCompleto || dep.nome || "Nome não informado",
                     dep_cpf: dep.cpf || "",
                     dep_dtnascimento: dep.dataNascimento ? dep.dataNascimento : null,
@@ -361,12 +387,12 @@ serve(async (req) => {
                     dep_endereco: record.endereco || "Não informado", // Usa o do titular
                     dep_numero: record.numero || "S/N",
                     dep_cep: record.cep || "55.150-000",
-                    prt_codigo: getParentescoId(dep.parentesco), 
-                    etc_codigo: getEstadoCivilId(dep.estadoCivil, dep.sexo), 
+                    prt_codigo: await getDynamicParentescoId(dep.parentesco), 
+                    etc_codigo: await getDynamicEstadoCivilId(dep.estadoCivil, dep.sexo), 
                     bai_codigo: bairroId, 
                     cid_codigo: cidadeId,  // Usa a cidade do Titular
                     rlg_codigo: 2
-                }));
+                })));
             } catch (e) {
                 console.error('Erro ao mapear dependentes para SIGPAF:', e);
             }
@@ -403,7 +429,7 @@ serve(async (req) => {
             col_codvendedor: record.col_codvendedor || 190, // Busca da tabela ou usa 190 por padrão
             rlg_codigo: 2,
             sxo_codigo: record.sexo === 'Feminino' ? 2 : 1, // Assumindo 2 p/ Fem e 1 p/ Masc
-            etc_codigo: getEstadoCivilId(record.estado_civil, record.sexo),
+            etc_codigo: await getDynamicEstadoCivilId(record.estado_civil, record.sexo),
             beneficiarios: beneficiarios
         };
 
