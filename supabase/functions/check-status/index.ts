@@ -42,10 +42,16 @@ serve(async (req) => {
     }
 
     // 1. Faz a requisição para a API do SIGPAF com o CPF FORMATADO
-    const url = `https://api.sigpaf.com.br/public/Pessoa?cpf=${encodeURIComponent(cpfFormatado)}`;
+    // BLINDAGEM CONTRA CACHE: Adicionamos um timestamp na URL e headers rígidos
+    // para forçar o servidor deles a buscar o dado em tempo real, ignorando "fantasmas".
+    const url = `https://api.sigpaf.com.br/public/Pessoa?cpf=${encodeURIComponent(cpfFormatado)}&_t=${Date.now()}`;
     const response = await fetch(url, {
         method: 'GET',
-        headers: { 'authorization': SIGPAF_API_KEY }
+        headers: { 
+            'authorization': SIGPAF_API_KEY,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+        }
     });
 
     const responseText = await response.text();
@@ -57,7 +63,8 @@ serve(async (req) => {
     }
 
     // 2. Trata o caso do cliente não existir ou erro no SIGPAF
-    if (data.erro || !data.dados) {
+    // BLINDAGEM EXTRA: Checa explicitamente data.existe e também se "dados" vier vazio.
+    if (data.erro || data.existe === false || !data.dados || Object.keys(data.dados).length === 0) {
          return new Response(JSON.stringify({ existe: false, msg: data.msg || "Cliente não encontrado" }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200,
