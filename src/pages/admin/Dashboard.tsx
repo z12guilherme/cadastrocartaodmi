@@ -693,15 +693,15 @@ export default function Dashboard() {
                         <CreditCard className="w-4 h-4" /> Carteirinha Digital
                       </h4>
                       <div className="space-y-3">
-                        <p className="text-xs text-gray-600 font-medium">Link de acesso dinâmico do cliente:</p>
+                        <p className="text-xs text-gray-600 font-medium">Página de acesso do cliente:</p>
                         <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-2">
-                          <input type="text" readOnly value={`${window.location.origin}/carteirinha/${selectedInscricao.cpf.replace(/\D/g, "")}`} className="text-xs text-gray-500 bg-transparent flex-1 outline-none" />
+                          <input type="text" readOnly value={`${window.location.origin}/acessar-carteirinha`} className="text-xs text-gray-500 bg-transparent flex-1 outline-none" />
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/carteirinha/${selectedInscricao.cpf.replace(/\D/g, "")}`); toast.success('Link da carteirinha copiado!'); }} className="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 flex items-center justify-center gap-2 transition-colors">
+                          <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/acessar-carteirinha`); toast.success('Link da página de acesso copiado!'); }} className="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 flex items-center justify-center gap-2 transition-colors">
                             <Copy className="w-4 h-4" /> Copiar Link
                           </button>
-                          <a href={`${window.location.origin}/carteirinha/${selectedInscricao.cpf.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex-1 bg-white border border-indigo-200 text-indigo-700 py-2 rounded-lg text-xs font-bold hover:bg-indigo-50 flex items-center justify-center gap-2 transition-colors">
+                          <a href={`${window.location.origin}/acessar-carteirinha`} target="_blank" rel="noopener noreferrer" className="flex-1 bg-white border border-indigo-200 text-indigo-700 py-2 rounded-lg text-xs font-bold hover:bg-indigo-50 flex items-center justify-center gap-2 transition-colors">
                             <ExternalLink className="w-4 h-4" /> Visualizar
                           </a>
                         </div>
@@ -860,7 +860,7 @@ export default function Dashboard() {
                               <span className="text-xs text-gray-500 font-medium">Aguardando assinatura</span>
                               <button
                                 onClick={() => {
-                                  const link = `${window.location.origin}/assinatura/${encodeURIComponent(selectedInscricao.cpf)}`;
+                                  const link = `${window.location.origin}/assinatura/${selectedInscricao.id}`;
                                   navigator.clipboard.writeText(link);
                                   toast.success('Link de assinatura copiado!');
                                 }}

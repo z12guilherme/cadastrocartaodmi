@@ -18,6 +18,7 @@ import logoDmi from "@/assets/logo-dmi.png";
 import { submitCadastro } from "@/services/api";
 import { generateContractPdf } from "./pdf"; 
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 const RegistrationWizard = () => {
   const [step, setStep] = useState(1);
@@ -33,6 +34,7 @@ const RegistrationWizard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   // const [finalContract, setFinalContract] = useState<Blob | null>(null);
   const [protocolo, setProtocolo] = useState<string | null>(null);
+  const [inscricaoId, setInscricaoId] = useState<string | null>(null);
 
   // 1. Recupera o rascunho salvo ao abrir a tela
   useEffect(() => {
@@ -82,6 +84,17 @@ const RegistrationWizard = () => {
       // Agora passamos a assinatura pura, o contrato será gerado pelo Admin após pagamento
       const novoProtocolo = await submitCadastro({ data, signatureBase64: signatureImageBase64 });
       setProtocolo(novoProtocolo);
+      
+      // Busca o ID gerado no banco para montar o link seguro de assinatura
+      const { data: inscData } = await supabase
+        .from("inscricoes")
+        .select("id")
+        .eq("cpf", data.titular.cpf.replace(/\D/g, ""))
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+        
+      if (inscData) setInscricaoId(inscData.id);
 
       toast.success("Solicitação enviada com sucesso!");
 
@@ -109,6 +122,7 @@ const RegistrationWizard = () => {
     });
     // setFinalContract(null);
     setProtocolo(null);
+    setInscricaoId(null);
     setStep(1);
   };
 
@@ -187,7 +201,7 @@ const RegistrationWizard = () => {
               }}
             />
           )}
-          {step === 7 && <Step6Sucesso onReset={handleReset} protocolo={protocolo} cpf={data.titular.cpf} />}
+          {step === 7 && <Step6Sucesso onReset={handleReset} protocolo={protocolo} id={inscricaoId} />}
         </div>
       </main>
     </div>

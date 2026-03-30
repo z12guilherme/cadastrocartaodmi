@@ -6,12 +6,12 @@ import { toast } from "sonner";
 interface Step6Props {
   onReset: () => void;
   protocolo: string | null;
-  cpf: string;
+  id: string | null;
   // contractBlob retirado pois não é mais gerado aqui
 }
 
-const Step6Sucesso = ({ onReset, protocolo, cpf }: Step6Props) => {
-  const linkAssinatura = `${window.location.origin}/assinatura/${encodeURIComponent(cpf)}`;
+const Step6Sucesso = ({ onReset, protocolo, id }: Step6Props) => {
+  const linkAssinatura = id ? `${window.location.origin}/assinatura/${id}` : "";
 
   const copiarLink = () => {
     navigator.clipboard.writeText(linkAssinatura);
@@ -41,22 +41,24 @@ const Step6Sucesso = ({ onReset, protocolo, cpf }: Step6Props) => {
           </div>
         )}
 
-        <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg w-full max-w-sm mx-auto space-y-3">
-          <p className="text-sm font-medium text-gray-700">Link para o cliente assinar:</p>
-          <div className="flex items-center gap-2 bg-white border rounded-md p-2">
-            <input type="text" readOnly value={linkAssinatura} className="text-xs text-gray-500 bg-transparent flex-1 outline-none" />
+        {id && (
+          <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg w-full max-w-sm mx-auto space-y-3">
+            <p className="text-sm font-medium text-gray-700">Link para o cliente assinar:</p>
+            <div className="flex items-center gap-2 bg-white border rounded-md p-2">
+              <input type="text" readOnly value={linkAssinatura} className="text-xs text-gray-500 bg-transparent flex-1 outline-none" />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={copiarLink} variant="default" size="sm" className="w-full gap-2 bg-[#0EA5FF] hover:bg-[#0EA5FF]/90 text-white">
+                <Copy className="w-4 h-4" /> Copiar Link
+              </Button>
+              <Button asChild variant="outline" size="sm" className="w-full gap-2">
+                <a href={linkAssinatura} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4" /> Abrir
+                </a>
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={copiarLink} variant="default" size="sm" className="w-full gap-2 bg-[#0EA5FF] hover:bg-[#0EA5FF]/90 text-white">
-              <Copy className="w-4 h-4" /> Copiar Link
-            </Button>
-            <Button asChild variant="outline" size="sm" className="w-full gap-2">
-              <a href={linkAssinatura} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="w-4 h-4" /> Abrir
-              </a>
-            </Button>
-          </div>
-        </div>
+        )}
 
         <div className="bg-green-50 text-green-800 p-4 rounded-lg text-sm border border-green-200 mt-4 flex items-start gap-3 text-left">
           <MessageCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />

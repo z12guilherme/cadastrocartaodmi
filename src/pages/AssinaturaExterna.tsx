@@ -14,7 +14,7 @@ interface ClienteData {
 }
 
 export default function AssinaturaExterna() {
-  const { cpf } = useParams(); // Pega o CPF da URL
+  const { id } = useParams(); // Pega o ID (UUID) da URL
   const navigate = useNavigate();
   const signatureRef = useRef<SignatureCanvas>(null);
   
@@ -27,13 +27,13 @@ export default function AssinaturaExterna() {
   // Busca os dados do cliente ao carregar a página
   useEffect(() => {
     async function fetchDados() {
-      if (!cpf) return;
+      if (!id) return;
       
       try {
         const { data, error } = await supabase
           .from("inscricoes")
           .select("id, nome_completo, cpf, valor, assinatura_url")
-          .eq("cpf", cpf)
+          .eq("id", id)
           .order("created_at", { ascending: false })
           .limit(1)
           .single();
@@ -49,7 +49,7 @@ export default function AssinaturaExterna() {
       }
     }
     fetchDados();
-  }, [cpf]);
+  }, [id]);
 
   const limparAssinatura = () => {
     signatureRef.current?.clear();
