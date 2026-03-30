@@ -29,7 +29,7 @@ const App = () => (
           <Route path="/cadastro" element={<Cadastro />} />
           <Route path="/consulta" element={<ConsultaStatus />} />
           <Route path="/assinatura/:cpf" element={<AssinaturaExterna />} />
-          <Route path="/carteirinha/:cpf" element={<Carteirinha />} />
+          <Route path="/carteirinha" element={<Carteirinha />} />
           <Route path="/acessar-carteirinha" element={<ConsultaCarteirinha />} />
           <Route path="/admin/login" element={<Login />} />
           

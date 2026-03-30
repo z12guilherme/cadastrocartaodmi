@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import logoDmi from "@/assets/logo-dmi.png";
 
+const WHATSAPP_SUPORTE = "5581997488090";
+
 interface ConsultaResult {
   nome_completo: string;
   status: string;
@@ -171,7 +173,7 @@ export default function ConsultaStatus() {
                 <Link to="/cadastro" className="text-sm text-[#0EA5FF] hover:underline font-medium">
                   Ainda não tem cadastro? Faça o seu agora
                 </Link>
-                <a href="https://wa.me/5581997488090?text=Olá,%20estou%20com%20problemas%20para%20consultar%20meu%20cadastro%20do%20Cartão%20DMI." target="_blank" rel="noopener noreferrer" className="text-sm text-green-600 hover:underline font-medium">
+                <a href={`https://wa.me/${WHATSAPP_SUPORTE}?text=Olá,%20estou%20com%20problemas%20para%20consultar%20meu%20cadastro%20do%20Cartão%20DMI.`} target="_blank" rel="noopener noreferrer" className="text-sm text-green-600 hover:underline font-medium">
                   Problemas com seu CPF? Fale com o suporte no WhatsApp
                 </a>
               </div>
@@ -220,7 +222,10 @@ export default function ConsultaStatus() {
                     <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
                       {/* Botão 1: Acessar Carteirinha (Ação Principal) */}
                       <button 
-                        onClick={() => navigate(`/carteirinha/${protocolo.replace(/\D/g, '')}`)}
+                        onClick={() => {
+                          sessionStorage.setItem("dmi_carteirinha_cpf", protocolo.replace(/\D/g, ''));
+                          navigate("/carteirinha");
+                        }}
                         className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-[#0EA5FF] hover:bg-[#0EA5FF]/90 transition-colors gap-2"
                       >
                         <CreditCard className="w-5 h-5" />

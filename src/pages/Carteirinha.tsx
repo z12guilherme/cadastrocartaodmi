@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { buscarDadosCarteirinha } from "@/services/api";
 import { ShieldCheck, Loader2, AlertCircle, ArrowLeft, Users, CheckCircle2 } from "lucide-react";
 import logoDmi from "@/assets/logo-dmi.png";
@@ -31,7 +31,9 @@ interface SigpafStatus {
 }
 
 export default function Carteirinha() {
-  const { cpf } = useParams();
+  const navigate = useNavigate();
+  const cpf = sessionStorage.getItem("dmi_carteirinha_cpf");
+  
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<CarteirinhaData | null>(null);
   const [sigpafStatus, setSigpafStatus] = useState<SigpafStatus | null>(null);
@@ -39,7 +41,10 @@ export default function Carteirinha() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!cpf) return;
+      if (!cpf) {
+        navigate("/consulta");
+        return;
+      }
 
       const cpfLimpo = cpf.replace(/\D/g, "");
 
@@ -90,7 +95,7 @@ export default function Carteirinha() {
       }
     };
     fetchData();
-  }, [cpf]);
+  }, [cpf, navigate]);
 
   if (loading) {
     return (
@@ -127,7 +132,7 @@ export default function Carteirinha() {
   }
 
   // Prioriza o campo `dependentes` (JSONB), com fallback para o campo legado `observacoes` (TEXT).
-  let dependentes: any[] = [];
+  let dependentes: NonNullable<CarteirinhaData['dependentes']> = [];
   if (data?.dependentes && Array.isArray(data.dependentes) && data.dependentes.length > 0) {
     dependentes = data.dependentes;
   } else {
@@ -250,7 +255,7 @@ export default function Carteirinha() {
               Dependentes Inclusos ({dependentes.length})
             </h3>
             <div className="space-y-3">
-              {dependentes.map((dep: any, idx: number) => (
+              {dependentes.map((dep, idx: number) => (
                 <div key={idx} className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
                   <div>
                     <p className="font-bold text-sm text-slate-700">{dep.nomeCompleto}</p>

@@ -39,8 +39,9 @@ export default function ConsultaCarteirinha() {
       return;
     }
 
-    // Redireciona direto para a rota da carteirinha
-    navigate(`/carteirinha/${cleanCpf}`);
+    // Salva o CPF na sessão e redireciona sem expor na URL
+    sessionStorage.setItem("dmi_carteirinha_cpf", cleanCpf);
+    navigate(`/carteirinha`);
   };
 
   return (
