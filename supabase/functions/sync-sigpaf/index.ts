@@ -236,13 +236,15 @@ serve(async (req) => {
         const formatDateToISO = (dateStr?: string) => {
             if (!dateStr) return "";
             const cleanStr = String(dateStr).trim();
+            // Já está no formato YYYY-MM-DD (com ou sem horas)
             if (/^\d{4}-\d{2}-\d{2}/.test(cleanStr)) return cleanStr.substring(0, 10);
+            // Está no formato DD/MM/YYYY
             if (/^\d{2}\/\d{2}\/\d{4}$/.test(cleanStr)) {
                 const [day, month, year] = cleanStr.split('/');
                 return `${year}-${month}-${day}`;
             }
-            if (cleanStr.includes('T')) return cleanStr.split('T')[0]; // Limpa datas com horas ex: 1990-01-01T00:00:00Z
-            return cleanStr;
+            // Se chegou aqui, o formato é desconhecido ou inválido. Não arriscamos.
+            return "";
         };
 
         // Função para mapear o nome da cidade para o ID do SIGPAF

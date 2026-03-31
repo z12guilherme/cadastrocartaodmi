@@ -31,6 +31,7 @@ const Step3Dependentes = ({ dependentes, onChange, onNext, onBack }: Step3Props)
         nomeCompleto: "",
         parentesco: "",
         cpf: "",
+        dataNascimento: "",
         fotoDocumento: null,
       },
     ]);
@@ -78,6 +79,16 @@ const Step3Dependentes = ({ dependentes, onChange, onNext, onBack }: Step3Props)
                 value={dep.nomeCompleto}
                 onChange={(e) => updateDep(dep.id, "nomeCompleto", e.target.value)}
                 placeholder="Nome do dependente"
+              />
+            </div>
+
+            <div>
+              <Label>Data de Nascimento</Label>
+              <MaskedInput
+                mask="00/00/0000"
+                value={(dep as any).dataNascimento || ""}
+                onAccept={(v) => updateDep(dep.id, "dataNascimento" as any, v)}
+                placeholder="DD/MM/AAAA"
               />
             </div>
 

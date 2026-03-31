@@ -16,6 +16,7 @@ interface CarteirinhaData {
     nomeCompleto: string;
     parentesco: string;
     cpf: string;
+    dataNascimento?: string;
   }[];
   protocolo?: string;
 }
