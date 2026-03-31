@@ -235,12 +235,14 @@ serve(async (req) => {
         // Função para garantir que a data esteja no formato YYYY-MM-DD (padrão do SIGPAF)
         const formatDateToISO = (dateStr?: string) => {
             if (!dateStr) return "";
-            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
-            if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-                const [day, month, year] = dateStr.split('/');
+            const cleanStr = String(dateStr).trim();
+            if (/^\d{4}-\d{2}-\d{2}/.test(cleanStr)) return cleanStr.substring(0, 10);
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(cleanStr)) {
+                const [day, month, year] = cleanStr.split('/');
                 return `${year}-${month}-${day}`;
             }
-            return dateStr;
+            if (cleanStr.includes('T')) return cleanStr.split('T')[0]; // Limpa datas com horas ex: 1990-01-01T00:00:00Z
+            return cleanStr;
         };
 
         // Função para mapear o nome da cidade para o ID do SIGPAF
@@ -395,25 +397,40 @@ serve(async (req) => {
         const bairroId = await getBairroId(record.bairro);
         
         let beneficiarios: any[] = [];
-        if (record.observacoes && record.observacoes.startsWith('[')) {
+        let deps: any[] = [];
+        
+        // Prioriza a coluna estruturada 'dependentes' (JSONB), com fallback para 'observacoes'
+        if (record.dependentes && Array.isArray(record.dependentes)) {
+            deps = record.dependentes;
+        } else if (record.observacoes && typeof record.observacoes === 'string' && record.observacoes.startsWith('[')) {
+            try { deps = JSON.parse(record.observacoes); } catch (e) { console.error('Erro parse observacoes', e); }
+        }
+
+        if (deps.length > 0) {
             try {
-                const deps = JSON.parse(record.observacoes);
                 // Usando Promise.all para permitir a busca assíncrona do ID do parentesco
-                beneficiarios = await Promise.all(deps.map(async (dep: any) => ({
-                    dep_nome: dep.nomeCompleto || dep.nome || "Nome não informado",
-                    dep_cpf: formatCpf(dep.cpf || dep.cpfCnpj) || "",
-                    dep_dtnascimento: formatDateToISO(dep.dataNascimento) || null,
-                    dep_rg: dep.rg || "",
-                    dep_celular: dep.telefone || record.telefone || "", // Usa o do titular se vazio
-                    dep_endereco: record.endereco || "Não informado", // Usa o do titular
-                    dep_numero: record.numero || "S/N",
-                    dep_cep: record.cep || "55.150-000",
-                    prt_codigo: await getDynamicParentescoId(dep.parentesco), 
-                    etc_codigo: await getDynamicEstadoCivilId(dep.estadoCivil, dep.sexo), 
-                    bai_codigo: bairroId, 
-                    cid_codigo: cidadeId,  // Usa a cidade do Titular
-                    rlg_codigo: 2
-                })));
+                beneficiarios = await Promise.all(deps.map(async (dep: any) => {
+                    // Cobre as três formas mais comuns que um formulário joga no JSON para a data de nascimento
+                    const rawNascimento = dep.dataNascimento || dep.data_nascimento || dep.nascimento || dep.dtnascimento;
+                    const dataFormatada = formatDateToISO(rawNascimento);
+
+                    const depPayload: any = {
+                        dep_nome: dep.nomeCompleto || dep.nome || "Nome não informado",
+                        dep_cpf: formatCpf(dep.cpf || dep.cpfCnpj) || "",
+                        prt_codigo: await getDynamicParentescoId(dep.parentesco), 
+                        etc_codigo: await getDynamicEstadoCivilId(dep.estadoCivil, dep.sexo), 
+                        bai_codigo: bairroId, 
+                        cid_codigo: cidadeId,  // Usa a cidade do Titular
+                        rlg_codigo: 1 // Ajustado conforme exigido no seu curl
+                    };
+
+                    // A API do SIGPAF é rigorosa: só mandamos o campo se ele tiver uma data válida (idêntico ao curl)
+                    if (dataFormatada) {
+                        depPayload.dep_dtnascimento = dataFormatada;
+                    }
+
+                    return depPayload;
+                }));
             } catch (e) {
                 console.error('Erro ao mapear dependentes para SIGPAF:', e);
             }
@@ -446,9 +463,8 @@ serve(async (req) => {
             cid_codigo: cidadeId, // Dinâmico com base no cadastro
             bai_codigo: bairroId, // Dinâmico com base no cadastro
             pla_codigo: planCodigoId, // Dinâmico com base nos dependentes
-            col_codcobrador: 74, // 74 = JOAM VINICIUS
-            col_codvendedor: record.col_codvendedor || 190, // Busca da tabela ou usa 190 por padrão
-            rlg_codigo: 2,
+            col_codvendedor: record.col_codvendedor || 77, // O vendedor fica neste parâmetro principal
+            rlg_codigo: 1, // Ajustado conforme o seu curl
             sxo_codigo: record.sexo === 'Feminino' ? 2 : 1, // Assumindo 2 p/ Fem e 1 p/ Masc
             etc_codigo: await getDynamicEstadoCivilId(record.estado_civil, record.sexo),
             beneficiarios: beneficiarios
