@@ -50,14 +50,6 @@ export default function Carteirinha() {
 
       const cpfLimpo = cpf.replace(/\D/g, "");
 
-      // Mostra o cache para uma experiência offline-first, mas ele será validado em seguida.
-      const cachedData = localStorage.getItem(`carteirinha_${cpfLimpo}`);
-      if (cachedData) {
-        try {
-          setData(JSON.parse(cachedData));
-        } catch (e) {}
-      }
-
       try {
         // 1. A FONTE DA VERDADE: Buscar direto na API do SIGPAF (Bypass Edge Function)
         const cpfFormatado = cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
@@ -125,8 +117,22 @@ export default function Carteirinha() {
           localStorage.setItem(`carteirinha_${cpfLimpo}`, JSON.stringify(fallbackData));
         }
       } catch (err) {
-        // O erro lançado pela validação será pego aqui
-        setError((err as Error).message);
+        // OFFLINE-FIRST: Se a validação online falhar (ex: sem internet),
+        // tentamos carregar a última versão válida do cache.
+        const isNetworkError = err instanceof TypeError;
+        const cachedData = localStorage.getItem(`carteirinha_${cpfLimpo}`);
+
+        if (isNetworkError && cachedData) {
+          try {
+            setData(JSON.parse(cachedData));
+            // Opcional: Adicionar um aviso de que os dados são offline.
+          } catch (e) {
+            setError("Não foi possível carregar os dados. Verifique sua conexão.");
+          }
+        } else {
+          // Se o erro não for de rede, ou se não houver cache, mostramos o erro real.
+          setError((err as Error).message);
+        }
       } finally {
         setLoading(false);
       }
