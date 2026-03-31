@@ -1,10 +1,64 @@
-import { serve } from "https://deno.land/std@0.192.0/http/server.ts"
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
-// Configuração de CORS necessária para o Frontend (React) conseguir chamar a função diretamente
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// --- Interfaces para Tipagem (Melhora a clareza e segurança) ---
+
+/**
+ * Representa a estrutura esperada da resposta da API do SIGPAF.
+ */
+interface SigpafResponse {
+  erro?: boolean;
+  existe?: boolean;
+  msg?: string;
+  dados?: {
+    pessoaSituacao?: {
+      psi_codigo: number;
+      psi_descricao: string;
+      psi_corhex: string;
+    };
+    pes_contrato: string | number;
+    pes_codigo: string | number;
+    pes_nome: string;
+    pes_dtcadastro: string;
+  };
 }
+
+/**
+ * Representa a estrutura de dados que esta função retorna para o frontend.
+ */
+interface StatusData {
+  existe: boolean;
+  status?: string;
+  corHex?: string;
+  contrato?: string | number;
+  nome?: string;
+  dataCadastro?: string;
+  msg?: string; // Usado para mensagens de erro ou "não encontrado"
+  error?: string; // Usado para erros internos
+}
+
+
+// --- Configurações e Funções Auxiliares ---
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*', // Em produção, considere restringir para o seu domínio: 'https://seusite.com'
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+/**
+ * Cria uma resposta JSON padronizada.
+ * @param body O corpo da resposta.
+ * @param status O código de status HTTP.
+ * @returns Um objeto Response.
+ */
+function createJsonResponse(body: StatusData, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    status,
+  });
+}
+
+
+// --- Lógica Principal da Função ---
 
 serve(async (req) => {
   // Responde ao "preflight" request do navegador (CORS)
@@ -13,24 +67,17 @@ serve(async (req) => {
   }
 
   try {
-    // O frontend sempre enviará os parâmetros via POST usando o supabase.functions.invoke()
     const { cpf } = await req.json();
 
     if (!cpf) {
-      return new Response(JSON.stringify({ error: 'CPF é obrigatório' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      });
+      return createJsonResponse({ existe: false, error: 'CPF é obrigatório' }, 400);
     }
 
     // Garante que pegamos apenas os números, não importa o que o frontend enviou
     const cpfNumerico = String(cpf).replace(/\D/g, "");
     
     if (cpfNumerico.length !== 11) {
-      return new Response(JSON.stringify({ error: 'CPF inválido (tamanho incorreto)' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      });
+      return createJsonResponse({ existe: false, error: 'CPF inválido (tamanho incorreto)' }, 400);
     }
 
     // Remonta o CPF no padrão que o banco do SIGPAF exige (XXX.XXX.XXX-XX)
@@ -55,20 +102,18 @@ serve(async (req) => {
     });
 
     const responseText = await response.text();
-    let data;
+    let data: SigpafResponse;
     try {
         data = JSON.parse(responseText);
     } catch (e) {
-        throw new Error(`SIGPAF não retornou um JSON válido. Resposta: ${responseText.substring(0, 100)}`);
+        console.error(`SIGPAF não retornou um JSON válido. Resposta: ${responseText.substring(0, 200)}`);
+        throw new Error(`A API externa (SIGPAF) retornou um formato inesperado.`);
     }
 
     // 2. Trata o caso do cliente não existir ou erro no SIGPAF
     // BLINDAGEM EXTRA: Checa explicitamente data.existe e também se "dados" vier vazio.
     if (data.erro || data.existe === false || !data.dados || Object.keys(data.dados).length === 0) {
-         return new Response(JSON.stringify({ existe: false, msg: data.msg || "Cliente não encontrado" }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200,
-        });
+         return createJsonResponse({ existe: false, msg: data.msg || "Cliente não encontrado" }, 200);
     }
 
     // 3. Filtro de LGPD: Retorna apenas dados de status (nada de endereço, telefone, nome da mãe, etc)
@@ -77,7 +122,7 @@ serve(async (req) => {
     const situacao = data.dados.pessoaSituacao;
     const isAtivo = situacao ? situacao.psi_codigo === 1 : false;
 
-    const statusData = {
+    const statusData: StatusData = {
         existe: true,
         // Se o código for 1, FORÇAMOS o status para "ATIVO". 
         // Se não, usamos a descrição que vier, ou um padrão seguro "INATIVO".
@@ -89,9 +134,10 @@ serve(async (req) => {
         dataCadastro: data.dados.pes_dtcadastro
     };
 
-    return new Response(JSON.stringify(statusData), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
+    return createJsonResponse(statusData, 200);
+
   } catch (error: any) {
-    console.error('Erro na função check-status:', error);
-    return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
+    console.error('Erro na função check-status:', error.message);
+    return createJsonResponse({ existe: false, error: error.message }, 500);
   }
 })

@@ -111,4 +111,4 @@ Conexão direta com o sistema desktop da clínica para evitar retrabalho manual.
 - [x] **Selo de Autenticidade**: Usar o retorno da API (`pessoaSituacao.psi_descricao`) para exibir um selo de **"ATIVO"** ou **"INATIVO"**, inviabilizando o uso de prints antigos por clientes inadimplentes.
 
 ## 11. Correção de Bugs
-- [] Corrigir BUG: na consulta está retornando um cliente com o CPF já cancelado
+- [x] Corrigir BUG: na consulta está retornando um cliente com o CPF já cancelado
