@@ -222,6 +222,27 @@ serve(async (req) => {
             throw new Error('Chave de API do SIGPAF não configurada no Supabase Secrets.');
         }
 
+        // Função para formatar o CPF com a máscara 999.999.999-99
+        const formatCpf = (cpf?: string) => {
+            if (!cpf) return "";
+            const cleaned = cpf.replace(/\D/g, "");
+            if (cleaned.length === 11) {
+                return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+            }
+            return cpf; // Retorna original se não for 11 dígitos
+        };
+
+        // Função para garantir que a data esteja no formato YYYY-MM-DD (padrão do SIGPAF)
+        const formatDateToISO = (dateStr?: string) => {
+            if (!dateStr) return "";
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+                const [day, month, year] = dateStr.split('/');
+                return `${year}-${month}-${day}`;
+            }
+            return dateStr;
+        };
+
         // Função para mapear o nome da cidade para o ID do SIGPAF
         const getCidadeId = (cidadeName?: string) => {
             if (!cidadeName) return 1; // Padrão: BELO JARDIM
@@ -380,8 +401,8 @@ serve(async (req) => {
                 // Usando Promise.all para permitir a busca assíncrona do ID do parentesco
                 beneficiarios = await Promise.all(deps.map(async (dep: any) => ({
                     dep_nome: dep.nomeCompleto || dep.nome || "Nome não informado",
-                    dep_cpf: dep.cpf || "",
-                    dep_dtnascimento: dep.dataNascimento ? dep.dataNascimento : null,
+                    dep_cpf: formatCpf(dep.cpf || dep.cpfCnpj) || "",
+                    dep_dtnascimento: formatDateToISO(dep.dataNascimento) || null,
                     dep_rg: dep.rg || "",
                     dep_celular: dep.telefone || record.telefone || "", // Usa o do titular se vazio
                     dep_endereco: record.endereco || "Não informado", // Usa o do titular
@@ -411,9 +432,9 @@ serve(async (req) => {
         const payload = {
             pes_nome: record.nome_completo,
             pes_razao: record.nome_completo,
-            pes_cpfcnpj: record.cpf || "",
+            pes_cpfcnpj: formatCpf(record.cpf) || "",
             pes_rgie: record.rg || "", // Adicionado RG
-            pes_dtnascimento: record.data_nascimento || record.dataNascimento || "", // Data Nascimento
+            pes_dtnascimento: formatDateToISO(record.data_nascimento || record.dataNascimento) || "", // Data Nascimento
             pes_email: record.email || "",
             pes_fone: record.telefone || "",
             pes_celular: record.telefone || "", // Repetindo telefone p/ evitar erros
