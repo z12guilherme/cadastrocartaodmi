@@ -185,7 +185,11 @@ export default function Carteirinha() {
 
   const isLocalAtivo = data?.status === "aprovado";
   const isSigpafAtivo = sigpafStatus?.status === "ATIVO";
-  const contratoFinal = sigpafStatus?.contrato || data?.protocolo || cpf;
+  // PRIORIDADE: O número do contrato no nosso banco (data.protocolo) é mais confiável
+  // do que o do SIGPAF, que pode ser um código de pessoa genérico.
+  // Mantemos a consulta ao SIGPAF como fonte da verdade para o STATUS, mas usamos nosso
+  // número de contrato para exibição.
+  const contratoFinal = data?.protocolo || sigpafStatus?.contrato || cpf;
   
   const nomeExibicao = sigpafStatus?.nome || data?.nome_completo || "BENEFICIÁRIO";
   const cpfFormatado = cpf?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
