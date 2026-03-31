@@ -125,10 +125,15 @@ export const submitCadastro = async ({
   const protocolo = cleanCpf;
 
   try {
-    // SEGURANÇA: Verificação final de duplicidade antes de iniciar os uploads
-    const { data: cpfExiste, error: rpcError } = await supabase.rpc('checar_cpf_existente', { p_cpf: titular.cpf });
-    if (rpcError) throw rpcError;
-    if (cpfExiste) {
+    // SEGURANÇA: Verificação final de duplicidade de cadastros ATIVOS ou PENDENTES
+    const { count, error: countError } = await supabase
+      .from('inscricoes')
+      .select('*', { count: 'exact', head: true })
+      .eq('cpf', cleanCpf) // Usa o CPF limpo
+      .in('status', ['pendente', 'aprovado']);
+
+    if (countError) throw countError;
+    if (count && count > 0) {
       throw new Error("Este CPF já possui um cadastro ativo ou em análise. Verifique a tela de Consulta.");
     }
 

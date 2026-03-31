@@ -52,7 +52,12 @@ const corsHeaders = {
  */
 function createJsonResponse(body: StatusData, status: number): Response {
   return new Response(JSON.stringify(body), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'application/json',
+      // Garante que nem o browser nem proxies (como o da Supabase) façam cache da resposta.
+      'Cache-Control': 'no-cache, no-store, must-revalidate, private',
+    },
     status,
   });
 }
@@ -94,6 +99,7 @@ serve(async (req) => {
     const url = `https://api.sigpaf.com.br/public/Pessoa?cpf=${encodeURIComponent(cpfFormatado)}&_t=${Date.now()}`;
     const response = await fetch(url, {
         method: 'GET',
+        cache: 'no-store', // BLINDAGEM MÁXIMA: Força o Deno a não usar nenhum cache para esta requisição.
         headers: { 
             'authorization': SIGPAF_API_KEY,
             'Cache-Control': 'no-cache, no-store, must-revalidate',

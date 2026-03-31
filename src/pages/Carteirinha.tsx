@@ -85,20 +85,18 @@ export default function Carteirinha() {
 
         // 4. Busca dados complementares (dependentes) do nosso banco.
         const localData = await buscarDadosCarteirinha(cpfLimpo).catch(() => null);
-        if (localData) {
-          setData(localData);
-          localStorage.setItem(`carteirinha_${cpfLimpo}`, JSON.stringify(localData));
-        } else {
-          const fallbackData: CarteirinhaData = {
-            nome_completo: sigpafData.nome || "BENEFICIÁRIO",
-            cpf: cpfLimpo,
-            status: "aprovado",
-            created_at: sigpafData.dataCadastro || new Date().toISOString(),
-            protocolo: sigpafData.contrato?.toString(),
-          };
-          setData(fallbackData);
-          localStorage.setItem(`carteirinha_${cpfLimpo}`, JSON.stringify(fallbackData));
+
+        // BLINDAGEM CONTRA FALSO POSITIVO DA API:
+        // Se a API do SIGPAF retornou 'ATIVO', mas o cliente não existe no nosso banco de dados local
+        // (ou foi rejeitado/excluído), nós bloqueamos o acesso para evitar exibir uma carteirinha fantasma.
+        if (!localData || (localData.status !== 'aprovado')) {
+            localStorage.removeItem(`carteirinha_${cpfLimpo}`);
+            setData(null);
+            throw new Error("Cadastro não encontrado ou inativo em nosso sistema local. Por favor, contate o suporte.");
         }
+
+        setData(localData);
+        localStorage.setItem(`carteirinha_${cpfLimpo}`, JSON.stringify(localData));
       } catch (err) {
         // SEGURANÇA PRIMEIRO: Em caso de QUALQUER erro na validação online, o acesso é bloqueado.
         // Não usamos mais o cache como fallback para evitar exibir dados desatualizados e inválidos.

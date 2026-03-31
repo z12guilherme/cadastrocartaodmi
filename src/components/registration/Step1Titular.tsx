@@ -79,11 +79,21 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
     setErrors((prev) => ({ ...prev, cpf: false }));
 
     try {
-      // 1. VERIFICAR SE O CPF JÁ ESTÁ EM UM CADASTRO PENDENTE/ATIVO NO NOSSO SISTEMA
-      const { data: cpfExiste, error: rpcError } = await supabase.rpc('checar_cpf_existente', { p_cpf: cpfClean });
-      if (rpcError) throw rpcError;
-      if (cpfExiste) {
-        toast.error("Este CPF já possui um cadastro em andamento ou finalizado.");
+      // 1. VERIFICAR SE O CPF JÁ ESTÁ EM UM CADASTRO PENDENTE OU ATIVO NO NOSSO SISTEMA
+      // Um cadastro 'rejeitado' deve permitir que o usuário tente novamente.
+      const { count, error: countError } = await supabase
+        .from('inscricoes')
+        .select('*', { count: 'exact', head: true })
+        .eq('cpf', cpfClean)
+        .in('status', ['pendente', 'aprovado']);
+
+      if (countError) {
+        // Não bloqueia o usuário se a verificação falhar, apenas loga o erro.
+        console.error("Erro ao checar CPF existente:", countError);
+      } else if (count && count > 0) {
+        toast.error("Este CPF já possui um cadastro ativo ou em análise.", {
+          description: "Acesse a tela de 'Consultar Status' para mais detalhes."
+        });
         setErrors((prev) => ({ ...prev, cpf: true }));
         setIsFetchingData(false);
         return;
@@ -97,12 +107,13 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
       if (sigpafError) {
         // Se a verificação do SIGPAF falhar, não bloqueamos, mas avisamos no console e seguimos para a próxima API.
         console.warn("Falha ao verificar existência no SIGPAF, prosseguindo para a API de dados.", sigpafError);
-      } else if (sigpafStatus && sigpafStatus.existe) {
-        // SE EXISTE NO SIGPAF, BLOQUEIA O CADASTRO
-        toast.error("Este CPF já pertence a um cliente DMI.", {
-          description: "Se deseja acessar sua carteirinha, use a tela de consulta.",
+      } else if (sigpafStatus && sigpafStatus.existe && sigpafStatus.status?.toUpperCase() === 'ATIVO') {
+        // SE EXISTE NO SIGPAF E ESTÁ ATIVO, BLOQUEIA O CADASTRO.
+        // Se existe mas está INATIVO/CANCELADO, permite o novo cadastro.
+        toast.error("Este CPF já pertence a um cliente DMI ativo.", {
+          description: "Para reativar seu plano ou acessar sua carteirinha, use a tela de consulta.",
         });
-        setErrors((prev) => ({ ...prev, cpf: true })); // Marca o campo com erro
+        setErrors((prev) => ({ ...prev, cpf: true }));
         setIsFetchingData(false);
         return; // Interrompe o fluxo
       }
