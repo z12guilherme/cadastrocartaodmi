@@ -30,8 +30,6 @@ interface SigpafStatus {
   dataCadastro?: string;
 }
 
-const SIGPAF_TOKEN = "a816aeb6-c724-44a7-882c-bc1d1ebf5f43";
-
 export default function Carteirinha() {
   const navigate = useNavigate();
   const cpf = sessionStorage.getItem("dmi_carteirinha_cpf");
@@ -51,88 +49,60 @@ export default function Carteirinha() {
       const cpfLimpo = cpf.replace(/\D/g, "");
 
       try {
-        // 1. A FONTE DA VERDADE: Buscar direto na API do SIGPAF (Bypass Edge Function)
-        const cpfFormatado = cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-        
-        const response = await fetch(`https://api.sigpaf.com.br/public/Pessoa?cpf=${encodeURIComponent(cpfFormatado)}&_t=${Date.now()}`, {
-          method: 'GET',
-          headers: { 
-            'authorization': SIGPAF_TOKEN,
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
-          }
+        // 1. A FONTE DA VERDADE: Chamar nossa Edge Function segura.
+        const { data: sigpafRaw, error: functionError } = await supabase.functions.invoke('check-status', {
+          body: { cpf: cpfLimpo },
         });
 
-        if (!response.ok) {
-          throw new Error(`Falha na comunicação com o sistema principal (HTTP ${response.status})`);
+        if (functionError) {
+          throw functionError;
         }
 
-        const sigpafRaw = await response.json();
-
-        // 2. VALIDAÇÃO RÍGIDA: Se o SIGPAF disser que não existe, a sessão é inválida.
-        if (sigpafRaw.erro || sigpafRaw.existe === false || !sigpafRaw.dados || Object.keys(sigpafRaw.dados).length === 0) {
+        // 2. VALIDAÇÃO RÍGIDA: Se a função disser que não existe, a sessão é inválida.
+        if (sigpafRaw.error || sigpafRaw.existe === false) {
           localStorage.removeItem(`carteirinha_${cpfLimpo}`); // Limpa o cache inválido
           setData(null); // Limpa os dados da tela
-          throw new Error(sigpafRaw.msg || "Cadastro não encontrado no sistema principal.");
+          throw new Error(sigpafRaw.msg || sigpafRaw.error || "Cadastro não encontrado no sistema principal.");
         }
 
-        const situacao = sigpafRaw.dados.pessoaSituacao;
-        const isAtivo = situacao ? situacao.psi_codigo === 1 : false;
+        const isAtivo = sigpafRaw.status === "ATIVO";
 
         if (!isAtivo) {
           localStorage.removeItem(`carteirinha_${cpfLimpo}`); // Limpa o cache inválido
           setData(null); // Limpa os dados da tela
-          const statusMsg = situacao?.psi_descricao ? `'${situacao.psi_descricao.toUpperCase()}'` : "INATIVO";
+          const statusMsg = sigpafRaw.status ? `'${sigpafRaw.status.toUpperCase()}'` : "INATIVO";
           throw new Error(`Acesso Bloqueado: O status do seu plano é ${statusMsg}.`);
         }
 
+        // A interface da Edge Function (StatusData) é compatível com a SigpafStatus
         const sigpafData: SigpafStatus = {
-          existe: true,
-          status: "ATIVO",
-          corHex: situacao?.psi_corhex || "#008040",
-          contrato: sigpafRaw.dados.pes_contrato || sigpafRaw.dados.pes_codigo,
-          nome: sigpafRaw.dados.pes_nome,
-          dataCadastro: sigpafRaw.dados.pes_dtcadastro
+          ...sigpafRaw,
+          corHex: sigpafRaw.corHex || "#008040", // Garante um fallback
         };
 
         // 3. SUCESSO: Se chegou aqui, o cliente está ATIVO. Atualiza os dados.
         setSigpafStatus(sigpafData);
 
         // 4. Busca dados complementares (dependentes) do nosso banco.
-        const localData = await buscarDadosCarteirinha(cpf).catch(() => null);
+        const localData = await buscarDadosCarteirinha(cpfLimpo).catch(() => null);
         if (localData) {
           setData(localData);
           localStorage.setItem(`carteirinha_${cpfLimpo}`, JSON.stringify(localData));
         } else {
-          // Cliente legado do SIGPAF (ou cliente que foi excluído do painel local).
-          // Como a fonte da verdade é o SIGPAF, montamos os dados limpos com o que vier de lá!
           const fallbackData: CarteirinhaData = {
             nome_completo: sigpafData.nome || "BENEFICIÁRIO",
             cpf: cpfLimpo,
             status: "aprovado",
             created_at: sigpafData.dataCadastro || new Date().toISOString(),
-            protocolo: sigpafData.contrato?.toString()
+            protocolo: sigpafData.contrato?.toString(),
           };
           setData(fallbackData);
           localStorage.setItem(`carteirinha_${cpfLimpo}`, JSON.stringify(fallbackData));
         }
       } catch (err) {
-        // OFFLINE-FIRST: Se a validação online falhar (ex: sem internet),
-        // tentamos carregar a última versão válida do cache.
-        const isNetworkError = err instanceof TypeError;
-        const cachedData = localStorage.getItem(`carteirinha_${cpfLimpo}`);
-
-        if (isNetworkError && cachedData) {
-          try {
-            setData(JSON.parse(cachedData));
-            // Opcional: Adicionar um aviso de que os dados são offline.
-          } catch (e) {
-            setError("Não foi possível carregar os dados. Verifique sua conexão.");
-          }
-        } else {
-          // Se o erro não for de rede, ou se não houver cache, mostramos o erro real.
-          setError((err as Error).message);
-        }
+        // SEGURANÇA PRIMEIRO: Em caso de QUALQUER erro na validação online, o acesso é bloqueado.
+        // Não usamos mais o cache como fallback para evitar exibir dados desatualizados e inválidos.
+        setError((err as Error).message);
       } finally {
         setLoading(false);
       }
