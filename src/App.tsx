@@ -14,6 +14,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { ReloadPrompt } from "./components/ReloadPrompt";
 import Carteirinha from './pages/Carteirinha';
 import ConsultaCarteirinha from './pages/ConsultaCarteirinha';
+import Parceiros from "./pages/Parceiros";
+
 
 
 const queryClient = new QueryClient();
@@ -32,6 +34,8 @@ const App = () => (
           <Route path="/carteirinha" element={<Carteirinha />} />
           <Route path="/acessar-carteirinha" element={<ConsultaCarteirinha />} />
           <Route path="/admin/login" element={<Login />} />
+          <Route path="/parceiros" element={<Parceiros />} />
+
           
           {/* Rotas Protegidas */}
           <Route path="/admin" element={<ProtectedRoute />}>

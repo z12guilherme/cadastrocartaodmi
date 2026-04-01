@@ -227,6 +227,15 @@ const LandingPage = () => {
             </SwiperSlide>
           ))}
         </Swiper>
+
+        <div className="container mx-auto px-4 text-center mt-12">
+          <Link to="/parceiros">
+            <Button variant="outline" size="lg" className="gap-2 text-[#0EA5FF] border-[#0EA5FF] hover:bg-[#0EA5FF]/10 hover:text-[#0EA5FF]">
+              Ver todos os parceiros
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </div>
       </section>
 
       {/* Final CTA */}
