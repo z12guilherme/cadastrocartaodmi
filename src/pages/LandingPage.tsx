@@ -186,7 +186,7 @@ const LandingPage = () => {
       </section>
 
       {/* Partners - 3D Carousel */}
-      <section className="py-16 bg-gradient-to-b from-white to-gray-50 overflow-hidden">
+      <section id="parceiros" className="py-16 bg-gradient-to-b from-white to-gray-50 overflow-hidden">
         <div className="container mx-auto px-4 text-center mb-10">
           <h2 className="text-3xl font-bold text-foreground mb-4">Nossos Parceiros</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
