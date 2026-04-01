@@ -212,6 +212,12 @@ serve(async (req) => {
 
         // 2. Dispara o Template: Carteirinha Digital (Envia nome e CPF para montar o link)
         await dispararTemplate("964730382572152", [nome, cpfLimpo]);
+
+        // Pausa de 2 segundos para evitar bloqueio de Spam/Rate Limit da Suri
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // 3. Dispara o Template: Clube de Benefícios DMI / Parceiros (Não possui variáveis, então enviamos array vazio)
+        await dispararTemplate("1475040390697834", []);
     };
 
     // Função auxiliar para sincronizar com o SIGPAF (Cadastro + Captura de Contrato)
