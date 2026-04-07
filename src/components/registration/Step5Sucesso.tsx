@@ -17,9 +17,7 @@ const Step5Sucesso = ({ onReset }: Step5Props) => {
           Pré-cadastro realizado!
         </h2>
         <p className="text-muted-foreground max-w-md">
-          Seu pré-cadastro foi recebido com sucesso. Nossa equipe entrará em
-          contato em breve para confirmar seus dados e ativar seu Cartão de
-          Benefícios.
+          Seu pré-cadastro foi recebido com sucesso. Compareça a uma unidade mais próxima para retirar seu carnê de pagamento e finalizar seu cadastro. Estamos ansiosos para tê-lo como parte da família Cartão DMI!
         </p>
       </div>
 
