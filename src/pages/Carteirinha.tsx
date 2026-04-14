@@ -78,9 +78,7 @@ const LogoCanvas = () => {
           if (alpha > 255) alpha = 255;
           if (alpha < 0) alpha = 0;
 
-          data[i] = 255;       // R -> Branco
-          data[i + 1] = 255;   // G -> Branco
-          data[i + 2] = 255;   // B -> Branco
+          // Mantém as cores originais, aplica apenas transparência no fundo claro
           data[i + 3] = alpha; // Aplica o Alpha turbinado
         }
 
@@ -269,11 +267,11 @@ export default function Carteirinha() {
         </div>
 
         {/* Cartão Físico (UI) */}
-        <div className="relative w-full aspect-[1.58/1] rounded-2xl shadow-xl overflow-hidden text-white transition-all hover:scale-[1.02] duration-300"
-          style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+        <div className="relative w-full aspect-[1.58/1] rounded-2xl shadow-md border border-slate-200 overflow-hidden text-slate-800 transition-all hover:scale-[1.02] duration-300"
+          style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)' }}>
 
           {/* Overlay Pattern */}
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent" />
+          <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-300 to-transparent" />
 
           <div className="relative h-full p-6 flex flex-col justify-between">
             <div className="flex justify-between items-start">
@@ -301,25 +299,25 @@ export default function Carteirinha() {
             <div className="space-y-4">
               <div className="flex justify-between items-start gap-2">
                 <div className="flex-1 overflow-hidden">
-                  <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Titular do Plano</p>
-                  <p className="text-lg font-bold tracking-wide truncate">{nomeExibicao.toUpperCase()}</p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Titular do Plano</p>
+                  <p className="text-lg font-bold tracking-wide truncate text-slate-800">{nomeExibicao.toUpperCase()}</p>
                 </div>
                 {contratoFinal && contratoFinal !== cpfExibicao?.replace(/\D/g, "") && (
                   <div className="text-right shrink-0">
                     <p className="text-[10px] text-[#0EA5FF] font-bold uppercase tracking-widest mb-1">Nº Contrato</p>
-                    <p className="text-lg font-mono tracking-wider font-bold text-white bg-white/10 px-2 py-0.5 rounded-lg border border-white/10 shadow-sm">{contratoFinal}</p>
+                    <p className="text-lg font-mono tracking-wider font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200 shadow-sm">{contratoFinal}</p>
                   </div>
                 )}
               </div>
 
               <div className="flex justify-between items-end">
                 <div>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">CPF</p>
-                  <p className="font-mono text-sm tracking-wider opacity-90">{cpfExibicao}</p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">CPF</p>
+                  <p className="font-mono text-sm tracking-wider font-medium text-slate-700">{cpfExibicao}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">{labelData}</p>
-                  <p className="font-mono text-sm tracking-wider opacity-90">{dataFormatada}</p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">{labelData}</p>
+                  <p className="font-mono text-sm tracking-wider font-medium text-slate-700">{dataFormatada}</p>
                 </div>
               </div>
             </div>
