@@ -23,10 +23,10 @@ import {
   Search,
   CreditCard,
 } from "lucide-react";
-import heroImg from "@/assets/hero-family.jpg";
-import logoDmi from "@/assets/logo-dmi.png";
+import heroImg from "@/assets/banner.jpg";
 import { PartnerCard } from "./PartnerCard";
 import { partners } from "@/data/partners";
+import logoDmi2 from "@/assets/logodmi-nova.jpg"
 
 const LandingPage = () => {
   return (
@@ -35,7 +35,7 @@ const LandingPage = () => {
       <nav className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
         <div className="container max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src={logoDmi} alt="Cartão DMI" className="w-10 h-10 object-contain" />
+            <img src={logoDmi2} alt="Cartão DMI" className="w-10 h-10 object-contain" />
             <span className="font-bold text-lg text-foreground">Cartão DMI</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
@@ -217,13 +217,13 @@ const LandingPage = () => {
         >
           {[...partners, ...partners].map((partner, index) => (
             <SwiperSlide key={`${index}-${partner.name}`} className="!w-auto !h-auto bg-transparent border-none shadow-none select-none">
-               <PartnerCard 
-                 name={partner.name}
-                 description={partner.description}
-                 discount={partner.discount}
-                 logo={partner.logo}
-                 link={partner.link}
-               />
+              <PartnerCard
+                name={partner.name}
+                description={partner.description}
+                discount={partner.discount}
+                logo={partner.logo}
+                link={partner.link}
+              />
             </SwiperSlide>
           ))}
         </Swiper>
@@ -285,7 +285,7 @@ const LandingPage = () => {
             {/* Col 1: Logo & About */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <img src={logoDmi} alt="Cartão DMI" className="w-8 h-8 object-contain brightness-200" />
+                <img src={logoDmi2} alt="Cartão DMI" className="w-8 h-8 object-contain brightness-200" />
                 <span className="font-bold text-foreground">Cartão DMI</span>
               </div>
               <p className="text-xs">
