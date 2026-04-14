@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { buscarDadosCarteirinha } from "@/services/api";
 import { ShieldCheck, Loader2, AlertCircle, ArrowLeft, Users, CheckCircle2 } from "lucide-react";
-import logoDmi from "@/assets/logo-dmi.png";
+import logoDmi from "@/assets/logodmi-nova.jpg";
 import QRCode from "react-qr-code";
 import { supabase } from "@/lib/supabase";
 
@@ -31,10 +31,73 @@ interface SigpafStatus {
   dataCadastro?: string;
 }
 
+const LogoCanvas = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return;
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = logoDmi;
+    img.onload = () => {
+      // Define a altura base (40px é o equivalente ao h-10 do Tailwind)
+      const height = 40;
+      const ratio = img.width / img.height;
+      const width = height * ratio;
+
+      // Suporte para telas de alta resolução (Retina/High DPI)
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
+      ctx.scale(dpr, dpr);
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Manipulação dos pixels para transformar o fundo claro em transparente e o logo em branco
+      try {
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+
+          // Calcula a luminância original do pixel
+          const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+
+          // Multiplicador (* 5) garante que partes coloridas (como azul)
+          // fiquem 100% opacas, deixando transparente apenas o que for de fato o fundo branco
+          let alpha = (255 - luminance) * 5;
+          if (alpha > 255) alpha = 255;
+          if (alpha < 0) alpha = 0;
+
+          data[i] = 255;       // R -> Branco
+          data[i + 1] = 255;   // G -> Branco
+          data[i + 2] = 255;   // B -> Branco
+          data[i + 3] = alpha; // Aplica o Alpha turbinado
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+      } catch (err) {
+        console.error("Erro ao manipular pixels do canvas:", err);
+      }
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="block" title="DMI" />;
+};
+
 export default function Carteirinha() {
   const navigate = useNavigate();
   const cpf = sessionStorage.getItem("dmi_carteirinha_cpf");
-  
+
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<CarteirinhaData | null>(null);
   const [sigpafStatus, setSigpafStatus] = useState<SigpafStatus | null>(null);
@@ -91,9 +154,9 @@ export default function Carteirinha() {
         // Se a API do SIGPAF retornou 'ATIVO', mas o cliente não existe no nosso banco de dados local
         // (ou foi rejeitado/excluído), nós bloqueamos o acesso para evitar exibir uma carteirinha fantasma.
         if (!localData || (localData.status !== 'aprovado')) {
-            localStorage.removeItem(`carteirinha_${cpfLimpo}`);
-            setData(null);
-            throw new Error("Cadastro não encontrado ou inativo em nosso sistema local. Por favor, contate o suporte.");
+          localStorage.removeItem(`carteirinha_${cpfLimpo}`);
+          setData(null);
+          throw new Error("Cadastro não encontrado ou inativo em nosso sistema local. Por favor, contate o suporte.");
         }
 
         setData(localData);
@@ -165,7 +228,7 @@ export default function Carteirinha() {
   // Mantemos a consulta ao SIGPAF como fonte da verdade para o STATUS, mas usamos nosso
   // número de contrato para exibição.
   const contratoFinal = data?.protocolo || sigpafStatus?.contrato || cpf;
-  
+
   const nomeExibicao = sigpafStatus?.nome || data?.nome_completo || "BENEFICIÁRIO";
   const cpfFormatado = cpf?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   const cpfExibicao = data?.cpf || cpfFormatado;
@@ -185,10 +248,10 @@ export default function Carteirinha() {
         {/* Status Badge */}
         <div className="flex justify-center mb-6">
           {sigpafStatus ? (
-            <span 
+            <span
               className="px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm border transition-colors"
-              style={{ 
-                backgroundColor: `${sigpafStatus.corHex || '#808080'}15`, 
+              style={{
+                backgroundColor: `${sigpafStatus.corHex || '#808080'}15`,
                 color: sigpafStatus.corHex || '#808080',
                 borderColor: `${sigpafStatus.corHex || '#808080'}40`
               }}
@@ -207,22 +270,22 @@ export default function Carteirinha() {
 
         {/* Cartão Físico (UI) */}
         <div className="relative w-full aspect-[1.58/1] rounded-2xl shadow-xl overflow-hidden text-white transition-all hover:scale-[1.02] duration-300"
-             style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
-          
+          style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)' }}>
+
           {/* Overlay Pattern */}
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent" />
-          
+
           <div className="relative h-full p-6 flex flex-col justify-between">
             <div className="flex justify-between items-start">
-              <img src={logoDmi} alt="DMI" className="h-10 brightness-0 invert" />
-              
+              <LogoCanvas />
+
               {/* QR Code com Blur condicional se inativo */}
               <div className="relative bg-white p-2 rounded-xl shadow-sm">
                 <div className={`transition-all duration-300 ${sigpafStatus && !isSigpafAtivo ? 'opacity-30 blur-[2px]' : ''}`}>
-                  <QRCode 
-                    value={String(contratoFinal)} 
+                  <QRCode
+                    value={String(contratoFinal)}
                     size={72}
-                    level="H" 
+                    level="H"
                   />
                 </div>
                 {sigpafStatus && !isSigpafAtivo && (
@@ -248,7 +311,7 @@ export default function Carteirinha() {
                   </div>
                 )}
               </div>
-              
+
               <div className="flex justify-between items-end">
                 <div>
                   <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-1">CPF</p>
@@ -267,7 +330,7 @@ export default function Carteirinha() {
         {dependentes.length > 0 && (
           <div className="mt-8 bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
             <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Users className="w-4 h-4 text-[#0EA5FF]" /> 
+              <Users className="w-4 h-4 text-[#0EA5FF]" />
               Dependentes Inclusos ({dependentes.length})
             </h3>
             <div className="space-y-3">
