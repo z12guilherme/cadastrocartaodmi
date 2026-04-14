@@ -281,7 +281,7 @@ export default function Carteirinha() {
               <div className="relative bg-white p-2 rounded-xl shadow-sm">
                 <div className={`transition-all duration-300 ${sigpafStatus && !isSigpafAtivo ? 'opacity-30 blur-[2px]' : ''}`}>
                   <QRCode
-                    value={String(contratoFinal)}
+                    value={`${window.location.origin}/validar/${cpfExibicao?.replace(/\D/g, "")}`}
                     size={72}
                     level="H"
                   />

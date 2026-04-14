@@ -14,6 +14,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { ReloadPrompt } from "./components/ReloadPrompt";
 import Carteirinha from './pages/Carteirinha';
 import ConsultaCarteirinha from './pages/ConsultaCarteirinha';
+import ValidarCarteirinha from './pages/ValidarCarteirinha';
 import Parceiros from "./pages/Parceiros";
 
 
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/assinatura/:id" element={<AssinaturaExterna />} />
           <Route path="/carteirinha" element={<Carteirinha />} />
           <Route path="/acessar-carteirinha" element={<ConsultaCarteirinha />} />
+          <Route path="/validar/:cpf" element={<ValidarCarteirinha />} />
           <Route path="/admin/login" element={<Login />} />
           <Route path="/parceiros" element={<Parceiros />} />
 
