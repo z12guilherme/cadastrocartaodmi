@@ -32,7 +32,7 @@ const Step2Documentos = ({ data, onChange, onNext, onBack }: Step2Props) => {
 
       <div className="space-y-4">
         <FileUpload
-          label="Foto do RG *"
+          label="Documento com foto (RG ou CNH) *"
           value={data.fotoRg}
           onChange={(v) => update("fotoRg", v)}
         />

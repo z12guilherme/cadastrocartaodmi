@@ -174,7 +174,6 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
       "bairro",
       "rua",
       "numero",
-      "rg" as any,
       "sexo" as any,
     ];
     const newErrors: Record<string, boolean> = {};
@@ -270,8 +269,8 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
 
         <div>
           <Label htmlFor="sexo">Sexo *</Label>
-          <Select 
-            value={(data as any).sexo || ""} 
+          <Select
+            value={(data as any).sexo || ""}
             onValueChange={(v) => update("sexo" as any, v)}
           >
             <SelectTrigger className={errors.sexo ? "border-destructive" : ""}>
@@ -285,17 +284,6 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
         </div>
 
         <div>
-          <Label htmlFor="rg">RG *</Label>
-          <Input
-            id="rg"
-            value={(data as any).rg || ""}
-            onChange={(e) => update("rg" as any, e.target.value)}
-            placeholder="0000000"
-            className={errors.rg ? "border-destructive" : ""}
-          />
-        </div>
-
-        <div>
           <Label htmlFor="telefoneCelular">Telefone Celular *</Label>
           <MaskedInput
             id="telefoneCelular"
@@ -306,7 +294,7 @@ const Step1Titular = ({ data, onChange, onNext }: Step1Props) => {
             className={errors.telefoneCelular ? "border-destructive" : ""}
           />
         </div>
-        
+
         <div>
           <Label htmlFor="email">E-mail</Label>
           <Input
