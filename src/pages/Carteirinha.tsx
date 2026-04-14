@@ -148,13 +148,13 @@ export default function Carteirinha() {
         // 4. Busca dados complementares (dependentes) do nosso banco.
         const localData = await buscarDadosCarteirinha(cpfLimpo).catch(() => null);
 
-        // BLINDAGEM CONTRA FALSO POSITIVO DA API:
-        // Se a API do SIGPAF retornou 'ATIVO', mas o cliente não existe no nosso banco de dados local
-        // (ou foi rejeitado/excluído), nós bloqueamos o acesso para evitar exibir uma carteirinha fantasma.
-        if (!localData || (localData.status !== 'aprovado')) {
+        // PERMITE USUÁRIOS ANTIGOS DO SIGPAF:
+        // Se não existir localmente (localData nulo), usamos os dados retornados do SIGPAF.
+        // Bloqueia APENAS se existir no banco local e estiver com status diferente de 'aprovado'.
+        if (localData && localData.status !== 'aprovado') {
           localStorage.removeItem(`carteirinha_${cpfLimpo}`);
           setData(null);
-          throw new Error("Cadastro não encontrado ou inativo em nosso sistema local. Por favor, contate o suporte.");
+          throw new Error("Seu cadastro foi inativado ou está pendente em nosso sistema.");
         }
 
         setData(localData);

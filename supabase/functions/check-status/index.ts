@@ -80,7 +80,7 @@ serve(async (req) => {
 
     // Garante que pegamos apenas os números, não importa o que o frontend enviou
     const cpfNumerico = String(cpf).replace(/\D/g, "");
-    
+
     if (cpfNumerico.length !== 11) {
       return createJsonResponse({ existe: false, error: 'CPF inválido (tamanho incorreto)' }, 400);
     }
@@ -98,28 +98,28 @@ serve(async (req) => {
     // para forçar o servidor deles a buscar o dado em tempo real, ignorando "fantasmas".
     const url = `https://api.sigpaf.com.br/public/Pessoa?cpf=${encodeURIComponent(cpfFormatado)}&_t=${Date.now()}`;
     const response = await fetch(url, {
-        method: 'GET',
-        cache: 'no-store', // BLINDAGEM MÁXIMA: Força o Deno a não usar nenhum cache para esta requisição.
-        headers: { 
-            'authorization': SIGPAF_API_KEY,
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
-        }
+      method: 'GET',
+      cache: 'no-store', // BLINDAGEM MÁXIMA: Força o Deno a não usar nenhum cache para esta requisição.
+      headers: {
+        'authorization': SIGPAF_API_KEY,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
     });
 
     const responseText = await response.text();
     let data: SigpafResponse;
     try {
-        data = JSON.parse(responseText);
+      data = JSON.parse(responseText);
     } catch (e) {
-        console.error(`SIGPAF não retornou um JSON válido. Resposta: ${responseText.substring(0, 200)}`);
-        throw new Error(`A API externa (SIGPAF) retornou um formato inesperado.`);
+      console.error(`SIGPAF não retornou um JSON válido. Resposta: ${responseText.substring(0, 200)}`);
+      throw new Error(`A API externa (SIGPAF) retornou um formato inesperado.`);
     }
 
     // 2. Trata o caso do cliente não existir ou erro no SIGPAF
     // BLINDAGEM EXTRA: Checa explicitamente data.existe e também se "dados" vier vazio.
     if (data.erro || data.existe === false || !data.dados || Object.keys(data.dados).length === 0) {
-         return createJsonResponse({ existe: false, msg: data.msg || "Cliente não encontrado" }, 200);
+      return createJsonResponse({ existe: false, msg: data.msg || "Cliente não encontrado" }, 200);
     }
 
     // 3. Filtro de LGPD: Retorna apenas dados de status (nada de endereço, telefone, nome da mãe, etc)
@@ -129,15 +129,15 @@ serve(async (req) => {
     const isAtivo = situacao ? situacao.psi_codigo === 1 : false;
 
     const statusData: StatusData = {
-        existe: true,
-        // Se o código for 1, FORÇAMOS o status para "ATIVO". 
-        // Se não, usamos a descrição que vier, ou um padrão seguro "INATIVO".
-        // Isso previne que um status "CANCELADO" com código 1 passe, ou que um código != 1 seja "ATIVO".
-        status: isAtivo ? "ATIVO" : (situacao?.psi_descricao || "INATIVO"),
-        corHex: situacao?.psi_corhex || "#808080",
-        contrato: data.dados.pes_contrato || data.dados.pes_codigo,
-        nome: data.dados.pes_nome,
-        dataCadastro: data.dados.pes_dtcadastro
+      existe: true,
+      // Se o código for 1, FORÇAMOS o status para "ATIVO". 
+      // Se não, usamos a descrição que vier, ou um padrão seguro "INATIVO".
+      // Isso previne que um status "CANCELADO" com código 1 passe, ou que um código != 1 seja "ATIVO".
+      status: isAtivo ? "ATIVO" : (situacao?.psi_descricao || "INATIVO"),
+      corHex: situacao?.psi_corhex || "#808080",
+      contrato: data.dados.pes_contrato || data.dados.pes_codigo,
+      nome: data.dados.pes_nome,
+      dataCadastro: data.dados.pes_dtcadastro
     };
 
     return createJsonResponse(statusData, 200);
