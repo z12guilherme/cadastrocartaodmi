@@ -112,3 +112,12 @@ Conexão direta com o sistema desktop da clínica para evitar retrabalho manual.
 
 ## 11. Correção de Bugs
 - [x] Corrigir BUG: na consulta está retornando um cliente com o CPF já cancelado
+
+--
+
+## 12. Automação de Cobrança (Inadimplentes)
+- [ ] **Definição da API (SIGPAF)**: Aguardar liberação do endpoint, formato do JSON e instruções de uso da API de inadimplentes.
+- [ ] **Controle de Estado (Supabase)**: Criar tabela `historico_cobrancas` para registrar o último aviso e evitar spam/banimento no WhatsApp.
+- [ ] **Templates do WhatsApp**: Criar e aprovar no painel da SURI/Meta um template de mensagem do tipo "Utilidade" para cobrança amigável.
+- [ ] **Edge Function (`cron-cobranca`)**: Criar a função que consulta a API, filtra quem já foi cobrado há menos de 2 dias úteis e dispara a SURI com `delay`.
+- [ ] **Agendador (pg_cron)**: Configurar o gatilho no banco de dados para rodar a função automaticamente de segunda a sexta, em horário comercial.
