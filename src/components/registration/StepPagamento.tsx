@@ -26,7 +26,7 @@ interface StepPagamentoProps {
 const StepPagamento = ({ values, onChange, onNext, onBack }: StepPagamentoProps) => {
   const stoneLink = "https://payment-link-v3.stone.com.br/pl_p7eoj0VKgrAXy1JHLu06BnDz3PGJWvmE";
   const valorAdesao = ADESAO.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  const diasVencimento = ["5", "10", "15", "20", "25", "30"];
+  const diasVencimento = ["05", "10", "15", "20", "25"];
 
   const handleNext = () => {
     if (!values.metodoPagamento) {
@@ -57,8 +57,8 @@ const StepPagamento = ({ values, onChange, onNext, onBack }: StepPagamentoProps)
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Forma de Pagamento da Adesão</Label>
-          <Select 
-            value={values.metodoPagamento} 
+          <Select
+            value={values.metodoPagamento}
             onValueChange={(v) => onChange('metodoPagamento', v)}
           >
             <SelectTrigger>
@@ -73,8 +73,8 @@ const StepPagamento = ({ values, onChange, onNext, onBack }: StepPagamentoProps)
 
         <div className="space-y-2">
           <Label>Dia de Vencimento (Mensalidade)</Label>
-          <Select 
-            value={values.diaVencimento} 
+          <Select
+            value={values.diaVencimento}
             onValueChange={(v) => onChange('diaVencimento', v)}
           >
             <SelectTrigger>
@@ -87,7 +87,7 @@ const StepPagamento = ({ values, onChange, onNext, onBack }: StepPagamentoProps)
             </SelectContent>
           </Select>
           <p className="text-[0.7rem] text-muted-foreground flex items-center gap-1">
-            <Calendar className="w-3 h-3"/> As mensalidades poderão ser pagas via boleto.
+            <Calendar className="w-3 h-3" /> As mensalidades poderão ser pagas via boleto.
           </p>
         </div>
       </div>
@@ -97,20 +97,20 @@ const StepPagamento = ({ values, onChange, onNext, onBack }: StepPagamentoProps)
         <div className="animate-in fade-in slide-in-from-top-4 space-y-4">
           <div className="bg-green-50 border border-green-200 rounded-xl p-6 space-y-4">
             <div className="flex items-center gap-3">
-                <CreditCard className="w-6 h-6 text-green-600"/>
-                <div>
-                    <p className="text-sm text-green-700 font-medium">Pagamento via Stone</p>
-                    <p className="text-sm text-green-800">
-                        Clique no botão para pagar a taxa de adesão ({valorAdesao}).
-                        <br/>
-                        <span className="text-xs">Aceitamos Pix, Cartão de Crédito e Boleto.</span>
-                    </p>
-                </div>
+              <CreditCard className="w-6 h-6 text-green-600" />
+              <div>
+                <p className="text-sm text-green-700 font-medium">Pagamento via Stone</p>
+                <p className="text-sm text-green-800">
+                  Clique no botão para pagar a taxa de adesão ({valorAdesao}).
+                  <br />
+                  <span className="text-xs">Aceitamos Pix, Cartão de Crédito e Boleto.</span>
+                </p>
+              </div>
             </div>
             <Button className="w-full bg-green-600 hover:bg-green-700 text-white shadow-sm" size="lg" asChild>
-                <a href={stoneLink} target="_blank" rel="noopener noreferrer">
-                    Pagar Agora
-                </a>
+              <a href={stoneLink} target="_blank" rel="noopener noreferrer">
+                Pagar Agora
+              </a>
             </Button>
           </div>
 
@@ -121,7 +121,7 @@ const StepPagamento = ({ values, onChange, onNext, onBack }: StepPagamentoProps)
               onChange={(v) => onChange('comprovantePagamento', v)}
             />
             <p className="text-xs text-muted-foreground">
-               Após realizar o pagamento, tire um print da tela de confirmação e anexe aqui.
+              Após realizar o pagamento, tire um print da tela de confirmação e anexe aqui.
             </p>
           </div>
         </div>
@@ -133,8 +133,8 @@ const StepPagamento = ({ values, onChange, onNext, onBack }: StepPagamentoProps)
           <div className="space-y-1">
             <h4 className="font-semibold text-amber-900">Pagamento Presencial Necessário</h4>
             <p className="text-sm text-amber-800">
-              Para concluir a efetivação do plano, é necessário comparecer pessoalmente à clínica para realizar o pagamento da taxa de adesão. 
-              <br/>
+              Para concluir a efetivação do plano, é necessário comparecer pessoalmente à clínica para realizar o pagamento da taxa de adesão.
+              <br />
               Por favor, <strong>compareça à clínica</strong> para realizar o pagamento da taxa de adesão ({valorAdesao}) e finalizar seu cadastro.
             </p>
           </div>
