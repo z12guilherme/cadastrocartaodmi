@@ -121,3 +121,18 @@ Conexão direta com o sistema desktop da clínica para evitar retrabalho manual.
 - [ ] **Templates do WhatsApp**: Criar e aprovar no painel da SURI/Meta um template de mensagem do tipo "Utilidade" para cobrança amigável.
 - [ ] **Edge Function (`cron-cobranca`)**: Criar a função que consulta a API, filtra quem já foi cobrado há menos de 2 dias úteis e dispara a SURI com `delay`.
 - [ ] **Agendador (pg_cron)**: Configurar o gatilho no banco de dados para rodar a função automaticamente de segunda a sexta, em horário comercial.
+
+--
+
+## 13. Integração Lavite Saúde - Agendamento de Consultas via SURI
+- [x] **Análise de Documentação (API Lavite Saúde)**: Endpoints mapeados.
+  - `POST /api/v1/usuarios/sessao` (Autenticação da Edge Function).
+  - `GET /api/v1/agendas` (Listar horários e especialidades no Frontend).
+  - `GET /api/v1/pacientes` e `POST /api/v1/pacientes` (Verificar/Criar o paciente no banco da Lavite antes de agendar).
+  - `POST /api/v1/agendamentos` (Criar a reserva da consulta).
+- [ ] **Chaves de API Definitivas (Aguardando Suporte)**: Solicitar os Tokens de acesso de produção para a API (unidades HSF e Rede DMI) ao suporte da Lavite e configurá-los no Supabase (`LAVITE_API_TOKEN_HSF` e `LAVITE_API_TOKEN_REDEDMI`).
+- [ ] **Templates WhatsApp (SURI)**: Criar e aprovar no painel da Meta/SURI os templates de mensagem (Ex: Confirmação de Agendamento, Lembrete de Consulta 24h antes).
+- [x] **Edge Function (`agendamento-lavite`)**: Criar função no Supabase com rotas internas (ex: `action: 'listar_agendas'` e `action: 'criar_agendamento'`) para intermediar de forma segura as requisições para a Lavite e para a SURI.
+- [x] **Interface de Agendamento (Frontend)**: Criar tela interativa (ex: `/agendamento` ou como aba na Carteirinha Digital) contendo um fluxo de seleção: Especialidade > Profissional > Data/Hora > Confirmação.
+- [ ] **Histórico e Cache (Banco de Dados)**: Avaliar criação de uma tabela `agendamentos` no Supabase para exibir as próximas consultas diretamente na Área do Beneficiário sem onerar a API da Lavite.
+- [ ] **Testes de Fluxo**: Simular agendamentos, conferir bloqueio de horários na Lavite e verificar se as mensagens do WhatsApp estão chegando corretamente.

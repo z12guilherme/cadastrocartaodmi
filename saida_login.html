@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <title>Alertas - L. A. Vite</title>
+    <meta content="authenticity_token" name="csrf-param" />
+    <meta content="Ri6O62y0e2mtLojdek0shGd2tOqkSrHt76ZpMaiJcrk=" name="csrf-token" />
+    <link href="//lavitebucket.s3.amazonaws.com/assets/application-fb419eb6fba13c6d1d49234db40a59c8.css" media="all"
+        rel="stylesheet" type="text/css" />
+    <link href="//lavitebucket.s3.amazonaws.com/assets/print/print-e5ef35f84686b0dfdfacfd8aa6532411.css" media="print"
+        rel="stylesheet" type="text/css" />
+    <script type="text/javascript">
+        //<![CDATA[
+        var LOGIN_URL = '/usuarios/login';
+        //]]>
+    </script>
+    <script type="text/javascript">
+        //<![CDATA[
+        var CURRENT_USUARIO_RECEPCAO = 'false';
+        //]]>
+    </script>
+    <script type="text/javascript">
+        //<![CDATA[
+        var PUSHER_KEY = 'c99e4702638a265f0a15';
+        //]]>
+    </script>
+    <script type="text/javascript">
+        //<![CDATA[
+        var ACCESS_TOKEN = 'lavite_rededmi_93454633b360e65c9614d2ec609daddc';
+        //]]>
+    </script>
+    <script type="text/javascript">
+        //<![CDATA[
+        var AUTH_TOKEN = "Ri6O62y0e2mtLojdek0shGd2tOqkSrHt76ZpMaiJcrk=";
+        //]]>
+    </script>
+    <script type="text/javascript">
+        //<![CDATA[
+        var CURRENT_USER = 'MARCOS GUILHERME OLIVEIRA LIMA';
+        //]]>
+    </script>
+    <script type="text/javascript">
+        //<![CDATA[
+        var CURRENT_USER_EMAIL = 'faturamentohsf@rededmi.com.br';
+        //]]>
+    </script>
+    <script type="text/javascript">
+        //<![CDATA[
+        var CURRENT_USER_ID = '22';
+        //]]>
+    </script>
+    <script type="text/javascript">
+        //<![CDATA[
+        var CURRENT_PROFISSIONAL = '';
+        //]]>
+    </script>
+    <script src="//lavitebucket.s3.amazonaws.com/assets/application-70115b8c1e1ce05326b808e8e04fee67.js"
+        type="text/javascript"></script>
+    <script src="https://www.gstatic.com/charts/loader.js" type="text/javascript"></script>
+    <script src="https://code.highcharts.com/highcharts.js" type="text/javascript"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js" type="text/javascript"></script>
+    <script src="https://code.highcharts.com/modules/drilldown.js" type="text/javascript"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" media="screen"
+        rel="stylesheet" type="text/css" />
+    <script>
+        $(function () { $('.dinheiro').maskMoney({ thousands: '.', decimal: ',' }); });
+    </script>
+</head>
+
+<body class='alertas app index' id='alertas'>
+    <div id='topo'>
+        <input id="show_justificativa_retroativa" name="show_justificativa_retroativa" type="hidden" value="false" />
+        <input id="usuario_setor_atual_id" name="usuario_setor_atual_id" type="hidden" />
+        <div class='container'>
+            <a class='logo primaria' href='/'>
+                <img alt="L. A. Informática" class="logo"
+                    src="https://lavitebucket.s3.amazonaws.com/rededmi/logo_dmi.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=AKIA6AMHE4NRCMVSQSCK%2F20260515%2Fus-east-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20260515T144302Z&amp;X-Amz-Expires=900&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=3f7ba297d4408bca0c425a7fe5001d7632953fb74ff4814af01ba8bbb92c1242" />
+            </a>
+            <a class='logo secundario' href='/'>
+                <img alt="L. A. Vite"
+                    src="//lavitebucket.s3.amazonaws.com/assets/topo-logo-lavite-376507f8aebadb934ce3834465dd0380.png" />
+            </a>
+            <span class='telefone-suporte' title='Ligue para Suporte'>
+                (81) 3421-8812
+            </span>
+            <span class='usuario_nome'>
+                MARCOS GUILHERME OLIVEIRA LIMA
+            </span>
+            <span class='usuario'>
+                <span class='item-menu-usuario'>
+                    <a href="/usuario/conta/editar" class="icone icone-usuario-conta com-tooltip"
+                        title="Minha Conta"></a>
+                </span>
+                <span class='item-menu-usuario' id='correio'>
+                    <a href="/correio/mensagens" class="icone icone-correio com-tooltip" title="Correio">C</a>
+                </span>
+                <span class='item-menu-chat'>
+                    <a href="#" class="icone icone-chat com-tooltip" id="botao_fale_conosco"
+                        title="Converse com o Suporte">C</a>
+                </span>
+                <span class='item-menu-usuario'>
+                    <a href="/configuracoes" class="icone icone-configuracoes com-tooltip" title="Configurações">C</a>
+                </span>
+                <span class='item-menu-usuario'>
+                    <a href="/usuarios/logout" class="icone icone-sair com-tooltip" id="botao_logout" title="Sair">S</a>
+                </span>
+            </span>
+        </div>
+    </div>
+    <div id='menu'>
+        <ul class='container principal'>
+            <li id='menu-cadastros'>
+                <a href="/cadastros">Cadastros</a>
+            </li>
+            <li id='menu-atendimentos'>
+                <a href="/atendimentos"> Atendimentos</a>
+            </li>
+            <li id='menu-estoque'>
+                <a href="/estoque">Estoque</a>
+            </li>
+            <li id='menu-faturamento'>
+                <a href="/faturamento">Faturamento</a>
+            </li>
+            <li id='menu-laboratorio'>
+                <a href="/laboratorio">Laboratório</a>
+            </li>
+            <li id='menu-financeiro'>
+                <a href="/financeiro">Financeiro</a>
+            </li>
+            <li id='menu-custos'>
+                <a href="/custos">Custos</a>
+            </li>
+            <li id='menu-relatorios'>
+                <a href="/relatorios">Relatórios</a>
+            </li>
+        </ul>
+    </div>
+    <div id='loading_bar'>
+        <span></span>
+    </div>
+
+    <div class='cabecalho container apenas-impressao'>
+        <div class='logomarca column'>
+            <img alt="Logo_dmi" height="80"
+                src="https://lavitebucket.s3.amazonaws.com/rededmi/logo_dmi.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=AKIA6AMHE4NRCMVSQSCK%2F20260515%2Fus-east-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20260515T144302Z&amp;X-Amz-Expires=900&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=3f7ba297d4408bca0c425a7fe5001d7632953fb74ff4814af01ba8bbb92c1242"
+                width="140" />
+        </div>
+        <div class='dados column'>
+            <h2>DMI</h2>
+            <p>
+                AVENIDA
+                Geminiano Maciel
+                , 400
+                <span class='separador'>-</span>
+                Centro
+                <span class='separador'>-</span>
+                Belo Jardim
+                <span class='separador'>-</span>
+                PE
+                <span class='separador'>-</span>
+                CEP
+                55157-010
+            </p>
+            <p>
+                (81) 3726-2899
+                <span class='separador'>|</span>
+                (81) 99748-8090
+                <span class='separador'>|</span>
+                www.rededmi.com.br/
+            </p>
+        </div>
+    </div>
+
+    <div id='conteudo'>
+        <div class='container'>
+            <input id="allowLoadMetabase" name="allowLoadMetabase" type="hidden" value="false" />
+            <div id='anuncio-ultimo' style='margin-right: -15px;'>
+                <div class='titulo'>Último Anúncio</div>
+                <div class='descricao'>
+                    <span class='texto'>Descrição/Subtítulo do último anúncio</span>
+                    <span class='link-mais'>
+                        <a href='javascript:void(0)'>Clique aqui para detalhes.</a>
+                    </span>
+                </div>
+                <div class='anuncio-link-esconder'>
+                    <a data-anuncio_id='0' href='javascript:void(0)' id='link-esconder'>x Não ver mais este anúncio</a>
+                </div>
+            </div>
+
+            <div class='alerta agendas-com-problema-de-marcacao column span-15 append-1 last'>
+                <div class='icone column span-1'>
+                    <img alt="Alerta-alerta"
+                        src="//lavitebucket.s3.amazonaws.com/assets/alerta-alerta-7a0bc22d0c72c1e9a2759f8c233e270f.png" />
+                </div>
+                <h2 class='column'>
+                    <a href="/cadastros/agendas?marcacoes_desmarcadas=true" class="com-tooltip"
+                        title="Mostrar agendas com problemas de marcação">2 agendas precisam de remarcação</a>
+                </h2>
+            </div>
+
+
+            <div class='alerta urgencias_sus-sem-baixa column span-15 append-1 last'>
+                <div class='icone column span-1'>
+                    <img alt="Alerta-ok"
+                        src="//lavitebucket.s3.amazonaws.com/assets/alerta-ok-d00cea5d32cb89f29012f5d0efeda70e.png" />
+                </div>
+                <h2 class='column'>
+                    Nenhuma urgência sem alta
+                </h2>
+            </div>
+            <div class='alerta estoque_solicitacao column span-15 append-1 last'>
+                <div class='icone column span-1'>
+                    <img alt="Alerta-ok"
+                        src="//lavitebucket.s3.amazonaws.com/assets/alerta-ok-d00cea5d32cb89f29012f5d0efeda70e.png" />
+                </div>
+                <h2 class='column'>
+                    Nenhuma solicitação a efetuar
+                </h2>
+            </div>
+            <div class='alerta estoque_validade_vencido column span-15 append-1 last'>
+                <div class='icone column span-1'>
+                    <img alt="Alerta-ok"
+                        src="//lavitebucket.s3.amazonaws.com/assets/alerta-ok-d00cea5d32cb89f29012f5d0efeda70e.png" />
+                </div>
+                <h2 class='column'>
+                    Nenhum lote de item vencido no estoque
+                </h2>
+            </div>
+            <div class='alerta estoque_validade_vencer column span-15 append-1 last'>
+                <div class='icone column span-1'>
+                    <img alt="Alerta-ok"
+                        src="//lavitebucket.s3.amazonaws.com/assets/alerta-ok-d00cea5d32cb89f29012f5d0efeda70e.png" />
+                </div>
+                <h2 class='column'>
+                    Nenhum lote de item próximo do vencimento no estoque
+                </h2>
+            </div>
+            <div class='alerta ponto-reposicao column span-15 append-1 last'>
+                <div class='icone column span-1'>
+                    <img alt="Alerta-ok"
+                        src="//lavitebucket.s3.amazonaws.com/assets/alerta-ok-d00cea5d32cb89f29012f5d0efeda70e.png" />
+                </div>
+                <h2 class='column'>
+                    Nenhum item de estoque abaixo do ponto de reposição
+                </h2>
+            </div>
+            <div class='alerta estoque-seguranca column span-15 append-1 last'>
+                <div class='icone column span-1'>
+                    <img alt="Alerta-ok"
+                        src="//lavitebucket.s3.amazonaws.com/assets/alerta-ok-d00cea5d32cb89f29012f5d0efeda70e.png" />
+                </div>
+                <h2 class='column'>
+                    Nenhum item abaixo do estoque de segurança
+                </h2>
+            </div>
+            <div class='alerta estoque-seguranca column span-15 append-1 last'>
+                <div class='icone column span-1'>
+                    <img alt="Alerta-ok"
+                        src="//lavitebucket.s3.amazonaws.com/assets/alerta-ok-d00cea5d32cb89f29012f5d0efeda70e.png" />
+                </div>
+                <h2 class='column'>
+                    Nenhuma internação precisa ser prorrogada
+                </h2>
+            </div>
+            <div class='alerta emergencias-sem-baixa column span-15 append-1 last'>
+                <div class='icone column span-1'>
+                    <img alt="Alerta-ok"
+                        src="//lavitebucket.s3.amazonaws.com/assets/alerta-ok-d00cea5d32cb89f29012f5d0efeda70e.png" />
+                </div>
+                <h2 class='column'>
+                    Nenhuma emergência sem baixa
+                </h2>
+            </div>
+
+            &nbsp;
+
+        </div>
+    </div>
+</body>
+<script>
+    $(document).ready(function () {
+        $('#modal_usuarios_atividades').dialog({
+            width: '240px',
+            draggable: true,
+            resizable: false,
+            position: ['right', 'bottom'],
+            title: 'Atividades em processo',
+            closeText: 'x',
+            stack: false,
+        });
+
+        $('.arquivo').on('click', function () {
+            var _this = $(this);
+            setTimeout(function () {
+                _this.parent().remove();
+            }, 2000);
+        })
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        $('#modal_medico_exame_logs').dialog({
+            width: '500px',
+            draggable: true,
+            resizable: false,
+            position: ['right', 'bottom'],
+            title: 'Sr. ' + CURRENT_PROFISSIONAL,
+            closeText: 'x',
+            stack: false,
+        });
+
+        $('.ciente').on('click', function () {
+            var _this = $(this);
+            setTimeout(function () {
+                _this.parent().remove();
+            }, 2000);
+        })
+    });
+</script>
+<script>
+    (function (o, c, t, a, d, e, s, k) {
+        o.octadesk = o.octadesk || {};
+        o.octadesk.chatOptions = {
+            subDomain: a,
+            showButton: 'false',
+            openOnMessage: e,
+            hide: 'true',
+            _hideOnClose: 'true'
+        };
+        var bd = c.getElementsByTagName("body")[0];
+        var sc = c.createElement("script");
+        sc.async = 1;
+        sc.src = t;
+        bd.appendChild(sc);
+    })(window, document, 'https://cdn.octadesk.com/embed.js', 'lavite', 'true', 'true', 'false');
+</script>
+<script>
+    window.addEventListener('onOctaChatReady', function () {
+        octadesk.chat.login({
+            name: CURRENT_USER, // Nome do seu usuário
+            email: CURRENT_USER_EMAIL // E-mail do seu usuário
+        });
+    });
+</script>
+
+</html>

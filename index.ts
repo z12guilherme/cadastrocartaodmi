@@ -1,62 +1,114 @@
 import { serve } from "https://deno.land/std@0.192.0/http/server.ts"
 
-// Configuração de CORS necessária para o Frontend (React) conseguir chamar a função diretamente
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const LAVITE_BASE_URL = "https://hsf.lavitesaude.com/api/v1";
+
+// Função auxiliar para autenticar na API da Lavite e pegar o token de sessão
+async function getLaviteSession() {
+  const login = Deno.env.get('LAVITE_LOGIN');
+  const password = Deno.env.get('LAVITE_PASSWORD');
+
+  if (!login || !password) {
+    throw new Error('Credenciais da Lavite não configuradas no Supabase (LAVITE_LOGIN / LAVITE_PASSWORD)');
+  }
+
+  const response = await fetch(`${LAVITE_BASE_URL}/usuarios/sessao`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ login, password })
+  });
+
+  if (!response.ok) {
+    throw new Error('Falha ao autenticar na API Lavite Saúde');
+  }
+
+  const data = await response.json();
+  return data.token; // Supondo que a API retorne um { token: '...' }
+}
+
 serve(async (req) => {
-  // Responde ao "preflight" request do navegador (CORS)
+  // Tratamento de CORS para requisições do Navegador (Frontend)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // O frontend sempre enviará os parâmetros via POST usando o supabase.functions.invoke()
-    const { cpf } = await req.json();
+    const { action, payload } = await req.json();
 
-    if (!cpf) {
-      return new Response(JSON.stringify({ error: 'CPF é obrigatório' }), {
+    if (!action) {
+      return new Response(JSON.stringify({ error: 'Parâmetro "action" é obrigatório.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
     }
 
-    const SIGPAF_API_KEY = Deno.env.get('SIGPAF_API_KEY');
-    if (!SIGPAF_API_KEY) {
-      throw new Error('Chave de API do SIGPAF não configurada.');
-    }
-
-    // 1. Faz a requisição para a API do SIGPAF com o CPF informado
-    const response = await fetch(`https://api.sigpaf.com.br/public/Pessoa?cpf=${cpf}`, {
-        method: 'GET',
-        headers: { 'authorization': SIGPAF_API_KEY }
-    });
-
-    const data = await response.json();
-
-    // 2. Trata o caso do cliente não existir ou erro no SIGPAF
-    if (data.erro || !data.dados) {
-         return new Response(JSON.stringify({ existe: false, msg: data.msg || "Cliente não encontrado" }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200,
-        });
-    }
-
-    // 3. Filtro de LGPD: Retorna apenas dados de status (nada de endereço, telefone, nome da mãe, etc)
-    const statusData = {
-        existe: true,
-        status: data.dados.pessoaSituacao?.psi_descricao || "DESCONHECIDO",
-        corHex: data.dados.pessoaSituacao?.psi_corhex || "#808080",
-        contrato: data.dados.pes_contrato || data.dados.pes_codigo,
-        nome: data.dados.pes_nome,
-        dataCadastro: data.dados.pes_datacadastro // Adicionando o campo de data de cadastro
+    // 1. Autenticação na API Lavite (Pega o token para as próximas requisições)
+    const laviteToken = await getLaviteSession();
+    const authHeaders = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${laviteToken}`
     };
 
-    return new Response(JSON.stringify(statusData), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
+    // ----------------------------------------------------------------------
+    // ROTA 1: Listar Agendas e Horários Disponíveis
+    // ----------------------------------------------------------------------
+    if (action === 'listar_agendas') {
+      // Você pode passar filtros no payload (ex: especialidade, data)
+      const queryString = new URLSearchParams(payload || {}).toString();
+
+      const response = await fetch(`${LAVITE_BASE_URL}/agendas?${queryString}`, {
+        method: 'GET',
+        headers: authHeaders
+      });
+
+      const data = await response.json();
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    }
+
+    // ----------------------------------------------------------------------
+    // ROTA 2: Criar Agendamento (Reserva a consulta + Avisa SURI)
+    // ----------------------------------------------------------------------
+    if (action === 'criar_agendamento') {
+      // TODO: 1. Verificar se o paciente existe (GET /pacientes?cpf=...)
+      // TODO: 2. Se não existir, criar (POST /pacientes)
+
+      // 3. Efetivar o Agendamento
+      const agendamentoResponse = await fetch(`${LAVITE_BASE_URL}/agendamentos`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify(payload)
+      });
+
+      if (!agendamentoResponse.ok) {
+        const erro = await agendamentoResponse.text();
+        throw new Error(`Erro ao agendar na Lavite: ${erro}`);
+      }
+
+      const agendamentoData = await agendamentoResponse.json();
+
+      // TODO: 4. Chamar a API da SURI para enviar WhatsApp de confirmação
+
+      return new Response(JSON.stringify({ success: true, data: agendamentoData }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    }
+
+    // Ação não reconhecida
+    return new Response(JSON.stringify({ error: 'Ação desconhecida.' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400,
+    });
+
   } catch (error: any) {
-    console.error('Erro na função check-status:', error);
+    console.error(`Erro na action:`, error);
     return new Response(JSON.stringify({ error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
   }
 })

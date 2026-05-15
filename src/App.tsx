@@ -16,6 +16,8 @@ import Carteirinha from './pages/Carteirinha';
 import ConsultaCarteirinha from './pages/ConsultaCarteirinha';
 import ValidarCarteirinha from './pages/ValidarCarteirinha';
 import Parceiros from "./pages/Parceiros";
+import Agendamento from "./pages/Agendamento";
+
 
 
 
@@ -37,8 +39,10 @@ const App = () => (
           <Route path="/validar/:cpf" element={<ValidarCarteirinha />} />
           <Route path="/admin/login" element={<Login />} />
           <Route path="/parceiros" element={<Parceiros />} />
+          <Route path="/agendamento" element={<Agendamento />} />
 
-          
+
+
           {/* Rotas Protegidas */}
           <Route path="/admin" element={<ProtectedRoute />}>
             <Route path="dashboard" element={<Dashboard />} />

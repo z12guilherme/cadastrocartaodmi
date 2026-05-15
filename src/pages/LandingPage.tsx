@@ -51,6 +51,12 @@ const LandingPage = () => {
                 <span>Consultar Status</span>
               </Button>
             </Link>
+            <Link to="/agendamento">
+              <Button variant="outline" size="sm" className="gap-2 border-[#0EA5FF] text-[#0EA5FF] hover:bg-[#0EA5FF]/10 hidden md:flex">
+                <Stethoscope className="w-4 h-4" />
+                <span>Agendar Consulta</span>
+              </Button>
+            </Link>
             <Link to="/acessar-carteirinha">
               <Button variant="outline" size="sm" className="gap-2 border-[#0EA5FF] text-[#0EA5FF] hover:bg-[#0EA5FF]/10">
                 <CreditCard className="w-4 h-4" />
@@ -104,6 +110,12 @@ const LandingPage = () => {
                   <button className="border-2 border-white bg-white/10 backdrop-blur-sm text-white hover:bg-white hover:text-[#0EA5FF] px-8 py-3 rounded-full font-medium transition-all animate__animated animate__fadeInBottomRight flex items-center justify-center gap-2">
                     <CreditCard className="w-5 h-5" />
                     Carteirinha Digital
+                  </button>
+                </Link>
+                <Link to="/agendamento">
+                  <button className="border-2 border-[#64E627] bg-[#64E627]/10 backdrop-blur-sm text-[#64E627] hover:bg-[#64E627] hover:text-black px-8 py-3 rounded-full font-medium transition-all animate__animated animate__fadeInBottomRight flex items-center justify-center gap-2 mt-4 sm:mt-0 shadow-lg">
+                    <Stethoscope className="w-5 h-5" />
+                    Agendar Consulta
                   </button>
                 </Link>
                 <a href="https://play.google.com/store/apps/details?id=com.sigpaf.dmicliente&pcampaignid=web_share" target="_blank" rel="noopener noreferrer">

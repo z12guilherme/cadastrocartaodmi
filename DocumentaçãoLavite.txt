@@ -1,0 +1,802 @@
+https://hsf.lavitesaude.com/lavite_api/doc/1.0/agendamentos/index.html -->lavite 1.0 / Agendamentos / index
+GET /api/v1/agendamentos
+Listar agendamentos realizados
+Formatos Suportados
+json
+Parâmentros
+Nome parâmetro	Descrição
+agenda_id
+requerido	
+ID da Agenda
+
+Validations:
+
+Must be String
+
+data
+opcional	
+Data da agenda
+
+Validations:
+
+Must be String
+
+https://hsf.lavitesaude.com/lavite_api/doc/1.0/agendamentos/create.html --> 
+lavite 1.0 / Agendamentos / create
+POST /api/v1/agendamentos
+Cria um agendamento
+Formatos Suportados
+json
+Exemplos
+ {
+   "agenda_id": "35"
+   "codigo_paciente": "000005739",
+
+   "data": "11/05/2022",
+   "horario_id: "720"
+   "hora": "08:00",
+   "observacao": "xxxxxx"
+}
+      
+Parâmentros
+Nome parâmetro	Descrição
+agenda_id
+requerido	
+ID da Agenda
+
+Validations:
+
+Must be String
+
+codigo_paciente
+requerido	
+Número do prontuário do paciente
+
+Validations:
+
+Must be String
+
+data
+requerido	
+Data da marcação
+
+Validations:
+
+Must be String
+
+hora
+requerido	
+Hora da marcação
+
+Validations:
+
+Must be String
+
+observacao
+opcional	
+Obervação qualquer
+
+Validations:
+
+Must be String
+
+https://hsf.lavitesaude.com/lavite_api/doc/1.0/agendamentos/update.html -->
+lavite 1.0 / Agendamentos / update
+PUT /api/v1/agendamentos/:id
+Atualiza o status de um agendamento
+Formatos Suportados
+json
+Exemplos
+{
+  "status": "[confirmado, cancelada]",
+  "motivo_cancelamento": "xxxxxx"
+}
+      
+Parâmentros
+Nome parâmetro	Descrição
+status
+requerido	
+Status da marcação
+
+Validations:
+
+Must be String
+
+motivo_cancelamento
+opcional	
+Justificativa em caso de cancelamento
+
+Validations:
+
+Must be String
+
+https://hsf.lavitesaude.com/lavite_api/doc/1.0/agendas/index.html -->
+lavite 1.0 / Agendas / index
+GET /api/v1/agendas
+Listar agendas
+Formatos Suportados
+json
+
+https://hsf.lavitesaude.com/lavite_api/doc/1.0/agendas/create.html -->
+lavite 1.0 / Agendas / create
+POST /api/v1/agendas
+Cadastrar uma agenda
+Formatos Suportados
+json
+Erros
+Code	Description
+422	Agenda não foi criada
+Exemplos
+{
+ "agenda": {
+   "numero_cbo": "221205",
+   "profissional": {
+      "numero_cbo": "221205",
+      "nome": "Paulo Mendes",
+      "sexo": "masculino",
+      "numero_conselho": "2222",
+      "cpf": "000.715.124-11",
+      "conselho": "crm"
+    },
+
+    "horarios": {
+       "segunda": {
+         "quant_consultas": 10,
+          "hora_inicial": "08:00",
+          "hora_final": "18:00"
+        },
+        "terca": {
+          "quant_consultas": 10,
+          "hora_inicial": "08:00",
+          "hora_final": "18:00"
+         }
+    }
+  }
+}
+      
+Parâmentros
+Nome parâmetro	Descrição
+agenda
+requerido	
+Dados da agenda
+
+Validations:
+
+Must be a Hash
+
+agenda[numero_cbo]
+requerido	
+Especialidade da agenda
+
+Validations:
+
+Must be String
+
+agenda[profissional]
+opcional	
+Dados do profissional
+
+Validations:
+
+Must be a Hash
+
+agenda[profissional][numero_cbo]
+requerido	
+Numero do cbo
+
+Validations:
+
+Must be String
+
+agenda[profissional][nome]
+requerido	
+Validations:
+
+Must be String
+
+agenda[profissional][sexo]
+requerido	
+Validations:
+
+Must be one of: masculino, feminino.
+
+agenda[profissional][numero_conselho]
+requerido	
+Numero do conselho do profissional
+
+Validations:
+
+Must be String
+
+agenda[profissional][cpf]
+requerido	
+CPF do profissional formatado
+
+Validations:
+
+Must be String
+
+agenda[profissional][conselho]
+requerido	
+Sigla do conselho do profissional
+
+Validations:
+
+Must be String
+
+agenda[horarios]
+opcional	
+Dados dos horarios da agenda
+
+Validations:
+
+Must be a Hash
+
+agenda[horarios][segunda]
+opcional	
+Dados do dia da semana(segunda, terça etc)
+
+Validations:
+
+Must be a Hash
+
+agenda[horarios][segunda][quant_consultas]
+requerido	
+Validations:
+
+Must be Integer
+
+agenda[horarios][segunda][hora_inicial]
+requerido	
+Validations:
+
+Must be String
+
+agenda[horarios][segunda][hora_final]
+requerido	
+Validations:
+
+Must be String
+
+https://hsf.lavitesaude.com/lavite_api/doc/1.0/agendas/update.html -->
+PUT /api/v1/agendas/:id
+Atualiza uma agenda
+url: /api/v1/agendas/codigo_especialidade:221205:crm_profissional:2222
+
+Formatos Suportados
+json
+Exemplos
+{
+    "agenda": {
+        "horarios": {
+            "quinta": {
+                "quant_consultas": 10,
+                "hora_inicial": "08:00",
+                "hora_final": "12:00",
+                "validade_inicial": "14/10/2015",
+                "validade_final": "15/10/2015"
+            }
+        }
+    }
+}
+      
+Parâmentros
+Nome parâmetro	Descrição
+agenda
+requerido	
+Dados da agenda
+
+Validations:
+
+Must be a Hash
+
+agenda[horarios]
+opcional	
+Dados dos horarios da agenda
+
+Validations:
+
+Must be a Hash
+
+agenda[horarios][segunda]
+opcional	
+Dados do dia da semana(segunda, terça etc)
+
+Validations:
+
+Must be a Hash
+
+agenda[horarios][segunda][quant_consultas]
+requerido	
+Validations:
+
+Must be Integer
+
+agenda[horarios][segunda][hora_inicial]
+requerido	
+Validations:
+
+Must be String
+
+agenda[horarios][segunda][hora_final]
+requerido	
+Validations:
+
+Must be String
+
+agenda[horarios][segunda][validade_inicial]
+requerido	
+Validations:
+
+Must be String
+
+agenda[horarios][segunda][validade_final]
+requerido	
+Validations:
+
+Must be String
+
+https://hsf.lavitesaude.com/lavite_api/doc/1.0/pacientes/index.html -->
+lavite 1.0 / Pacientes / index
+GET /api/v1/pacientes
+Buscar Pacientes
+Formatos Suportados
+json
+Exemplos
+ Buscar por prontuario:
+ /api/v1/pacientes?prontuario=xxxxx
+
+ Buscar por prontuario interno:
+ /api/v1/pacientes?prontuario_interno=xxxxx
+
+ Buscar por cpf:
+ /api/v1/pacientes?busca_paciente_documento=xxxxx
+
+ Lista de municípios:
+ /servicos/buscar_municipio?nome=Recife
+
+ Paginação:
+ /api/v1/pacientes?pagina=2
+
+Retorno:
+ {
+     "pacientes": [
+         {
+             "prontuario": "000015354",
+             "nome": "ABIDIAS FLORENCIO COSTA",
+             "idade": 75,
+             "sexo": "masculino",
+             "numero_documento": "212.825.444-20",
+             "data_nascimento": "1943-03-10",
+             "nome_responsavel": null,
+             "documento_responsavel": null,
+             "parentesco": null,
+             "municipio_nome": "Recife",
+             "estado_nome": "Pernambuco"
+         }
+     ]
+ }
+      
+https://hsf.lavitesaude.com/lavite_api/doc/1.0/pacientes/create.html -->
+lavite 1.0 / Pacientes / create
+POST /api/v1/pacientes
+Cria um paciente
+Formatos Suportados
+json
+Exemplos
+ {
+   "nome": "Kauê Sousa Correia",
+   "sexo": "masculino",
+   "municipio_id": 1,
+   "nome_mae": "Ágatha Dias Souza",
+   "tipo_documento_id": 4,
+   "numero_documento": 52156120056,
+   "data_nascimento": "1974-02-13",
+}
+
+Lista de municípios:
+/servicos/buscar_municipio?nome=xxxx
+
+Lista de tipos de documentos:
+1:PIS/PASEP, 2:Identidade, 3:Registro de Nascimento, 4:CPF, 5:Ignorado, 6:Matrícula do RN
+
+Lista de raças:
+1:Branca, 2:Preta, 3:Parda, 4:Amarela, 5:Indigena, 6:Sem informação
+
+Lista de nacionalidades:
+1: Brasileiro
+2: Naturalizado brasileiro
+3: Argentino
+4: Boliviano
+5: Chileno
+6: Paraguaio
+7: Uruguaio
+8: Alemão
+9: Belga
+10: Britânico
+11: Canadense
+12: Espanhol
+13: Norte-americano (EUA)
+14: Francês
+15: Suíço
+16: Italiano
+17: Japonês
+18: Chinês
+19: Coreano
+20: Português
+21: Outros latino-americanos
+22: Outros asiáticos
+23: Outros
+      
+Parâmentros
+Nome parâmetro	Descrição
+nome
+requerido	
+Nome do paciente
+
+Validations:
+
+Must be String
+
+sexo
+requerido	
+Sexo do paciente
+
+Validations:
+
+Must be String
+
+municipio_id
+requerido	
+Município do paciente
+
+Validations:
+
+Must be Integer
+
+nome_mae
+requerido	
+Nome da mãe do paciente
+
+Validations:
+
+Must be String
+
+tipo_documento_id
+requerido	
+ID do tipo de documento do paciente
+
+Validations:
+
+Must be Integer
+
+numero_documento
+requerido	
+Número do documento do paciente
+
+Validations:
+
+Must be String
+
+data_nascimento
+requerido	
+Data de nascimento do paciente
+
+Validations:
+
+Must be String
+
+nacionalidade_id
+requerido	
+Nacionalidade do paciente
+
+Validations:
+
+Must be Integer
+
+nome_pai
+opcional	
+Data do pai do paciente
+
+Validations:
+
+Must be String
+
+prontuario_interno
+opcional	
+Validations:
+
+Must be String
+
+raca
+opcional	
+Raça do paciente
+
+Validations:
+
+Must be Integer
+
+telefone_celular
+opcional	
+Telefone celular do paciente
+
+Validations:
+
+Must be String
+
+email
+opcional	
+Email do paciente
+
+Validations:
+
+Must be String
+
+numero_carteira
+opcional	
+Número da carteira do paciente
+
+Validations:
+
+Must be String
+
+data_inicio_plano
+opcional	
+Data do início do plano do paciente
+
+Validations:
+
+Must be String
+
+nome_responsavel
+opcional	
+Informações Complementares - Nome do responsável
+
+Validations:
+
+Must be String
+
+documento_responsavel
+opcional	
+Informações Complementares - Número do documento do responsável
+
+Validations:
+
+Must be String
+
+parentesco
+opcional	
+Informações Complementares - Parentesco
+
+Validations:
+
+Must be String
+
+nome_conjuge
+opcional	
+Informações Complementares - Nome do conjuge
+
+Validations:
+
+Must be String
+
+telefone_conjuge
+opcional	
+Informações Complementares - Telefone do conjuge
+
+Validations:
+
+Must be String
+
+https://hsf.lavitesaude.com/lavite_api/doc/1.0/pacientes/update.html -->
+lavite 1.0 / Pacientes / update
+PUT /api/v1/pacientes/:id
+Atualiza um paciente
+Formatos Suportados
+json
+Exemplos
+ {
+   "nome": "Kauê Sousa Correia Gouveia",
+   "sexo": "masculino",
+   "municipio_id": 1,
+   "nome_mae": "Ágatha Dias Souza",
+   "tipo_documento_id": 4,
+   "numero_documento": 52156120056,
+   "data_nascimento": "1974-02-13",
+}
+
+Lista de municípios:
+/servicos/buscar_municipio?nome=xxxx
+
+Lista de tipos de documentos:
+1:PIS/PASEP, 2:Identidade, 3:Registro de Nascimento, 4:CPF, 5:Ignorado, 6:Matrícula do RN
+
+Lista de raças:
+1:Branca, 2:Preta, 3:Parda, 4:Amarela, 5:Indigena, 6:Sem informação
+
+Lista de nacionalidades:
+1: Brasileiro
+2: Naturalizado brasileiro
+3: Argentino
+4: Boliviano
+5: Chileno
+6: Paraguaio
+7: Uruguaio
+8: Alemão
+9: Belga
+10: Britânico
+11: Canadense
+12: Espanhol
+13: Norte-americano (EUA)
+14: Francês
+15: Suíço
+16: Italiano
+17: Japonês
+18: Chinês
+19: Coreano
+20: Português
+21: Outros latino-americanos
+22: Outros asiáticos
+23: Outros
+      
+Parâmentros
+Nome parâmetro	Descrição
+nome
+requerido	
+Nome do paciente
+
+Validations:
+
+Must be String
+
+sexo
+requerido	
+Sexo do paciente
+
+Validations:
+
+Must be String
+
+municipio_id
+requerido	
+Município do paciente
+
+Validations:
+
+Must be Integer
+
+nome_mae
+requerido	
+Nome da mãe do paciente
+
+Validations:
+
+Must be String
+
+tipo_documento_id
+requerido	
+ID do tipo de documento do paciente
+
+Validations:
+
+Must be Integer
+
+numero_documento
+requerido	
+Número do documento do paciente
+
+Validations:
+
+Must be String
+
+data_nascimento
+requerido	
+Data de nascimento do paciente
+
+Validations:
+
+Must be String
+
+nacionalidade_id
+requerido	
+Nacionalidade do paciente
+
+Validations:
+
+Must be Integer
+
+nome_pai
+opcional	
+Data do pai do paciente
+
+Validations:
+
+Must be String
+
+prontuario_interno
+opcional	
+Validations:
+
+Must be String
+
+raca
+opcional	
+Raça do paciente
+
+Validations:
+
+Must be Integer
+
+telefone_celular
+opcional	
+Telefone celular do paciente
+
+Validations:
+
+Must be String
+
+email
+opcional	
+Email do paciente
+
+Validations:
+
+Must be String
+
+numero_carteira
+opcional	
+Número da carteira do paciente
+
+Validations:
+
+Must be String
+
+data_inicio_plano
+opcional	
+Data do início do plano do paciente
+
+Validations:
+
+Must be String
+
+nome_responsavel
+opcional	
+Informações Complementares - Nome do responsável
+
+Validations:
+
+Must be String
+
+documento_responsavel
+opcional	
+Informações Complementares - Número do documento do responsável
+
+Validations:
+
+Must be String
+
+parentesco
+opcional	
+Informações Complementares - Parentesco
+
+Validations:
+
+Must be String
+
+nome_conjuge
+opcional	
+Informações Complementares - Nome do conjuge
+
+Validations:
+
+Must be String
+
+telefone_conjuge
+opcional	
+Informações Complementares - Telefone do conjuge
+
+Validations:
+
+Must be String
+
+
