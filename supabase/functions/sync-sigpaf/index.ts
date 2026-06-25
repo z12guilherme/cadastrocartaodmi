@@ -63,7 +63,7 @@ serve(async (req) => {
         const supabaseUrl = Deno.env.get('SUPABASE_URL') || Deno.env.get('SUPABASE_DB_URL')
         const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
         const SURI_TOKEN = Deno.env.get('SURI_TOKEN')
-        const SURI_API_URL = Deno.env.get('SURI_API_URL') || 'https://cbm-wap-babysuri-cb89694138-dmi.azurewebsites.net/'
+        const SURI_API_URL = Deno.env.get('SURI_API_URL') || 'https://cb89694138.api.suri.ai/'
 
         if (!supabaseUrl || !supabaseServiceKey) {
             throw new Error('Supabase credenciais não configuradas na Edge Function.')
